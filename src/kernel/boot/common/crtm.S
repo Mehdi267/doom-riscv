@@ -9,18 +9,19 @@
 
 #include "constants.h"
 
+// cf risc-v assembly programmer's handbook (pg 109 in risc-v spec)
 .section .text.init,"ax",@progbits
 .globl _start
 _start:
     # Mise en place du vecteur de trap machine
-    la      t0, mtrap_entry
-    csrw    mtvec, t0
+    la      t0, mtrap_entry // load adress mtrap_entry in t0
+    csrw    mtvec, t0 // write mtrap_entry in mtvec
 
     # Mise en place des piles (stacks) en fonction du hart (~core)
-    csrr    t0, mhartid
-    slli    t0, t0, STACK_SHIFT
-    la      sp, stacks + STACK_SIZE
-    add     sp, sp, t0
+    csrr    t0, mhartid // mhardid is just number of the processeur running the code
+    slli    t0, t0, STACK_SHIFT // shift left logic immediate  src, dest, 10: t0 = t0<<10
+    la      sp, stacks + STACK_SIZE // sp = stacks + 1kb
+    add     sp, sp, t0 // ??
 
     # On place dans mscratch le haut de la pile machine trap
     # elle sera réutilisée lors d'une interruption machine
