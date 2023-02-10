@@ -35,29 +35,35 @@ static void delegate_traps()
 	 */
 }
 
-static inline void setup_pmp(void)
-{
-	/*
-	 * Désactivation de la protection de la mémoire physique (PMP).
-	 *
-	 * Configuration de la PMP pour donner  un accès complet à la mémoire.
-	 * CSR concernés: pmpaddr0 and pmpcfg0.
-	 */
+static inline void setup_pmp(void) {
+  /*
+   * Désactivation de la protection de la mémoire physique (PMP).
+   *
+   * Configuration de la PMP pour donner  un accès complet à la mémoire.
+   * CSR concernés: pmpaddr0 and pmpcfg0.
+   */
 
-	// Ignore the illegal-instruction trap if PMPs aren't supported.
-	uintptr_t pmpc = PMP_NAPOT | PMP_R | PMP_W | PMP_X;
-	uintptr_t pmpa = ((uintptr_t) 1 << (__riscv_xlen == 32 ? 31 : 53)) - 1;
-	__asm__ __volatile__ ("la t0, 1f\n\t"
-						  "csrrw t0, mtvec, t0\n\t"
-						  "csrw pmpaddr0, %1\n\t"
-						  "csrw pmpcfg0, %0\n\t"
-						  ".align 2\n\t"
-						  "1: csrw mtvec, t0"
-	: : "r" (pmpc), "r" (pmpa) : "t0");
+  // Ignore the illegal-instruction trap if PMPs aren't supported.
+  uintptr_t pmpc = PMP_NAPOT | PMP_R | PMP_W | PMP_X;
+  uintptr_t pmpa = ((uintptr_t)1 << (__riscv_xlen == 32 ? 31 : 53)) - 1;
+  __asm__ __volatile__("la t0, 1f\n\t"
+                       "csrrw t0, mtvec, t0\n\t"
+                       "csrw pmpaddr0, %1\n\t"
+                       "csrw pmpcfg0, %0\n\t"
+                       ".align 2\n\t"
+                       "1: csrw mtvec, t0"
+                       : : "r"(pmpc), "r"(pmpa) : "t0");
 }
 
-static inline void enter_supervisor_mode()
-{
+static inline void enter_supervisor_mode() {
+
+  /* __asm__ __volatile__ ("csrw stap %0\n" */
+  /*                       "csrw mstatus %0\n"); */
+  csr_write(satp, 0); // virtual memory desactivated
+  // global desactivation of interrupts
+  uint64_t mstatus = csr_read(mstatus);
+  csr_write(mstatus, mstatus ^ ((1<<1) | (1<<3))); //bits sie and mie are 1 and 3
+  csr_write(mie, 0);
 
 	// Il faut obligatoirement configurer la protection de la mémoire physique avant de passer en mode supervisor.
 	setup_pmp();
@@ -68,8 +74,13 @@ static inline void enter_supervisor_mode()
 	 * CSR concernés: mepc et mstatus.
 	 * Voir aussi riscv.h pour la macro mret().
 	 */
-	csr_write(satp, 0);
-
+  // changing to supervisor mode
+  csr_write(mepc, kernel_start());
+  mstatus = csr_read(mstatus);
+  csr_write(mstatus, mstatus ^ (1<<12)); // writing 0 at bit 12 (0 indexed)
+  csr_write(mstatus, 1<<11); // writing 1 at bit 11 | mpp = 01
+  csr_write(sie, 1);
+  mret();
 }
 
 /*
