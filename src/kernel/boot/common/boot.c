@@ -62,7 +62,6 @@ static inline void setup_pmp(void) {
                        : : "r"(pmpc), "r"(pmpa) : "t0");
 }
 
-
 /**
 * Cette fonction fera la configuration nécessaire pour le passage dans le mode
 * de superviseur à partir du mode machine qui est le mode dans lequel on boot
