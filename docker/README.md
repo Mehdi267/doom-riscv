@@ -94,3 +94,5 @@ sudo docker exec -it projet_os_riscv /bin/bash
 docker create --interactive --net host -e  DISPLAY=$DISPLAY --tty -v /home/frikha/Desktop/semestre_8/projet_os/xinul:/home/ -v /tmp/.X11-unix:/tmp/.X11-unix --name projet_os_riscv_graphic barbem/risc-v_cep 
 
 sudo docker exec -it  projet_os_riscv_graphic /bin/bash 
+
+

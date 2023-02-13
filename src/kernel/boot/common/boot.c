@@ -14,8 +14,10 @@
 #include "bios/info.h"
 #include "traps/trap.h"
 #include "timer.h"
+#include "drivers/splash.h"
 
 extern void _start();
+extern void test();
 extern int tic;
 
 /*
@@ -38,9 +40,11 @@ static void delegate_traps()
 	 * CSR concernés: mideleg et medeleg.
 	 */
 
-	//delegate s timer
+	//This function call delegated timer interrupt to the Supervisor mode 
+  //instead of machine mode 
 	csr_set(mideleg, SIE_STIE);
 }
+
 
 static inline void setup_pmp(void) {
   /*
@@ -69,49 +73,39 @@ static inline void setup_pmp(void) {
 */
 static inline void enter_supervisor_mode() {
 
-
- //On désactive pour le moment la mémoire virtuel,
- //éventuellement il faut revenir sur cela
- //et changer la valeur stockée dans le registre
- csr_write(satp, 0);
-  //On désactive les interruptions machine uniquement
- csr_clear(mstatus, MSTATUS_MIE);
+  // Il faut obligatoirement configurer la protection de la mémoire physique
+  // avant de passer en mode superviseur.
+  setup_pmp();
 
 
- // Il faut obligatoirement configurer la protection de la mémoire physique
- // avant de passer en mode superviseur.
- setup_pmp();
+  /*
+    * Configuration du mode à utiliser lors de l'instruction mret.
+    *
+    * CSR concernés: mepc et mstatus.
+    * Voir aussi riscv.h pour la macro mret().
+  */
 
+  // changing to supervisor mode
+  //On met dans le registre mepc l'adresse de la méthode
+  //qu'on exécutera en mode superviseur qui dans ce cas la méthode
+  //kernel_start défini dans le fichier start.c
+  csr_write(mepc, kernel_start);
 
- /*
-  * Configuration du mode à utiliser lors de l'instruction mret.
-  *
-  * CSR concernés: mepc et mstatus.
-  * Voir aussi riscv.h pour la macro mret().
- */
+  // L'objectif du code  suivant est dans le mettre dans la case MPP
+  // du registre csr mstatus le niveau auquel on veut en aller après avoir traité
+  // l'interruption auquel on est maintenant. Dans notre cas on veut passer du mode
+  // actuel qui est le mode machine vers le mode superviseur qui est identifié avec
+  // les bits suivants : 01
 
+  csr_set(mstatus, MSTATUS_MPP_0);
+  csr_clear(mstatus, MSTATUS_MPP_1);
 
- // changing to supervisor mode
- //On met dans le registre mepc l'adresse de la méthode
- //qu'on exécutera en mode superviseur qui dans ce cas la méthode
- //kernel_start défini dans le fichier start.c
- csr_write(mepc, kernel_start());
+  //On désactive les interruptions dans le mode superviseur
+  csr_set(mstatus, MSTATUS_SIE);
 
- // L'objectif du code  suivant est dans le mettre dans la case MPP
- // du registre csr mstatus le niveau auquel on veut en aller après avoir traité
- // l'interruption auquel on est maintenant. Dans notre cas on veut passer du mode
- // actuel qui est le mode machine vers le mode superviseur qui est identifié avec
- // les bits suivants : 01
- csr_set(mstatus, MSTATUS_MPP_0);
- csr_clear(mstatus, MSTATUS_MPP_1);
-
-//On désactive les interruptions dans le mode superviseur
- csr_clear(mstatus, MSTATUS_SIE);
-
-
- // Le passage au niveau mit dans le registre sera fait automatiquement avec l'instruction
- // mret qui changera le niveau suivant ce qui existe dans mpp
- mret();
+  // Le passage au niveau mit dans le registre sera fait automatiquement avec l'instruction
+  // mret qui changera le niveau suivant ce qui existe dans mpp
+  mret();
 }
 
 
@@ -136,21 +130,32 @@ __attribute__((noreturn)) void boot_riscv()
   // Délégations des interruptions et des exceptions
   delegate_traps();
 
+  //On désactive pour le moment la mémoire virtuel,
+  //éventuellement il faut revenir sur cela
+  //et changer la valeur stockée dans le registre
+  csr_write(satp, 0);
 
-	// //enable machine interrupts
-	// csr_set(mstatus, MSTATUS_MIE);
+  //We disable machine mode interrupts
+  csr_clear(mstatus, MSTATUS_MIE);
 
-	// //enable machine timer interrupts
-	// csr_set(sie, SIE_STIE);
+	//enables machine timer interrupts for the Supervisor mode
+	csr_set(mie, SIE_STIE);
+  
+  //enables machine timer interrupts for the Supervisor mode
+	csr_set(mip, MIP_STIP);
 
-	// //enable supervisorinterrupts
-	// csr_set(sstatus, SSTATUS_SIE);
+	//enables timer interrupts for the Supervisor mode
+	csr_set(sie, SIE_STIE);
 
-	// //init timer to 0
-	// tic = 0;
+	//enables global Supervisor mode interrupts
+	csr_set(sstatus, SSTATUS_SIE);
 
-	// //set first timer interrupt
-	// set_supervisor_timer_interrupt(0); 
+
+	//init timer to 0
+	tic = 0;
+
+	//set first timer interrupt
+	set_supervisor_timer_interrupt(0);
 
 	enter_supervisor_mode();
   //exit(kernel_start());

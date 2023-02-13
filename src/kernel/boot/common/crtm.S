@@ -22,7 +22,7 @@ _start:
     csrw    stvec, t0
 
     # Mise en place des piles (stacks) en fonction du hart (~core)
-    csrr    t0, mhartid # mhardid is just number of the processeur running the code
+    csrr    t0, mhartid # mhardid is just number of the thread currectly running
     slli    t0, t0, STACK_SHIFT # shift left logic immediate  src, dest, 10: t0 = t0<<10
     la      sp, stacks + STACK_SIZE # sp = stacks + 1kb
     add     sp, sp, t0 # moving sp to the correct stack according to mhartid
@@ -31,41 +31,19 @@ _start:
     # elle sera réutilisée lors d'une interruption machine
     la      t1, mtrap_stacks + STACK_SIZE
     add     t0, t0, t1
-    csrw mscratch, t0
+    csrw    mscratch, t0
+    addi    t2, t0, 0
 
-    # init of 32 register to 0
-#    li x0, 0
-#    li x1, 0
-#    li x2, 0
-#    li x3, 0
-#    li x4, 0
-#    li x5, 0
-#    li x6, 0
-#    li x7, 0
-#    li x8, 0
-#    li x9, 0
-#    li x10, 0
-#    li x11, 0
-#    li x12, 0
-#    li x13, 0
-#    li x14, 0
-#    li x15, 0
-#    li x16, 0
-#    li x17, 0
-#    li x18, 0
-#    li x19, 0
-#    li x20, 0
-#    li x21, 0
-#    li x22, 0
-#    li x23, 0
-#    li x24, 0
-#    li x25, 0
-#    li x26, 0
-#    li x27, 0
-#    li x28, 0
-#    li x29, 0
-#    li x30, 0
-#    li x31, 0
+    #On se redéplace par rapport à la pile 
+    #du process qui est en cours d'execution
+    csrr    t0, mhartid # mhardid is just number of the thread currectly running
+    slli    t0, t0, STACK_SHIFT # shift left logic immediate  src, dest, 10: t0 = t0<<10
+
+    # On place dans sscratch le haut de la pile supervisor trap
+    # elle sera réutilisée lors d'une interruption superviseur
+    la      t1, strap_stacks + STACK_SIZE
+    add     t0, t0, t1
+    csrw    sscratch, t0
 
     # On parque les harts autres que le premier pour booter sur un seul core.
     csrr    a0, mhartid # read cssr and store in a0
@@ -89,3 +67,9 @@ stacks:
     .global mtrap_stacks
 mtrap_stacks:
     .skip STACK_SIZE * MAX_HARTS
+
+    .align 4
+    .global strap_stacks
+strap_stacks:
+    .skip STACK_SIZE * MAX_HARTS
+
