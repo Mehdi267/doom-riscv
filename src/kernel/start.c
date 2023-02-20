@@ -17,6 +17,7 @@
 #include "riscv.h"
 
 #include "drivers/splash.h"
+#include "tests/tests.h"
 
 int kernel_start()
 {
@@ -26,5 +27,6 @@ int kernel_start()
 	puts("hello there");
 	while (1) wfi(); //endort le processeur en attente d'une interruption
 	
-	exit(0);
+	exit(kernel_tests(NULL));
+
 }

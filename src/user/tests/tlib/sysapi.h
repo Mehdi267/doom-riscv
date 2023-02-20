@@ -72,11 +72,7 @@ int vsnprintf(char *, size_t, const char *, va_list);
 // Prototype des appels systeme de la spec
 int chprio(int pid, int newprio);
  int cons_write(const char *str, unsigned long size);
-#if defined CONS_READ_LINE
 unsigned long cons_read(char *string, unsigned long length);
-#elif defined CONS_READ_CHAR
-int cons_read(void);
-#endif
 void cons_echo(int on);
 void exit(int retval);
 int getpid(void);

@@ -1,0 +1,7 @@
+br strap_entry
+br _start
+br enter_supervisor_mode
+br kernel_start
+define nr
+n
+info reg

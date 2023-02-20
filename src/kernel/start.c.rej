@@ -1,0 +1,17 @@
+diff a/src/kernel/start.c b/src/kernel/start.c	(rejected hunks)
+@@ -15,6 +15,7 @@
+ #include "string.h"
+ 
+ #include "drivers/splash.h"
++#include "tests/tests.h"
+ 
+ int kernel_start()
+ {
+@@ -22,5 +23,6 @@ int kernel_start()
+ 	splash_vga_screen();
+ 
+ 	puts("Hello world!");
+-exit(0);
++
++	exit(kernel_tests(NULL));
+ }
