@@ -13,6 +13,7 @@
 .section .text.init,"ax",@progbits
 .globl _start
 _start:
+
     # Mise en place du vecteur de trap machine
     la      t0, mtrap_entry # load adress mtrap_entry in t0
     csrw    mtvec, t0 # write mtrap_entry in mtvec
@@ -32,7 +33,7 @@ _start:
     la      t1, mtrap_stacks + STACK_SIZE
     add     t0, t0, t1
     csrw    mscratch, t0
-    addi    t2, t0, 0
+    add    t2,t0,x0 # used for debugging
 
     #On se redéplace par rapport à la pile 
     #du process qui est en cours d'execution
