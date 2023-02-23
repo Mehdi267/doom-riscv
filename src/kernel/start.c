@@ -25,7 +25,7 @@ int kernel_start()
 	splash_vga_screen();
 
 	puts("hello there");
-	while (1) wfi(); //endort le processeur en attente d'une interruption
+	//while (1) wfi(); //endort le processeur en attente d'une interruption
 	
 	exit(kernel_tests(NULL));
 

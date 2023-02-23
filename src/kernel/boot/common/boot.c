@@ -160,6 +160,11 @@ __attribute__((noreturn)) void boot_riscv()
 
 	init_frames();
 
+	// for(int i = 0; i<10; i++){
+		void *frame = get_frame();
+		release_frame(frame);
+	//}
+
 	enter_supervisor_mode();
   //exit(kernel_start());
 	__builtin_unreachable();
