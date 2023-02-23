@@ -67,6 +67,19 @@ static inline void setup_pmp(void) {
                        : : "r"(pmpc), "r"(pmpa) : "t0");
 }
 
+
+/**
+* Crée le directory utilisé par l'ensemble des process kernels 
+* Crée la page contenant la mémoire du noyau et les directories
+* Cette page est référencée par une pte du directory
+* renvoie l'adresse physique du directory
+*/
+void *init_directory(){
+  void *ppn = get_frame();
+  
+
+}
+
 /**
 * Cette fonction fera la configuration nécessaire pour le passage dans le mode
 * de superviseur à partir du mode machine qui est le mode dans lequel on boot
@@ -160,10 +173,15 @@ __attribute__((noreturn)) void boot_riscv()
 
 	init_frames();
 
-	// for(int i = 0; i<10; i++){
-		void *frame = get_frame();
-		release_frame(frame);
+  //void *to_release;
+	//for(int i = 0; i<10; i++){
+	//	void *frame = get_frame();
+  //  if(i==5) to_release = frame;
 	//}
+//
+  //release_frame(to_release);
+
+  void *ppn = init_directory();
 
 	enter_supervisor_mode();
   //exit(kernel_start());

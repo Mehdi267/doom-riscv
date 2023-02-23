@@ -45,7 +45,18 @@ void release_frame(void *frame){
     //frame pointe vers l'ancien mem_ptr
 
     //checks : la frame est comprise dans la memoire accessible
-    
+    if((char *)frame < _free_memory_start || (char *)frame > _memory_end){
+        //the frame is not within bounds of physical mem
+        return ;
+    }
+
+    if(((unsigned long)frame & (unsigned long)0xFFF) != 0){
+        //the frame is not correctly aligned
+        return ;
+    }
+
+    //TODO : hash map containing allocated frames. Check if frame to release was allocated. Only check necessary
+
     char *temp = mem_ptr;
     mem_ptr = (char*)frame;
     *(char**)frame = temp;
