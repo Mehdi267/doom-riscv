@@ -101,7 +101,7 @@ static inline void enter_supervisor_mode() {
   csr_clear(mstatus, MSTATUS_MPP_1);
 
   //On désactive les interruptions dans le mode superviseur
-  csr_set(mstatus, MSTATUS_SIE);
+  csr_clear(mstatus, MSTATUS_SIE);
 
   // Le passage au niveau mit dans le registre sera fait automatiquement avec l'instruction
   // mret qui changera le niveau suivant ce qui existe dans mpp
