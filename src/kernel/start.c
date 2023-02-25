@@ -24,6 +24,15 @@ int kernel_start()
 	splash_screen();
 	splash_vga_screen();
 
+	/**
+	 * These lines are used for debugging purposes, they are not relevant
+	 * please don't remove them
+	*/
+   	// char str[80];
+	// sprintf(str,"%li",csr_read(mstatus));
+	// puts(str);
+
+
 	puts("hello there");
 	while (1) wfi(); //endort le processeur en attente d'une interruption
 	
