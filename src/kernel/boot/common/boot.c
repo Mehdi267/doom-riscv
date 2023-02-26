@@ -58,8 +58,8 @@ static void delegate_traps()
     * in order to have more control over what we do for that reason we exploit the two registers :
     *  medeleg(exceptions) and mideleg(interrupts) for delegating the appropriate traps to the appropriate mode
   */
-	// csr_set(medeleg, SIE_STIE);
-  // csr_set(mideleg, SIE_STIE);
+	csr_set(medeleg, SIE_STIE);
+  csr_set(mideleg, SIE_STIE);
 }
 
 
@@ -161,7 +161,7 @@ __attribute__((noreturn)) void boot_riscv()
 	tic = 0;
 
 	//set first timer interrupt
-	set_supervisor_timer_interrupt(0);
+	//set_supervisor_timer_interrupt(0);
 
   /**
    * This function will enter in the supervisor mode and it will enable

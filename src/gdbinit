@@ -1,7 +1,10 @@
-br strap_entry
-br _start
-br enter_supervisor_mode
 br kernel_start 
+br idle
+br context_switch
 define nr
 n
 info reg
+
+
+// br strap_entry
+// br enter_supervisor_mode

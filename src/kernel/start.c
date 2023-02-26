@@ -15,7 +15,7 @@
 #include "stdint.h"
 #include "string.h"
 #include "riscv.h"
-
+#include "process/process.h"
 #include "drivers/splash.h"
 #include "tests/tests.h"
 
@@ -24,6 +24,9 @@ int kernel_start()
 	splash_screen();
 	splash_vga_screen();
 
+	if (initialize_process_workflow()<0){
+		puts("error chile setting up process");
+	}
 	/**
 	 * These lines are used for debugging purposes, they are not relevant
 	 * please don't remove them
@@ -32,8 +35,8 @@ int kernel_start()
 	// sprintf(str,"%li",csr_read(mstatus));
 	// puts(str);
 
-
 	puts("hello there");
+	idle(NULL);
 	while (1) wfi(); //endort le processeur en attente d'une interruption
 	
 	exit(kernel_tests(NULL));
