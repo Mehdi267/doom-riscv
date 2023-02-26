@@ -25,7 +25,8 @@ int kernel_start()
 	splash_vga_screen();
 
 	if (initialize_process_workflow()<0){
-		puts("error chile setting up process");
+		puts("error while setting up process");
+		exit(-1);
 	}
 	/**
 	 * These lines are used for debugging purposes, they are not relevant

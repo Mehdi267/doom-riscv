@@ -39,16 +39,14 @@ void set_supervisor_timer_interrupt(uint64_t delta_ms)
 
 void handle_mtimer_interrupt()
 {
-	puts("test machine!\n");
-	printf("Tic \n");
+	printf("Tic machine \n");
 	set_machine_timer_interrupt(TIC_PER); // this fills the role of ack
 	tic++;
 }
 
 void handle_stimer_interrupt()
 {
-	puts("test supervisor!\n");
-	printf("Tic \n");
+	printf("Tic supervisor %d \n", tic);
 	set_supervisor_timer_interrupt(TIC_PER); // this fills the role of ack
 	tic++;
 }

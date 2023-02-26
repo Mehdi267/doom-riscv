@@ -1,3 +1,9 @@
+/**
+* Projet PCSEA RISC-V
+* Mehdi Frikha
+* See license for license details.
+*/
+
 #include "process.h"
 #include "hash.h"
 #include "stddef.h"
@@ -36,17 +42,27 @@ int idle(void *arg)
 
 int process_1(void *arg)
 {
+    int i = 0;
     for (;;) {
-        printf("[%s] pid = %i\n", get_pid_name(1), 1);
+        i++;
+        printf("[%s] pid = %d \n", get_pid_name(1), 1);
         context_switch(get_process_struct_of_pid(1)->context_process, get_process_struct_of_pid(2)->context_process);
+        if (i == 6){
+            return 1;
+        }
     }
 }
 
 int process_2(void *arg)
 {
+    int i = 0;
     for (;;) {
-        printf("[%s] pid = %i\n", get_pid_name(2), 2);
+        i++;
+        printf("[%s] pid = %d \n", get_pid_name(2), 2);
         context_switch(get_process_struct_of_pid(2)->context_process, get_process_struct_of_pid(1)->context_process);
+        if (i == 5){
+            return 2;
+        }
     }
 }
 

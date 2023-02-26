@@ -1,3 +1,9 @@
+/**
+* Projet PCSEA RISC-V
+* Mehdi Frikha
+* See license for license details.
+*/
+
 #include "helperfunc.h"
 #include "process.h"
 #include "stddef.h"
@@ -43,3 +49,15 @@ int increment_pid_and_get_new_pid(){
 hash_t* get_process_hash_table(void){
     return pid_process_hash_table;
 }
+
+
+int validate_action_process_valid(process* process_pid){
+    if (process_pid == NULL){
+        return -1;
+    }
+    if (process_pid->state == ZOMBIE){
+        return -1;
+    }
+    return 0;
+}
+

@@ -41,9 +41,11 @@ void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf)
 		switch (mcause & ~INTERRUPT_CAUSE_FLAG) {
 			case intr_m_timer:
 				handle_mtimer_interrupt();
+				csr_clear(mip, intr_m_timer);
 				break;
 			case intr_s_timer: // in case the s timer interrupt has not been delegated to supervisor mode
 				handle_stimer_interrupt();
+				csr_clear(mip, intr_s_timer);
 				break;
 			default:
 				die(

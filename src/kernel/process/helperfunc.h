@@ -1,3 +1,8 @@
+/**
+* Projet PCSEA RISC-V
+* Mehdi Frikha
+* See license for license details.
+*/
 
 #ifndef _HELPFUNCTIONS_H_
 #define _HELPFUNCTIONS_H_
@@ -28,7 +33,7 @@ extern char* getname(void);
  * @param pid id of the process that we want to print its name 
  * @return the name of the process with the pid given ad the function argument or NULL if it can't find it
  */
-char* get_pid_name(int pid);
+extern char* get_pid_name(int pid);
 
 
 /**
@@ -40,6 +45,14 @@ extern int increment_pid_and_get_new_pid();
  * @brief Returns the hash table tha map id with process structs
 */
 extern hash_t* get_process_hash_table(void);
+
+/**
+ * @brief Validate that the process is an state on which we can call system calls
+ * we will mostly check that the process is not a ZOMBIE but the function can be extended to 
+ * other processes
+*/
+extern int validate_action_process_valid(process* process_pid);
+
 
 
 #endif

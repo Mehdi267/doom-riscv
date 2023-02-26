@@ -5,6 +5,10 @@
  * See license for license details.
  */
 
+ //TODO : A chaque changement de contexte, il faut également changer le page directory pour que le processus qui va s'exécuter 
+ //retrouve son espace virtuel, à savoir son code, sa pile et ses données. Lorsque le processus se termine, son mapping est détruit,
+ // le page directory et le page table sont détruits, la mémoire physique est libérée. Le processus a libéré son espace.
+
 
 .text 
 .globl context_switch  
@@ -24,7 +28,7 @@ context_switch:
 	sd s8,   80(a0)
 	sd s9,   88(a0)
 	sd s10,  96(a0)
-	sd s11, 104(a0)
+	sd s11, 104(a0) 
 
 	# Restauration du contexte
 	ld sp,    0(a1)

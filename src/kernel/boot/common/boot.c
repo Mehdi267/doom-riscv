@@ -15,6 +15,7 @@
 #include "traps/trap.h"
 #include "timer.h"
 #include "drivers/splash.h"
+#include "frame_dist.h"
 
 extern void _start();
 extern void test();
@@ -81,6 +82,18 @@ static inline void setup_pmp(void) {
                        ".align 2\n\t"
                        "1: csrw mtvec, t0"
                        : : "r"(pmpc), "r"(pmpa) : "t0");
+}
+
+
+/**
+* Crée le directory utilisé par l'ensemble des process kernels 
+* Crée la page contenant la mémoire du noyau et les directories
+* Cette page est référencée par une pte du directory
+* renvoie l'adresse physique du directory
+*/
+void *init_directory(){
+  //void *ppn = get_frame();
+  return NULL;
 }
 
 /**
@@ -161,7 +174,11 @@ __attribute__((noreturn)) void boot_riscv()
 	tic = 0;
 
 	//set first timer interrupt
-	//set_supervisor_timer_interrupt(0);
+	// set_supervisor_timer_interrupt(1000);
+
+	init_frames();
+
+  //void *ppn = init_directory();
 
   /**
    * This function will enter in the supervisor mode and it will enable
