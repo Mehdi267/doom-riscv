@@ -37,6 +37,7 @@ int kernel_start()
 	// puts(str);
 
 	puts("hello there");
+	setpid(0);
 	idle(NULL);
 	while (1) wfi(); //endort le processeur en attente d'une interruption
 	

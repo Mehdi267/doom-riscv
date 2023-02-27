@@ -8,11 +8,11 @@
 #include "stdio.h"
 #include "frame_dist.h"
 #include "stdbool.h"
-
+#include "scheduler.h"  
 
 //Hash table that associates to every pid the process struct associated to it
 hash_t *pid_process_hash_table = NULL;
-//Id du processus encore d'exécution
+//Id of the process that is currently running this value will be changed dynamically by the scheduler
 int current_running_process_pid = -1;
 //Pid iterator that will be used to associate to every process a unique pid
 int pid_iterator = -1;
@@ -33,6 +33,16 @@ void *process_memory_allocator(unsigned long size){
 }
 
 
+
+int setpid(int new_pid){
+    //We start by checking that the process exists
+    process* process_pid = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(new_pid), NULL));
+    if (process_pid == NULL){
+       return -1;
+    }
+    current_running_process_pid = new_pid;
+    return new_pid;
+}
 
 
 int getpid(void){
@@ -71,7 +81,7 @@ int chprio(int pid, int newprio){
 
 /**
 * @brief this function deletes the process from the hash table
-* and fress the data structure of the process
+* and frees the data structure of the process
 * @param process_to_free the process that we will free that must be a zombie
 * @returns the value 0 if the the operation was a success and a negative value otherwise
 */
@@ -217,7 +227,7 @@ void exit_process(int retval){
 
 int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name, void *arg){   
    //We verify that the process that made this call is a validprocess ie not a zombie 
-   if (validate_action_process_valid(get_process_struct_of_pid(getpid())) < 0){
+   if (!(getpid() == -1) && validate_action_process_valid(get_process_struct_of_pid(getpid())) < 0){
        return -1;
    }
    //We check that the function arguments are valid
@@ -306,7 +316,7 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
    new_process->next_sibling = NULL;
    new_process->return_value= NULL;
 
-
+   add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
    printf("[%s] created process with pid = %d \n", new_process->process_name, new_process->pid);
    return new_process->pid;
 }

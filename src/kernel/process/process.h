@@ -11,7 +11,7 @@
 
 #include "stdint.h"
 #include "hash.h"
-
+#include "queue.h"
 
 #define MAXPRIO 256
 #define MINPRIO 1
@@ -94,6 +94,8 @@ typedef struct process_t{
    struct process_t* children_head; // the head of the children process
    struct process_t* children_tail; // the tail of the children_process
    struct process_t* next_sibling; // next sibling of the current process, this parameter is used to link the children of a process
+   link link_queue_activable; //used to link the activatable processes 
+   link link_queue_asleep; //used to link the asleep process
    int return_value;
 } process;
 
@@ -154,6 +156,15 @@ extern void exit_process(int retval);
 */
 extern int getpid(void);
 
+
+/**
+ * @brief This methods set the curretly running process to a certain value
+ * this mehtod must only be called by the scheduler because it and only it change the 
+ * currently runnign process
+ * @param new_pid the new running process
+ * @return int the pid that was given as argument or a negative value if there were an error
+ */
+extern int setpid(int new_pid);
 
 /**
 * @brief Returns the priority of the process with the pid given
@@ -221,7 +232,11 @@ extern int waitpid(int pid, int *retvalp);
 extern void wait_clock(unsigned long clock);
 
 /**
- * 
+ * @brief idle process, this process does nothing and never exits.
+ * it has the pid 0 and it is the first process that we create, it priority is also equal to 1 
+ * the lowest possible priority so that it only gets executed only if there are no other processes
+ * currently running, might chahe prio to 0 less then the min prio so that when there are other processes
+ * with prio 1 it does not share the time with them 
 */
 extern int idle(void *arg);
 
