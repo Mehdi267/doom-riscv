@@ -12,23 +12,28 @@
 #include "stdint.h"
 #include "hash.h"
 #include "queue.h"
+#include "stdlib.h"
+#include "stdio.h"
+#include <stdio.h>
+#include <stddef.h>
+#include <stdarg.h>
 
 #define MAXPRIO 256
 #define MINPRIO 1
 #define NBPROC 30
 #define PROCESS_SETUP_SIZE 2
-
+#define IDLE_PROCESS_ID
 
 /**
 * Global variables
 * pid_process_hash_table: Hash table that associates to every pid the process struct associated to it
 * current_running_process_pid: Id of the process that is currently executing
 * pid_iterator : Pid iterator that will be used to associate to every process a unique pid
+* idle_process : idle process ie process that does nothing and have infinite loop
 */
 extern hash_t* pid_process_hash_table;
 extern int current_running_process_pid;
 extern int pid_iterator;
-
 
 
 
@@ -81,6 +86,13 @@ typedef enum _process_state {ACTIF, ACTIVATABLE, BLOCKEDSEMAPHORE, BLOCKEDIO, BL
 
 
 /**
+ * \brief 	A process function
+ * @param	arg : the argument that will be given to the function when the process is called 
+ */
+typedef int	(*process_function_t)	(void*);
+
+
+/**
 * this structure is given to all processesn it will stored at the kernel level
 */
 typedef struct process_t{
@@ -90,6 +102,7 @@ typedef struct process_t{
    uint32_t ssize; // total the size allocated to the process
    uint16_t prio; // priority of the process
    context_t* context_process; //we store here the current execution context of the process ie the important registers
+   process_function_t func; // the function that is associated to the process ; not very important and will be removed later
    struct process_t* parent; // parent process
    struct process_t* children_head; // the head of the children process
    struct process_t* children_tail; // the tail of the children_process
@@ -107,11 +120,20 @@ typedef struct process_t{
 * @note The list of the data structures are :
 * A hash table that will be used to associate to every pid a process structure, this table will be crucial
 * for search, modification and exploitation of processes
-*
+* 
 */
-int initialize_process_workflow();
+extern int initialize_process_workflow();
 
 
+/**
+* @brief Sets the status of process given as argument to active and makes it the running process 
+* and removes it from the activatable queue and launches it. Method is only called when we launch the first process
+* @param process_to_activate the process that will transform into an actif, the process must not be null and the process 
+* must 
+* @return the value 0 if there were no errors and a negative number if there were errors
+* @note THERE SHOULD NOT BE AN ACTIF PROCESS WHEN WE LAUNCH THIS or we will throw an error
+*/
+int activate_and_launch_process(process* process_to_activate);
 
 
 /**
@@ -239,6 +261,42 @@ extern void wait_clock(unsigned long clock);
  * with prio 1 it does not share the time with them 
 */
 extern int idle(void *arg);
+
+
+/**
+ * @brief the following macros are used when debugging the c 
+ * code. Inspired from :
+ * https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
+ */
+#define DEBUG_LEVEL 1 
+
+#define debug_print(fmt, ...) \
+        do {if (DEBUG_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_LEVEL == 2){ printf("File = %s : Line = %d: Func = %s(): " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+/**
+ * @brief the following macro are used to debug the scheduler,
+ *  meaning when we debug the scheduler we use the debug_print_scheduler
+ */
+#define DEBUG_SCHEDULER_LEVEL 0 //Indicates if debug type is actuve
+
+#define debug_print_scheduler(fmt, ...) \
+        do {if (DEBUG_SCHEDULER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_SCHEDULER_LEVEL == 2){ printf("File = %s : Line = %d: Func = %s(): " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+/**
+ * @brief the following macro are used to debug the processes,
+ *  meaning when we debug the scheduler we use the debug_print_process
+ */
+#define DEBUG_PROCESS_LEVEL 0 //Indicates if debug type is active
+
+#define debug_print_process(fmt, ...) \
+        do {if (DEBUG_PROCESS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_PROCESS_LEVEL == 2){ printf("File = %s : Line = %d: Func = %s(): " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
 
 #endif
 

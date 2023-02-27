@@ -1,10 +1,10 @@
-br kernel_start 
-br idle
-br context_switch
+br strap_entry
+br _start
+br enter_supervisor_mode
+br kernel_start
+br initialize_process_workflow
+br exit_process
+layout src
 define nr
 n
 info reg
-
-
-// br strap_entry
-// br enter_supervisor_mode

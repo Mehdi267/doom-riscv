@@ -26,15 +26,32 @@ int initialize_process_hash_table(){
 
 static int create_idle_process(){
     int pid_idle = start(idle, 1000, 1, "idle", NULL);
-    printf("[create_idle_process] idle pid = %d\n", pid_idle);
+    debug_print_process("[create_idle_process] idle pid = %d\n", pid_idle);
     return pid_idle;
+}
+
+
+int activate_and_launch_process(process* process_to_activate){
+    if (process_to_activate == NULL){
+        return -1;
+    }
+    if (setpid(process_to_activate->pid)<0){
+        return -1;
+    }
+    if (process_to_activate->state != ACTIVATABLE){
+        return -1;
+    }
+    delete_process_from_queue_wrapper(process_to_activate, ACTIVATABLE_QUEUE);
+    process_to_activate->state = ACTIF;
+    process_to_activate->func(NULL);
+    return 0;
 }
 
 
 int idle(void *arg)
 {
     for (;;) {
-        printf("[%s] pid = %d\n", get_pid_name(getpid()), getpid());
+        debug_print_process("[%s] pid = %d\n", get_pid_name(getpid()), getpid());
         scheduler();
     }
 }
@@ -45,7 +62,7 @@ int process_1(void *arg)
     int i = 0;
     for (;;) {
         i++;
-        printf("[%s] pid = %d\n", get_pid_name(getpid()), getpid());
+        debug_print_process("[%s] pid = %d\n", get_pid_name(getpid()), getpid());
         scheduler();
         // if (i == 6){
         //     return 1;
@@ -59,12 +76,8 @@ int process_2(void *arg)
     int i = 0;
     for (;;) {
         i++;
-        printf("[%s] pid = %d\n", get_pid_name(getpid()), getpid());
+        debug_print_process("[%s] pid = %d\n", get_pid_name(getpid()), getpid());
         scheduler();
-        // context_switch(get_process_struct_of_pid(2)->context_process, get_process_struct_of_pid(1)->context_process);
-        // if (i == 5){
-        //     return 2;
-        // }
     }
 }
 

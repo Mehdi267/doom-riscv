@@ -60,7 +60,7 @@ process* get_peek_element_queue_wrapper(queue_process_type type){
 
 
 void scheduler(){
-    printf("[scheduler] Inside the scheduler with pid equal to %d \n", getpid());
+    debug_print_scheduler("[scheduler] Inside the scheduler with pid equal to %d \n", getpid());
     //Process has been called before any execution has started
     int currently_running_process_id = getpid();
     
@@ -68,7 +68,7 @@ void scheduler(){
     if (currently_running_process_id == -1){
         //In this case no process is running and we have called the scheduler for the first time
         //we set the running proces in this case to the idle process
-        printf("[scheduler] Inside the scheduler with pid equal to %d ", getpid());
+        debug_print_scheduler("[scheduler] Inside the scheduler with pid equal to %d ", getpid());
         setpid(0);
     }
     else{
@@ -76,12 +76,17 @@ void scheduler(){
         //We take the current process struct:
         process* current_process = get_process_struct_of_pid(currently_running_process_id);
         process* top_process = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
-        printf("[scheduler] current process pid = %d, peek pid = %d\n", current_process->pid, top_process->pid);
-        printf("[scheduler] current process prio = %d, peek prio = %d\n", current_process->prio, top_process->prio);
-        if (top_process->prio > current_process->prio){
+        debug_print_scheduler("[scheduler] current process pid = %d, peek pid = %d\n", current_process->pid, top_process->pid);
+        debug_print_scheduler("[scheduler] current process prio = %d, peek prio = %d\n", current_process->prio, top_process->prio);
+        if (top_process->prio >= current_process->prio){
+            //In this case we switch the process
             setpid(top_process->pid);
             add_process_to_queue_wrapper(current_process, ACTIVATABLE_QUEUE);  
-            context_switch(top_process->context_process, current_process->context_process);
+            context_switch(current_process->context_process, top_process->context_process);
+        }
+        else{
+            //We replace the process that we have taken in the queue
+            add_process_to_queue_wrapper(top_process, ACTIVATABLE_QUEUE);  
         }
     }
 }
@@ -97,25 +102,25 @@ void scheduler(){
 //     Cette partie rend le process en cours d'execution qui est dans l'état Elu en l'etat Activable  et  inversement pour l'autre process
 //     donc il passe de Activable vers ELU
 //     */  
-//     printf("name of running process %s \n", mon_nom());
+//     debug_print_scheduler("name of running process %s \n", mon_nom());
 //     emptyAndFreeListeMourant();
 //     process* oldRunningProcess = get_running_process();
-//     printf("Check point 2 \n");
+//     debug_print_scheduler("Check point 2 \n");
 
 //     if (oldRunningProcess->state == ELU){
-//         printf("Check point 2 before prime  \n");
+//         debug_print_scheduler("Check point 2 before prime  \n");
 //         oldRunningProcess->state = ACTIVABLE;
 //         add_process_activable(oldRunningProcess);
 //     }
 
-//     printf("Check point 2 prime  \n");
+//     debug_print_scheduler("Check point 2 prime  \n");
 
 //     if (oldRunningProcess->state == MOURANT){
-//         printf("Adding dead process %s \n", mon_nom());
+//         debug_print_scheduler("Adding dead process %s \n", mon_nom());
 //         add_process_mourant(oldRunningProcess);
 //     }
 
-//     printf("Check point 3 \n");
+//     debug_print_scheduler("Check point 3 \n");
 //     getHeadActivable()->processActivable->state = ELU;
 //     update_running_process(getHeadActivable()->processActivable);
 //     removeHeadProcessActivableListe();
@@ -129,7 +134,7 @@ void scheduler(){
 //             break;
 //         }
 //     }
-//     printf("Ordananceur pid_running = %i and new pid is equal to %i \n", oldRunningProcess->pid, get_running_process()->pid);
+//     debug_print_scheduler("Ordananceur pid_running = %i and new pid is equal to %i \n", oldRunningProcess->pid, get_running_process()->pid);
 //     if (oldRunningProcess->pid != get_running_process()->pid){
 //         ctx_sw(oldRunningProcess->table_registers, get_running_process()->table_registers);
 //     }

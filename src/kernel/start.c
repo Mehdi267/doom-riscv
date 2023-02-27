@@ -16,6 +16,7 @@
 #include "string.h"
 #include "riscv.h"
 #include "process/process.h"
+#include "process/helperfunc.h"
 #include "drivers/splash.h"
 #include "tests/tests.h"
 
@@ -36,9 +37,10 @@ int kernel_start()
 	// sprintf(str,"%li",csr_read(mstatus));
 	// puts(str);
 
-	puts("hello there");
-	setpid(0);
-	idle(NULL);
+	printf("hello there");
+   if (activate_and_launch_process(get_process_struct_of_pid(0))<0){
+        return -1;
+    }
 	while (1) wfi(); //endort le processeur en attente d'une interruption
 	
 	exit(kernel_tests(NULL));
