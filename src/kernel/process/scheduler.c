@@ -19,7 +19,7 @@
 
 LIST_HEAD(activatable_process_queue);
 LIST_HEAD(asleep_process_queue);
-
+started_user_process = false; // user process is off by default
 
 int init_scheduling_process_queue(){
     return 0;
@@ -60,16 +60,17 @@ process* get_peek_element_queue_wrapper(queue_process_type type){
 
 
 void scheduler(){
+    
     debug_print_scheduler("[scheduler] Inside the scheduler with pid equal to %d \n", getpid());
     //Process has been called before any execution has started
     int currently_running_process_id = getpid();
     
     //This remains very experimental
-    if (currently_running_process_id == -1){
+    if (started_user_process == false){
         //In this case no process is running and we have called the scheduler for the first time
         //we set the running proces in this case to the idle process
-        debug_print_scheduler("[scheduler] Inside the scheduler with pid equal to %d ", getpid());
-        setpid(0);
+        debug_print_scheduler("[scheduler] Inside the scheduler with no process running %d", getpid());
+        first_process_call(get_process_struct_of_pid(getpid())); // pid is set by the activate method
     }
     else{
         //In here we treat the normal case 
@@ -77,7 +78,7 @@ void scheduler(){
         process* current_process = get_process_struct_of_pid(currently_running_process_id);
         process* top_process = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
         debug_print_scheduler("[scheduler] current process pid = %d, peek pid = %d\n", current_process->pid, top_process->pid);
-        debug_print_scheduler("[scheduler] current process prio = %d, peek prio = %d\n", current_process->prio, top_process->prio);
+        debug_print_scheduler("[scheduler] current process priority = %d, peek priority = %d\n", current_process->prio, top_process->prio);
         if (top_process->prio >= current_process->prio){
             //In this case we switch the process
             setpid(top_process->pid);
@@ -85,7 +86,7 @@ void scheduler(){
             context_switch(current_process->context_process, top_process->context_process);
         }
         else{
-            //We replace the process that we have taken in the queue
+            //We return the process that we have taken in the queue
             add_process_to_queue_wrapper(top_process, ACTIVATABLE_QUEUE);  
         }
     }

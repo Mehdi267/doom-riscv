@@ -13,7 +13,7 @@
 #include "helperfunc.h"
 #include "stdio.h"
 #include "scheduler.h"
-
+#include "../timer.h"
 
 int initialize_process_hash_table(){
     pid_process_hash_table = (hash_t*) malloc(sizeof(hash_t));
@@ -35,6 +35,11 @@ int activate_and_launch_process(process* process_to_activate){
     if (process_to_activate == NULL){
         return -1;
     }
+    if (getpid()>0){
+        //An actif process is already running, 
+        //this method is used  only to launch the first process
+        return -1; 
+    }
     if (setpid(process_to_activate->pid)<0){
         return -1;
     }
@@ -43,8 +48,8 @@ int activate_and_launch_process(process* process_to_activate){
     }
     delete_process_from_queue_wrapper(process_to_activate, ACTIVATABLE_QUEUE);
     process_to_activate->state = ACTIF;
+    set_supervisor_timer_interrupt(50);
     scheduler();
-    //process_to_activate->func(NULL);
     return 0;
 }
 

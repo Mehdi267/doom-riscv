@@ -150,40 +150,37 @@ static inline void enter_supervisor_mode() {
 */
 __attribute__((noreturn)) void boot_riscv()
 {
-  // Configuration des composants spécifiques à la machine (uart / htif, timer et interruptions externes).
-  arch_setup();
+    // Configuration des composants spécifiques à la machine (uart / htif, timer et interruptions externes).
+    arch_setup();
 
 
-  display_info_proc();
+    display_info_proc();
 
-  // Délégations des interruptions et des exceptions
-  delegate_traps();
+    // Délégations des interruptions et des exceptions
+    delegate_traps();
 
-  //On désactive pour le moment la mémoire virtuel,
-  //éventuellement il faut revenir sur cela
-  //et changer la valeur stockée dans le registre
-  csr_write(satp, 0);
+    //On désactive pour le moment la mémoire virtuel,
+    //éventuellement il faut revenir sur cela
+    //et changer la valeur stockée dans le registre
+    csr_write(satp, 0);
 
-  //We disable machine mode interrupts
-  csr_clear(mstatus, MSTATUS_MIE);
+    //We disable machine mode interrupts
+    csr_clear(mstatus, MSTATUS_MIE);
 
-	//enables timer interrupts for the Supervisor mode
-	csr_set(sie, SIE_STIE);
-	
-	//init timer to 0
-	tic = 0;
+    //enables timer interrupts for the Supervisor mode
+    csr_set(sie, SIE_STIE);
 
-	//set first timer interrupt
-	// set_supervisor_timer_interrupt(1000);
+    //init timer to 0
+    tic = 0;
 
-	init_frames();
+    init_frames();
 
-  //void *ppn = init_directory();
+    //void *ppn = init_directory();
 
-  /**
-   * This function will enter in the supervisor mode and it will enable
-   * supervisor mode intterupts
-  */
-	enter_supervisor_mode();
-	__builtin_unreachable();
+    /**
+     * This function will enter in the supervisor mode and it will enable
+     * supervisor mode intterupts
+     */
+    enter_supervisor_mode();
+    __builtin_unreachable();
 }

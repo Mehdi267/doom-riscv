@@ -148,12 +148,19 @@ extern int activate_and_launch_process(process* process_to_activate);
 extern void process_call_wrapper(void);
 
 
-/*
-* Save the current context on the stack and restore a previously saved context
-* current  : data structure in which the current context will be saved
-* future   : data structure holding the context of the future process to execute
+/**
+* @brief Save the current context on the stack and restore a previously saved context \n
+* current  : data structure in which the current context will be saved \n 
+* future   : data structure holding the context of the future process to execute \n
 */
 extern void context_switch(context_t *current, context_t *future);
+
+
+/**
+* @brief Runs the first executed process
+*/
+extern void first_process_call(context_t *current);
+
 
 
 /**
@@ -289,7 +296,7 @@ extern int idle(void *arg);
  * code. Inspired from :
  * https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
  */
-#define DEBUG_LEVEL 1 
+#define DEBUG_LEVEL 2
 
 #define debug_print(fmt, ...) \
         do {if (DEBUG_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -311,7 +318,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_PROCESS_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_PROCESS_LEVEL 2 //Indicates if debug type is active
 
 #define debug_print_process(fmt, ...) \
         do {if (DEBUG_PROCESS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \

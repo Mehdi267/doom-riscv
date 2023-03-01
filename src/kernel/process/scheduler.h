@@ -22,9 +22,11 @@ typedef enum _queue_type {ACTIVATABLE_QUEUE, ASLEEP_QUEUE} queue_process_type;
  * execute the approriate process
  * @param asleep_process_queue : used to link process that are asleep, the priority that we will be used here 
  * is the time that the process spent asleep
+ * @param started_user_process : indicates if we launched a user program or if that hasn't happenned yet
  */
 extern link activatable_process_queue;
 extern link asleep_process_queue;
+extern bool started_user_process;
 
 extern int init_scheduling_process_queue();
 
