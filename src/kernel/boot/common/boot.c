@@ -174,7 +174,7 @@ __attribute__((noreturn)) void boot_riscv()
 	tic = 0;
 
 	//set first timer interrupt
-	set_supervisor_timer_interrupt(1000);
+	// set_supervisor_timer_interrupt(1000);
 
 	init_frames();
 

@@ -22,7 +22,7 @@
 #define MINPRIO 1
 #define NBPROC 30
 #define PROCESS_SETUP_SIZE 2
-#define IDLE_PROCESS_ID
+#define IDLE_PROCESS_ID 1
 
 /**
 * Global variables
@@ -76,10 +76,11 @@ typedef struct context {
    * the text is take from the project spec
    * @param Active: The process is the one that owns the processor.
    * @param Enabled: The process only waits for the possession of the processor to run.
-   * @param Blocked on semaphore: The process has executed an operation on a semaphore which requires waiting to progress (for example wait).
-   * @param Blocked on I/O: The process is waiting for an I/O to be performed.
-   * @param Blocked waiting for a child: The process is waiting for one of its child processes to complete.
-   * @param Sleeping: The process called wait_clock, the sleep primitive until a given time.
+   * @param BLOCKEDSEMAPHORE on semaphore: The process has executed an operation on a semaphore which requires waiting to progress (for example wait).
+   * @param BLOCKEDIO on I/O: The process is waiting for an I/O to be performed.
+   * @param BLOCKEDWAITCHILD waiting for a child: The process is waiting for one of its child processes to complete.
+   * @param ASLEEP: The process called wait_clock, the sleep primitive until a given time.
+   * @param BLOCKEDQUEUE : 
    * @param Zombie: The process has either terminated or been terminated by the kill system call and its father is still alive and has not yet waitpided on it.
 */
 typedef enum _process_state {ACTIF, ACTIVATABLE, BLOCKEDSEMAPHORE, BLOCKEDIO, BLOCKEDQUEUE, BLOCKEDWAITCHILD, ASLEEP, ZOMBIE} process_state;
@@ -134,7 +135,7 @@ extern int initialize_process_workflow();
 * @return the value 0 if there were no errors and a negative number if there were errors
 * @note THERE SHOULD NOT BE AN ACTIF PROCESS WHEN WE LAUNCH THIS or we will throw an error
 */
-int activate_and_launch_process(process* process_to_activate);
+extern int activate_and_launch_process(process* process_to_activate);
 
 
 /**
