@@ -27,8 +27,8 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 				 * We clear the bit in the sip register that was responsible for this interrupt 
 				 * so that we don't jump into the same interrupt again
 				*/
-				csr_clear(sip, intr_s_timer);
-				csr_set(sip, intr_s_timer);
+				// csr_clear(sip, intr_s_timer);
+				// csr_set(sip, intr_s_timer);
 				break;
 			default:
 				die(

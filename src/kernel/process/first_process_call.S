@@ -28,5 +28,6 @@ ld s11, 104(a0)
 ld t0, 112(a0) 
 csrs sscratch, t0
 
+//We need to activate intterupts at this level
 # On passe la main au nouveau processus
 jr ra

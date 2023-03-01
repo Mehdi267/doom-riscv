@@ -318,7 +318,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_PROCESS_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_PROCESS_LEVEL 2 //Indicates if debug type is active
 
 #define debug_print_process(fmt, ...) \
         do {if (DEBUG_PROCESS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
