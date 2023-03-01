@@ -15,7 +15,7 @@ hash_t *pid_process_hash_table = NULL;
 //Id of the process that is currently running this value will be changed dynamically by the scheduler
 int current_running_process_pid = -1;
 //Pid iterator that will be used to associate to every process a unique pid
-int pid_iterator = -1;
+int pid_iterator = 0;
 
 
 /**
@@ -33,8 +33,6 @@ void *process_memory_allocator(unsigned long size){
 
 }
 
-
-
 int setpid(int new_pid){
     //We start by checking that the process exists
     process* process_pid = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(new_pid), NULL));
@@ -51,6 +49,19 @@ int getpid(void){
 }
 
 
+int leave_queue_process_if_needed(process* process_to_leave){
+    if(process_to_leave == NULL){
+        return -1;
+    }
+    if (process_to_leave->state == ACTIVATABLE){
+        delete_process_from_queue_wrapper(process_to_leave, ACTIVATABLE_QUEUE);
+    }
+    else if (process_to_leave->state == ASLEEP){
+        delete_process_from_queue_wrapper(process_to_leave, ASLEEP_QUEUE);
+    }
+    return 0;
+}
+
 int getprio(int pid){
    process* process_pid = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(pid), NULL));
    if (process_pid == NULL){
@@ -62,6 +73,20 @@ int getprio(int pid){
    return process_pid->prio;
 }
 
+
+int check_if_new_prio_is_higher_and_call_scheduler(int newprio){
+    if (!(newprio <= MAXPRIO && newprio >= MINPRIO)){
+       return -1;
+    }
+    int currently_running_prio = getprio(getpid());
+    if (currently_running_prio < 0){
+        return -1;
+    }
+    if (currently_running_prio < newprio){
+        scheduler();
+    }
+    return 0;
+}
 
 int chprio(int pid, int newprio){
    process* process_pid = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(pid), NULL));
@@ -75,6 +100,7 @@ int chprio(int pid, int newprio){
        return -1;
    }
    process_pid->prio = newprio;
+   check_if_new_prio_is_higher_and_call_scheduler(newprio);
    //If the process is placed in an execution queue, it must be replaced within that queue
    return pid;
 }
@@ -147,7 +173,7 @@ static int free_process_arg_and_fix_tree_link(process* process_to_free, process*
 * @brief this method is called when we exit a process, it will make the
 * children of the process that are still alive orphans and it will free all the zombie
 * children
-* @param parent_process the process that will do apply the action to
+* @param parent_process the process that will do apply the action on to
 * @returns the value 0 if the the operation was a success and a negative value otherwise
 */
 static int make_children_orphans_and_kill_zombies(process* parent_process){
@@ -183,7 +209,8 @@ static int make_children_orphans_and_kill_zombies(process* parent_process){
 /**
 * @brief called when we exit a process, it will transform the currently running process into a
 * zombie if the parent is still alive or it will kill the process if the parent is dead
-* @param  curent_or_custom indicates if we want to apply the function to the current process or a custom process
+* @param  curent_or_custom indicates if we want to apply the function to the current process or a custom process.
+* True for current, false for custom
 * @param pid the id of the process that we will apply the action on if we choose to work with a custom process 
 * @returns the value 0 if the the operation was a success and a negative value otherwise
 */
@@ -214,8 +241,9 @@ static int turn_current_process_into_a_zombie_or_kill_it(bool curent_or_custom, 
 
 
 void exit_process(int retval){
-   printf("[process_api][exit_process] I am in exit method with argument/ temp pid = %d \n", retval);
-   if (validate_action_process_valid(get_process_struct_of_pid(getpid())) < 0 ||turn_current_process_into_a_zombie_or_kill_it(false, 0)<0){
+   debug_print("I am in exit method with argument/ temp pid = %d \n", retval);
+   if (validate_action_process_valid(get_process_struct_of_pid(getpid())) < 0 ||
+         turn_current_process_into_a_zombie_or_kill_it(false, 0)<0){
        //Something went terribly wrong if we are in here
        exit(-1);
    }
@@ -227,171 +255,177 @@ void exit_process(int retval){
 
 
 int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name, void *arg){
-   //-------------------------------Input check--------------  
+    //-------------------------------Input check--------------  
 
-   //We verify that the process that made this call is a validprocess ie not a zombie 
-   if (!(getpid() == -1) && validate_action_process_valid(get_process_struct_of_pid(getpid())) < 0){
-       return -1;
-   }
-   //We check that the function arguments are valid
-   if (!(prio<= MAXPRIO && prio>=MINPRIO)){
-       return -1;
-   }
+    //We verify that the process that made this call is a validprocess ie not a zombie 
+    if (!(getpid() == -1) && validate_action_process_valid(get_process_struct_of_pid(getpid())) < 0){
+        return -1;
+    }
+    //We check that the function arguments are valid
+    if (!(prio<= MAXPRIO && prio>=MINPRIO)){
+        return -1;
+    }
 
-   //Naif check, we can do a thorough check of memory at this level
-   //in here or we can do that use memory api methods  
-   if (!(ssize > 0)){
-       return -1;
-   }
-    
-   //----------Process generation-----------
+    //Naif check, we can do a thorough check of memory at this level
+    //in here or we can do that use memory api methods  
+    if (!(ssize > 0)){
+        return -1;
+    }
 
-   process *new_process = (process*) malloc(sizeof(process));
-   if (new_process == NULL){
-       return -1;
-   }
+    //----------Process generation-----------
 
-   //---------Create a new pid and and new process to hash table----------------
-   
-   new_process->pid = increment_pid_and_get_new_pid();
-   hash_set(get_process_hash_table(), cast_int_to_pointer(new_process->pid), new_process);
+    process *new_process = (process*) malloc(sizeof(process));
+    if (new_process == NULL){
+        return -1;
+    }
 
-   //--------------Priority config--------------
+    //---------Create a new pid and and new process to hash table----------------
 
-   new_process->prio = prio;
-  
-   //---------------Name config-----------------
+    new_process->pid = increment_pid_and_get_new_pid();
+    hash_set(get_process_hash_table(), cast_int_to_pointer(new_process->pid), new_process);
 
-   new_process->process_name = (char*) malloc(strlen(name));
-   if (new_process->process_name == NULL){
-       return -1;
-   }
-   strcpy(new_process->process_name, name);
+    //--------------Priority config--------------
 
-   //--------------State config---------------------
+    new_process->prio = prio;
 
-   new_process->state = ACTIVATABLE;
-  
-   //---------------Memory config-----------------------
+    //---------------Name config-----------------
 
-   //We add PROCESS_SETUP_SIZE because we need space to call the function
-   //and in order to place the exit method in the stack
-   new_process->ssize = ssize + PROCESS_SETUP_SIZE;
+    new_process->process_name = (char*) malloc(strlen(name));
+    if (new_process->process_name == NULL){
+        return -1;
+    }
+    strcpy(new_process->process_name, name);
 
-   void* frame_pointer = process_memory_allocator(new_process->ssize);
-   if (frame_pointer == NULL){
-       return -1;
-   }
+    //--------------State config---------------------
 
-   //--------------------Process function config-----------
-   new_process->func = pt_func;
+    new_process->state = ACTIVATABLE;
 
-   //----------------Context setup-------------------------
-   new_process->context_process = (context_t*) malloc(sizeof(context_t));
-   if (new_process->context_process == NULL){
-       return -1;
-   }
+    //---------------Memory config-----------------------
 
-   new_process->context_process->sp = (uint64_t) frame_pointer;
-   //During the context_switch we will call the process_call_wrapper that has to call
-   //the method given as function argument that we placed in s1 also the call has to
-   //be made the right argument that is in s2 and it also has to call the exit_process method
-   //at the end as this will be important in the case the user uses a return call
-   new_process->context_process->ra = (uint64_t) process_call_wrapper;
-   new_process->context_process->s1 = (uint64_t) pt_func;
-   new_process->context_process->s2 = (uint64_t) arg;
+    //We add PROCESS_SETUP_SIZE because we need space to call the function
+    //and in order to place the exit method in the stack
+    new_process->ssize = ssize + PROCESS_SETUP_SIZE;
 
+    void* frame_pointer = process_memory_allocator(new_process->ssize);
+    if (frame_pointer == NULL){
+        return -1;
+    }
 
-   //--------------Tree management----------------
-   //The parent of the process is the process that called the start method
-   new_process->parent = (process*) hash_get(get_process_hash_table(), cast_int_to_pointer(getpid()), NULL);
+    //--------------------Process function config-----------
+    new_process->func = pt_func;
+
+    //----------------Context setup-------------------------
+    new_process->context_process = (context_t*) malloc(sizeof(context_t));
+    if (new_process->context_process == NULL){
+        return -1;
+    }
+
+    new_process->context_process->sp = (uint64_t) frame_pointer;
+    //During the context_switch we will call the process_call_wrapper that has to call
+    //the method given as function argument that we placed in s1 also the call has to
+    //be made the right argument that is in s2 and it also has to call the exit_process method
+    //at the end as this will be important in the case the user uses a return call
+    new_process->context_process->ra = (uint64_t) process_call_wrapper;
+    new_process->context_process->s1 = (uint64_t) pt_func;
+    new_process->context_process->s2 = (uint64_t) arg;
 
 
-   //if the parent process is null that means we created the head of the tree thus the new process
-   //is not attached to a parent
-   if (new_process->parent != NULL){
-       //We add the new process as a child to the parent process
-       if (new_process->parent->children_tail != NULL){
-           new_process->parent->children_tail->next_sibling = new_process;
-           new_process->parent->children_tail = new_process;
-       }
-       else{
-           new_process->parent->children_head = new_process;
-           new_process->parent->children_tail = new_process;
-       }
-   }
-   new_process->children_head = NULL;
-   new_process->children_tail = NULL;
-   new_process->next_sibling = NULL;
+    //--------------Tree management----------------
+    //The parent of the process is the process that called the start method
+    new_process->parent = (process*) hash_get(get_process_hash_table(), cast_int_to_pointer(getpid()), NULL);
 
-   //--------------Return value----------------
-   new_process->return_value= NULL;
 
-   add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
-   debug_print("[%s] created process with pid = %d \n", new_process->process_name, new_process->pid);
-   return new_process->pid;
+    //if the parent process is null that means we created the head of the tree thus the new process
+    //is not attached to a parent
+    if (new_process->parent != NULL){
+        //We add the new process as a child to the parent process
+        if (new_process->parent->children_tail != NULL){
+            new_process->parent->children_tail->next_sibling = new_process;
+            new_process->parent->children_tail = new_process;
+        }
+        else{
+            new_process->parent->children_head = new_process;
+            new_process->parent->children_tail = new_process;
+        }
+    }
+    new_process->children_head = NULL;
+    new_process->children_tail = NULL;
+    new_process->next_sibling = NULL;
+
+    //--------------Return value----------------
+    new_process->return_value= NULL;
+
+    //------------Add process to the activatable queue
+    add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
+
+    //------------We activate this new process if it has a higher priority-----------
+    check_if_new_prio_is_higher_and_call_scheduler(new_process->prio);
+
+    debug_print("[%s] created process with pid = %d \n", new_process->process_name, new_process->pid);
+    return new_process->pid;
 }
 
 
 
 
+
 int waitpid(int pid, int *retvalp){
-   if (get_process_struct_of_pid(getpid())->children_head == NULL &&
-       get_process_struct_of_pid(getpid())->children_tail == NULL ){
-       return -1;
-   }
-   process* temp_process = NULL;
-   process* temp_process_before= NULL;
-   int pid_to_return;
-   //negative pid, we find the first zombie and we take its return value and free it
-   if (pid<0){
-       temp_process = get_process_struct_of_pid(getpid())->children_head;
-       temp_process_before = temp_process;
-       while(true){
-           temp_process = get_process_struct_of_pid(getpid())->children_head;
-           temp_process_before = temp_process;
-           while (temp_process != NULL){
-               if (temp_process->state == ZOMBIE){
-                   break;
-               }
-               temp_process_before = temp_process;
-               temp_process=temp_process->next_sibling;
-           }
-       }
-       pid_to_return = temp_process->pid;
-   }
-   //positive pid, we verify pid is a child and then we take its return value and
-   //we kill it
-   else{
-       temp_process = get_process_struct_of_pid(getpid())->children_head;
-       temp_process_before = temp_process;
-       //We check that the pid belongs to a child
-       while (temp_process != NULL){
-           if (temp_process->pid == pid){
-               break;
-           }
-           temp_process_before = temp_process;
-           temp_process = temp_process->next_sibling;
-       }
-       if (temp_process==NULL){
-           //pid of the process given as function argument in not a child
-           //to current process
-           return -1;
-       }
-       while(true){
-           //We wait until the state becomes a zombie
-           if (temp_process->state == ZOMBIE){
-               break;
-           }
-       }
-   }
-   //We take the return value of the process and then we kill it
-   pid_to_return = temp_process->pid;
-   *retvalp = temp_process->return_value; 
-   if (free_process_arg_and_fix_tree_link(temp_process, temp_process_before)<0){
-       return -1;
-   }
-   return pid_to_return;
+    if (get_process_struct_of_pid(getpid())->children_head == NULL &&
+        get_process_struct_of_pid(getpid())->children_tail == NULL ){
+        return -1;
+    }
+    process* temp_process = NULL;
+    process* temp_process_before= NULL;
+    int pid_to_return;
+    //negative pid, we find the first zombie and we take its return value and free it
+    if (pid<0){
+        temp_process = get_process_struct_of_pid(getpid())->children_head;
+        temp_process_before = temp_process;
+        while(true){
+            temp_process = get_process_struct_of_pid(getpid())->children_head;
+            temp_process_before = temp_process;
+            while (temp_process != NULL){
+                if (temp_process->state == ZOMBIE){
+                    break;
+                }
+                temp_process_before = temp_process;
+                temp_process=temp_process->next_sibling;
+            }
+        }
+        pid_to_return = temp_process->pid;
+    }
+    //positive pid, we verify pid is a child and then we take its return value and
+    //we kill it
+    else{
+        temp_process = get_process_struct_of_pid(getpid())->children_head;
+        temp_process_before = temp_process;
+        //We check that the pid belongs to a child
+        while (temp_process != NULL){
+            if (temp_process->pid == pid){
+                break;
+            }
+            temp_process_before = temp_process;
+            temp_process = temp_process->next_sibling;
+        }
+        if (temp_process==NULL){
+            //pid of the process given as function argument in not a child
+            //to current process
+            return -1;
+        }
+        while(true){
+            //We wait until the state becomes a zombie
+            if (temp_process->state == ZOMBIE){
+                break;
+            }
+        }
+    }
+    //We take the return value of the process and then we kill it
+    pid_to_return = temp_process->pid;
+    *retvalp = temp_process->return_value; 
+    if (free_process_arg_and_fix_tree_link(temp_process, temp_process_before)<0){
+        return -1;
+    }
+    return pid_to_return;
 }
 
 
@@ -400,7 +434,16 @@ int kill(int pid){
     if (process_pid == NULL){
         return -1;
     }
-    if (validate_action_process_valid(process_pid) < 0 || turn_current_process_into_a_zombie_or_kill_it(true, pid)<0){
+    if (validate_action_process_valid(process_pid) < 0){
+        return -1;
+    }
+    if (process_pid->pid == getpid()){
+        return -1;//We cannot kill the current process from the current process
+    }
+    if (leave_queue_process_if_needed(process_pid)<0){
+        return -1;
+    }
+    if (turn_current_process_into_a_zombie_or_kill_it(false, pid)<0){
         return -1;
     }
     process_pid->return_value = 0;

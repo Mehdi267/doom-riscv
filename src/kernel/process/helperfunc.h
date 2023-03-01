@@ -9,10 +9,16 @@
 
 #include "stdint.h"
 #include "process.h"
+
 /**
  * @brief Casts an int to a void * pointer 
 */
 extern void* cast_int_to_pointer(int);
+
+/**
+ * @brief Casts a pointer into an int
+*/
+extern long cast_pointer_into_a_long(void * pointer);
 
 /**
  * @brief returns the struct process that holds the pid given as the function argument pid

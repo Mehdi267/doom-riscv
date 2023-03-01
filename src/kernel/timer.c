@@ -4,7 +4,7 @@
 #include "drivers/clint.h"
 #include "timer.h"
 #include "drivers/auxval.h"
-
+#include "process/scheduler.h"
 int tic;
 /*
  * Set machine timer

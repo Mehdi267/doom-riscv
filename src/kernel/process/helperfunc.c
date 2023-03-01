@@ -12,6 +12,9 @@ void* cast_int_to_pointer(int int_to_cast){
     return (void*)((long) int_to_cast);
 }
 
+long cast_pointer_into_a_long(void * pointer){
+    return (long) pointer;
+}
 
 process* get_process_struct_of_pid(int pid){
     process* process_pid = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(pid), NULL));

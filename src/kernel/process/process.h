@@ -72,15 +72,15 @@ typedef struct context {
 
 
 /**
-* @brief Enum _process_state is used to associate to every process a certain state.
-* the text is take from the project spec
-* Active: The process is the one that owns the processor.
-   Enabled: The process only waits for the possession of the processor to run.
-   Blocked on semaphore: The process has executed an operation on a semaphore which requires waiting to progress (for example wait).
-   Blocked on I/O: The process is waiting for an I/O to be performed.
-   Blocked waiting for a child: The process is waiting for one of its child processes to complete.
-   Sleeping: The process called wait_clock, the sleep primitive until a given time.
-   Zombie: The process has either terminated or been terminated by the kill system call and its father is still alive and has not yet waitpided on it.
+   * @brief Enum _process_state is used to associate to every process a certain state.
+   * the text is take from the project spec
+   * @param Active: The process is the one that owns the processor.
+   * @param Enabled: The process only waits for the possession of the processor to run.
+   * @param Blocked on semaphore: The process has executed an operation on a semaphore which requires waiting to progress (for example wait).
+   * @param Blocked on I/O: The process is waiting for an I/O to be performed.
+   * @param Blocked waiting for a child: The process is waiting for one of its child processes to complete.
+   * @param Sleeping: The process called wait_clock, the sleep primitive until a given time.
+   * @param Zombie: The process has either terminated or been terminated by the kill system call and its father is still alive and has not yet waitpided on it.
 */
 typedef enum _process_state {ACTIF, ACTIVATABLE, BLOCKEDSEMAPHORE, BLOCKEDIO, BLOCKEDQUEUE, BLOCKEDWAITCHILD, ASLEEP, ZOMBIE} process_state;
 
@@ -93,7 +93,7 @@ typedef int	(*process_function_t)	(void*);
 
 
 /**
-* this structure is given to all processesn it will stored at the kernel level
+* @brief this structure is given to all processesn it will stored at the kernel level
 */
 typedef struct process_t{
    int pid; // id of the process
@@ -109,7 +109,7 @@ typedef struct process_t{
    struct process_t* next_sibling; // next sibling of the current process, this parameter is used to link the children of a process
    link link_queue_activable; //used to link the activatable processes 
    link link_queue_asleep; //used to link the asleep process
-   int return_value;
+   int return_value; // return value of the process, used in waitpid
 } process;
 
 
@@ -119,8 +119,9 @@ typedef struct process_t{
 * @return the value 0 if there were no errors and a negative number if there were errors
 * @note The list of the data structures are :
 * A hash table that will be used to associate to every pid a process structure, this table will be crucial
-* for search, modification and exploitation of processes
-* 
+* for search, modification and exploitation of processes \n
+* Queues are also created to store the actif and the asleep processes(not working atm, queues are defined
+* globally but let's pray that i can actually make it work)
 */
 extern int initialize_process_workflow();
 
@@ -177,6 +178,24 @@ extern void exit_process(int retval);
 * @return the pid of the currently running process
 */
 extern int getpid(void);
+
+/**
+* @brief checks if the newprio that was given to a process is superior to 
+* priority of the currectly running proess and it were to be the case we will 
+* call the scheduler
+* @return a negative value if there were any problems
+*/
+extern int check_if_new_prio_is_higher_and_call_scheduler(int newprio);
+
+
+/**
+* @brief Checks if the process is an queue and leaves that queue if needed \n
+* We only use the state of the process to make this assumption regarding the process
+* location.
+* @return a negative value if there were any problems
+*/
+extern int leave_queue_process_if_needed(process* process_to_leave);
+
 
 
 /**
@@ -283,18 +302,18 @@ extern int idle(void *arg);
 
 #define debug_print_scheduler(fmt, ...) \
         do {if (DEBUG_SCHEDULER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-            if (DEBUG_SCHEDULER_LEVEL == 2){ printf("File = %s : Line = %d: Func = %s(): " fmt, __FILE__, \
+            if (DEBUG_SCHEDULER_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 /**
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_PROCESS_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_PROCESS_LEVEL 2 //Indicates if debug type is active
 
 #define debug_print_process(fmt, ...) \
         do {if (DEBUG_PROCESS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-            if (DEBUG_PROCESS_LEVEL == 2){ printf("File = %s : Line = %d: Func = %s(): " fmt, __FILE__, \
+            if (DEBUG_PROCESS_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 
