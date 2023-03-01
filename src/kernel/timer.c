@@ -46,8 +46,8 @@ void handle_mtimer_interrupt()
 
 void handle_stimer_interrupt()
 {
-	// printf("Tic supervisor %d \n", tic);
-     scheduler();
+	printf("Tic supervisor %d \n", tic);
+    scheduler();
 	set_supervisor_timer_interrupt(TIC_PER); // this fills the role of ack
 	tic++;
 }

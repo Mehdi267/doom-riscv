@@ -12,6 +12,8 @@
 #include "hash.h"
 #include "process.h"
 #include "queue.h"
+#include "stdbool.h"
+
 
 typedef enum _queue_type {ACTIVATABLE_QUEUE, ASLEEP_QUEUE} queue_process_type;
 
@@ -49,10 +51,18 @@ extern void add_process_to_queue_wrapper(process* process_to_add, queue_process_
 extern void delete_process_from_queue_wrapper(process* process_to_delete, queue_process_type type);
 
 /**
+ * @brief get the peek process and eliminate from the queue from a queue identified by the type param
+ * @param type used to indicate which queue we take the peek from
+ */
+extern process* pop_element_queue_wrapper(queue_process_type type);
+
+
+/**
  * @brief get the peek process from a queue identified by the type param
  * @param type used to indicate which queue we take the peek from
  */
 extern process* get_peek_element_queue_wrapper(queue_process_type type);
+
 
 /**
  * @brief does the process schduling
