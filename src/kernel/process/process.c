@@ -43,7 +43,8 @@ int activate_and_launch_process(process* process_to_activate){
     }
     delete_process_from_queue_wrapper(process_to_activate, ACTIVATABLE_QUEUE);
     process_to_activate->state = ACTIF;
-    process_to_activate->func(NULL);
+    scheduler();
+    //process_to_activate->func(NULL);
     return 0;
 }
 
@@ -55,7 +56,7 @@ int idle(void *arg)
                             get_pid_name(getpid()), 
                             getpid(), 
                             cast_pointer_into_a_long(arg));
-        scheduler();
+        // scheduler();
     }
 }
 
@@ -69,7 +70,7 @@ int process_1(void *arg)
                             get_pid_name(getpid()), 
                             getpid(), 
                             cast_pointer_into_a_long(arg));
-        scheduler();
+        // scheduler();
         // if (i == 6){
         //     return 1;
         // }
@@ -86,7 +87,7 @@ int process_2(void *arg)
                             get_pid_name(getpid()), 
                             getpid(), 
                             cast_pointer_into_a_long(arg));
-        scheduler();
+        // scheduler();
     }
 }
 

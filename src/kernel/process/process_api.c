@@ -26,7 +26,7 @@ int pid_iterator = 0;
 * @return the address of the page that we allocated
 */
 void *process_memory_allocator(unsigned long size){
-   if (size<FRAME_SIZE){
+   if (size <= FRAME_SIZE){
        return get_frame();
    }
    return NULL;
@@ -328,6 +328,15 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     new_process->context_process->ra = (uint64_t) process_call_wrapper;
     new_process->context_process->s1 = (uint64_t) pt_func;
     new_process->context_process->s2 = (uint64_t) arg;
+
+    // We must created a stack that has the size of a frame and place it in the kernel 
+    // memory space that will be used to handle interrupts for this process
+
+    void* interrupt_frame_pointer = process_memory_allocator(FRAME_SIZE);
+    if (interrupt_frame_pointer == NULL){
+        return -1;
+    }
+    new_process->context_process->sscratch = (uint64_t) interrupt_frame_pointer;
 
 
     //--------------Tree management----------------

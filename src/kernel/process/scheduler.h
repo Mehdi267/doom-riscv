@@ -52,6 +52,10 @@ extern void delete_process_from_queue_wrapper(process* process_to_delete, queue_
  */
 extern process* get_peek_element_queue_wrapper(queue_process_type type);
 
+/**
+ * @brief does the process schduling
+ * 
+ */
 extern void scheduler();
 
 #endif

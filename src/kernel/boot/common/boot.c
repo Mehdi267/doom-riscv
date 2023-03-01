@@ -60,7 +60,7 @@ static void delegate_traps()
     *  medeleg(exceptions) and mideleg(interrupts) for delegating the appropriate traps to the appropriate mode
   */
 	csr_set(medeleg, SIE_STIE);
-  csr_set(mideleg, SIE_STIE);
+    csr_set(mideleg, SIE_STIE);
 }
 
 

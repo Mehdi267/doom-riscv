@@ -33,7 +33,9 @@ context_switch:
 	sd s8,   80(a0)
 	sd s9,   88(a0)
 	sd s10,  96(a0)
-	sd s11, 104(a0) 
+	sd s11, 104(a0)
+    csrr t0, sscratch
+    sd t0, 112(a0) 
 
 	# Restauration du contexte
 	ld sp,    0(a1)
@@ -50,6 +52,10 @@ context_switch:
 	ld s9,   88(a1)
 	ld s10,  96(a1)
 	ld s11, 104(a1)
-	# On passe la main au nouveau processus
+    //Sscratch
+    ld t0, 112(a1) 
+    csrs sscratch, t0
+	
+    # On passe la main au nouveau processus
 	jr ra
 
