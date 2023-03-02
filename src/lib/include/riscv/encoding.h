@@ -1,6 +1,7 @@
 #ifndef _LIBC_RISCV_ENCODING_H_
 #define _LIBC_RISCV_ENCODING_H_
 
+
 #define MSTATUS_UIE         0x00000001
 #define MSTATUS_SIE         0x00000002
 #define MSTATUS_HIE         0x00000004

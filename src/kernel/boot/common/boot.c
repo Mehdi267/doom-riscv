@@ -16,6 +16,7 @@
 #include "timer.h"
 #include "drivers/splash.h"
 #include "frame_dist.h"
+#include "pages.h"
 
 extern void _start();
 extern void test();
@@ -84,17 +85,6 @@ static inline void setup_pmp(void) {
                        : : "r"(pmpc), "r"(pmpa) : "t0");
 }
 
-
-/**
-* Crée le directory utilisé par l'ensemble des process kernels 
-* Crée la page contenant la mémoire du noyau et les directories
-* Cette page est référencée par une pte du directory
-* renvoie l'adresse physique du directory
-*/
-void *init_directory(){
-  //void *ppn = get_frame();
-  return NULL;
-}
 
 /**
 * Cette fonction fera la configuration nécessaire pour le passage dans le mode
@@ -175,7 +165,20 @@ __attribute__((noreturn)) void boot_riscv()
 
     init_frames();
 
-    //void *ppn = init_directory();
+  /*Création du directory (table des pages de premier niveau) 
+  qui sera utilisé par l'ensemble des processus kernel.*/
+  page_table *ppn = init_directory();
+
+  //printf("%d",check_validity(ppn->pte_list +0));
+  //printf("%d",is_leaf(ppn->pte_list + 0));
+  //prints 11 =>OK
+
+  //on active et configure satp
+  csr_write(satp, 0x8000000000000000 | (long unsigned int) ppn); //ppn is 24b0000
+
+
+  //validation
+  set_gigapage(ppn->pte_list + 1, 0x100000000, true, true, false);
 
     /**
      * This function will enter in the supervisor mode and it will enable
