@@ -53,7 +53,7 @@ void set_ppn2(page_table_entry *pte, unsigned int ppn);
 void set_ppn1(page_table_entry *pte, unsigned int ppn);
 void set_ppn0(page_table_entry *pte, unsigned int ppn);
 
-void set_gigapage(page_table_entry *pte, unsigned int adress, bool read, bool write, bool exec);
+void set_gigapage(page_table_entry *pte, long unsigned int adress, bool read, bool write, bool exec);
 
 /**
 * Crée le directory utilisé par l'ensemble des process kernels 

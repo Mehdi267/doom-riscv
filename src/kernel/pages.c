@@ -15,7 +15,7 @@ page_table *init_directory(){
   return directory_ptr;
 }
 
-void set_gigapage(page_table_entry *pte, unsigned int adress, bool read, bool write, bool exec){
+void set_gigapage(page_table_entry *pte, long unsigned int adress, bool read, bool write, bool exec){
     //adress is relative to satp.ppn
     assert(read || !write); //or the page would be invalid
     assert(read || exec); //or the page is not a leaf

@@ -54,6 +54,18 @@ int activate_and_launch_process(process* process_to_activate){
     return 0;
 }
 
+void validation_process(){
+    uint8_t variable = 42;
+    uint8_t *ptr1 = &variable;
+    uint8_t *ptr2 = ptr1 + 0x100000000;
+    
+    printf("ptr1 @%p = %u\n", ptr1, *ptr1);
+    printf("ptr2 @%p = %u\n", ptr2, *ptr2);
+    if (*ptr1 == *ptr2)
+        puts("Test mémoire virtuelle OK");
+    else
+        puts("Test mémoire virtuelle FAIL");
+}
 
 int idle(void *arg)
 {
