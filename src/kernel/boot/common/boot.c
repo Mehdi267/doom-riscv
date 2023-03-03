@@ -149,6 +149,7 @@ __attribute__((noreturn)) void boot_riscv()
 
 
   display_info_proc();
+  display_misa_info();
 
   // Délégations des interruptions et des exceptions
   delegate_traps();
