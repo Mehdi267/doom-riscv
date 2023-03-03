@@ -253,7 +253,14 @@ extern int kill(int pid);
 */
 extern int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name, void *arg);
 
-
+/**
+* @brief This function allocates memory for a process, it's current
+* form remains very basic and does not follow the project specifications
+* and it is only valid for a size that is less than then page size
+* @param size corresponds to the size that we want to allocate
+* @return the address of the page that we allocated
+*/
+void *process_memory_allocator(unsigned long size);
 
 
 /**

@@ -8,7 +8,12 @@
 #include "stdio.h"
 #include "frame_dist.h"
 #include "stdbool.h"
-#include "scheduler.h"  
+#include "scheduler.h"
+#include "pages.h"
+#include <assert.h>
+
+
+#define FLOAT_TO_INT(x) (int)((x)+0.5)
 
 // Hash table that associates to every pid the process struct associated to it
 hash_t *pid_process_hash_table = NULL;
@@ -26,11 +31,58 @@ int pid_iterator = 0;
 * @return the address of the page that we allocated
 */
 void *process_memory_allocator(unsigned long size){
-   if (size <= FRAME_SIZE){
-       return get_frame();
-   }
-   return NULL;
+   if(size > FRAME_SIZE) return NULL;
 
+   //creating first hierarchy table
+   page_table* root = create_page_table();
+   // init first pte
+   page_table_entry *first_pte = root->pte_list;
+   set_valid(first_pte);
+   //not a leaf
+
+   //creating second hierarchy table
+   page_table* second_hierarchy_pt = create_page_table();
+   page_table_entry *second_pte = root->pte_list;
+   set_valid(second_pte);
+   //not a leaf
+
+   //link first pte to second pt : we write the adress of second_hierarchy pt in first_pte.ppn
+   link_pte(first_pte, (void *)second_hierarchy_pt);
+
+
+   //set_read(second_pte, true);
+   //set_write(second_pte, true);
+   //set_exec(second_pte, true);
+
+   /*if(size <= (unsigned long)PT_SIZE * FRAME_SIZE){
+        //allocate pages
+        int nb_pages = size / FRAME_SIZE;
+        if(size % FRAME_SIZE != 0) nb_pages ++;
+        for (page_table_entry* pte_i = root->pte_list; pte_i < root->pte_list + nb_pages; pte_i++){
+             set_leaf_page(pte_i);
+        }
+   }
+   else if(size <= (unsigned long int)PT_SIZE * MEGAPAGE_SIZE){
+        //allocate megapages
+        int nb_pages = size / MEGAPAGE_SIZE;
+        if(size % MEGAPAGE_SIZE != 0) nb_pages ++;
+        for (page_table_entry* pte_i = root->pte_list; pte_i < root->pte_list + nb_pages; pte_i++){
+            set_megapage(pte_i);
+        }
+   }
+   else if(size <= (unsigned long int)PT_SIZE * GIGAPAGE_SIZE){
+        //allocate gipages
+        int nb_pages = size / GIGAPAGE_SIZE;
+        if(size % GIGAPAGE_SIZE != 0) nb_pages ++;
+        for (page_table_entry* pte_i = root->pte_list; pte_i < root->pte_list + nb_pages; pte_i++){
+            set_gigapage(pte_i);
+        }
+   }
+   else{
+        //too big
+        return NULL;
+   }*/
+   return root;
 }
 
 int setpid(int new_pid){
@@ -332,7 +384,7 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     // We must created a stack that has the size of a frame and place it in the kernel 
     // memory space that will be used to handle interrupts for this process
 
-    void* interrupt_frame_pointer = process_memory_allocator(FRAME_SIZE);
+    void* interrupt_frame_pointer = get_frame();
     if (interrupt_frame_pointer == NULL){
         return -1;
     }

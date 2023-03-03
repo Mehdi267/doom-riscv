@@ -5,6 +5,7 @@ Gestion des tables de pages, PTEs, directory
 #ifndef _PAGES_H_
 #define _PAGES_H_
 #include <stdbool.h>
+#include "frame_dist.h"
 
 /*def d'une pte
 cf p85 of privileged doc
@@ -33,7 +34,7 @@ typedef struct page_table_entry{
 //def d'une page table
 typedef struct page_table{
     //512PTEs de 8 octets
-    page_table_entry pte_list[512];
+    page_table_entry pte_list[PT_SIZE];
 } page_table;
 
 page_table *create_page_table();
@@ -54,6 +55,8 @@ void set_ppn1(page_table_entry *pte, unsigned int ppn);
 void set_ppn0(page_table_entry *pte, unsigned int ppn);
 
 void set_gigapage(page_table_entry *pte, long unsigned int adress, bool read, bool write, bool exec);
+
+void link_pte(page_table_entry *pte, void *address);
 
 /**
 * Crée le directory utilisé par l'ensemble des process kernels 

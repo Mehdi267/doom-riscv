@@ -17,6 +17,7 @@
 #include "drivers/splash.h"
 #include "frame_dist.h"
 #include "pages.h"
+#include "process/process.h"
 
 extern void _start();
 extern void test();
@@ -173,12 +174,14 @@ __attribute__((noreturn)) void boot_riscv()
   //printf("%d",is_leaf(ppn->pte_list + 0));
   //prints 11 =>OK
 
+  process_memory_allocator(3000);
+
   //on active et configure satp
   csr_write(satp, 0x8000000000000000 | (long unsigned int) ppn); //ppn is 24b0000
 
 
   //validation
-  set_gigapage(ppn->pte_list + 1, 0x100000000, true, true, false);
+  //set_gigapage(ppn->pte_list + 1, 0x100000000, true, true, false);
 
     /**
      * This function will enter in the supervisor mode and it will enable

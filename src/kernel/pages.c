@@ -1,10 +1,13 @@
 #include "pages.h"
 #include "frame_dist.h"
+#include "process/helperfunc.h"
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 
 page_table *create_page_table(){
     page_table *ptr = (page_table *) get_frame(); //alloue 4096 octets pour la page
+    memset(ptr, 0, sizeof(page_table)); //makes sure everything is invalid
     return ptr;
 }
 
@@ -79,4 +82,14 @@ void set_read(page_table_entry *pte, bool read){
 
 void set_invalid(page_table_entry *pte){
     pte->valid = 0;
+}
+
+//link pte to address
+void link_pte(page_table_entry *pte, void *address){
+    address = (void *)((unsigned long int)address >> FRAME_SIZE_EXP); //we do not write the 12 zeros of the alignment
+    pte->ppn0 = MASK_ADDRESS(address, PPN0_MASK);
+    address = (void *)((unsigned long int)address >> PPN0_SIZE);
+    pte->ppn1 = MASK_ADDRESS(address, PPN1_MASK);
+    address = (void *)((unsigned long int)address >> PPN1_SIZE);
+    pte->ppn2 = MASK_ADDRESS(address, PPN2_MASK);
 }

@@ -59,6 +59,7 @@ extern hash_t* get_process_hash_table(void);
 */
 extern int validate_action_process_valid(process* process_pid);
 
-
+// mask an adress with a long int
+#define MASK_ADDRESS(a, i) ((unsigned long int)(a) & (i));
 
 #endif
