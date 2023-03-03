@@ -1,9 +1,13 @@
-br strap_entry
 br _start
 br enter_supervisor_mode
 br kernel_start
 br initialize_process_workflow
 br exit_process
+br scheduler
+br process_call_wrapper
+br first_process_call
+br boot_riscv
+br context_switch
 layout src
 define nr
 n

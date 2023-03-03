@@ -128,6 +128,8 @@ void scheduler(){
         }
     }
     debug_print_scheduler("[scheduler] I managed to return to the scheduler %d\n",getpid());
+    return;
+
 }
 
 /**

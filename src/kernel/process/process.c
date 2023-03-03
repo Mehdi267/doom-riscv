@@ -48,9 +48,9 @@ int activate_and_launch_process(process* process_to_activate){
     }
     delete_process_from_queue_wrapper(process_to_activate, ACTIVATABLE_QUEUE);
     process_to_activate->state = ACTIF;
+    // started_user_process = true;
+    // first_process_call(get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
     set_supervisor_timer_interrupt(1000);
-    started_user_process = true;
-    first_process_call(get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
     return 0;
 }
 

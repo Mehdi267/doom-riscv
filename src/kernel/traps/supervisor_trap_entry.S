@@ -80,6 +80,7 @@ strap_entry:
 1:  jal strap_handler
 
     # Restauration des registres
+    #This context is very important
     ld ra, 1*8(sp)
     ld t0, 5*8(sp)
     ld t1, 6*8(sp)

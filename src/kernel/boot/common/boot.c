@@ -61,7 +61,7 @@ static void delegate_traps()
     *  medeleg(exceptions) and mideleg(interrupts) for delegating the appropriate traps to the appropriate mode
   */
 	csr_set(medeleg, SIE_STIE);
-    csr_set(mideleg, SIE_STIE);
+  csr_set(mideleg, SIE_STIE);
 }
 
 
@@ -176,14 +176,14 @@ __attribute__((noreturn)) void boot_riscv()
   //on active et configure satp
   csr_write(satp, 0x8000000000000000 | (long unsigned int) ppn); //ppn is 24b0000
 
-
   //validation
   set_gigapage(ppn->pte_list + 1, 0x100000000, true, true, false);
 
-    /**
-     * This function will enter in the supervisor mode and it will enable
-     * supervisor mode intterupts
-     */
-    enter_supervisor_mode();
-    __builtin_unreachable();
+  csr_write(satp, 0); 
+  /**
+   * This function will enter in the supervisor mode and it will enable
+   * supervisor mode intterupts
+   */
+  enter_supervisor_mode();
+  __builtin_unreachable();
 }
