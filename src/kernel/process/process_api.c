@@ -10,6 +10,17 @@
 #include "stdbool.h"
 #include "scheduler.h"  
 
+#include "stdlib.h"
+#include "assert.h"
+#include "riscv.h"
+
+#include "bios/info.h"
+#include "traps/trap.h"
+#include "timer.h"
+#include "drivers/splash.h"
+#include "frame_dist.h"
+#include "pages.h"
+
 // Hash table that associates to every pid the process struct associated to it
 hash_t *pid_process_hash_table = NULL;
 // Id of the process that is currently running this value will be changed dynamically by the scheduler
@@ -327,7 +338,9 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     // at the end as this will be important in the case the user uses a return call
     new_process->context_process->ra = (uint64_t) process_call_wrapper;
     new_process->context_process->s1 = (uint64_t) pt_func;
+    debug_print("[start -> %d] function adress funciton adress = %ld\n", new_process->pid, (long) pt_func);
     new_process->context_process->s2 = (uint64_t) arg;
+    new_process->context_process->sip = (uint64_t) 0;
 
     // We must created a stack that has the size of a frame and place it in the kernel 
     // memory space that will be used to handle interrupts for this process
@@ -337,7 +350,7 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
         return -1;
     }
     new_process->context_process->sscratch = (uint64_t) interrupt_frame_pointer;
-
+    new_process->context_process->sstatus = (uint64_t) csr_read(sstatus);
 
     //--------------Tree management----------------
     // The parent of the process is the process that called the start method

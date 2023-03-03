@@ -27,6 +27,7 @@ int initialize_process_hash_table(){
 static int create_idle_process(){
     int pid_idle = start(idle, 1000, 1, "idle", cast_int_to_pointer(300));
     debug_print_process("[create_idle_process] idle pid = %d\n", pid_idle);
+    debug_print_process("[create_idle_process] idle funciton adress = %ld\n", (long) idle);
     return pid_idle;
 }
 
@@ -48,9 +49,9 @@ int activate_and_launch_process(process* process_to_activate){
     }
     delete_process_from_queue_wrapper(process_to_activate, ACTIVATABLE_QUEUE);
     process_to_activate->state = ACTIF;
-    // started_user_process = true;
-    // first_process_call(get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
-    set_supervisor_timer_interrupt(1000);
+    
+    started_user_process = true;
+    first_process_call(get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
     return 0;
 }
 

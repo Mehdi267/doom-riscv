@@ -40,6 +40,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 	} else {
 		// TODO ADD SYSTEM CALLS TREATEMENT
 		switch (scause) {
+			case intr_s_timer: 
 			default:
 				blue_screen(tf);
 				// no return

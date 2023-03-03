@@ -26,7 +26,14 @@ ld s10,  96(a0)
 ld s11, 104(a0)
 //Sscratch
 ld t0, 112(a0) 
-csrs sscratch, t0
+csrw sscratch, t0
+ld t0, 120(a0) 
+csrw sstatus, t0
+ld t0, 128(a0) 
+csrw sip, t0
+
+addi a0,x0,50
+jal set_supervisor_timer_interrupt
 
 //We need to activate intterupts at this level
 # On passe la main au nouveau processus

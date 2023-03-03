@@ -8,7 +8,10 @@ br process_call_wrapper
 br first_process_call
 br boot_riscv
 br context_switch
-layout src
+br strap_entry
+br idle
+br scheduler.c:132
 define nr
 n
 info reg
+// layout src

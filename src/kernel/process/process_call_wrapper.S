@@ -8,6 +8,7 @@
 process_call_wrapper:
 	move a0, s2
 	# csr_write(mepc, kernel_start);
-	csrw sepc, s1
-	sret 
+    addi x0,x0,0
+    jalr s1
 	j exit_process
+    

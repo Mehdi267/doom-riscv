@@ -28,6 +28,7 @@ void set_machine_timer_interrupt(uint64_t delta_ms)
 
 	uint64_t interrupt_time = get_mtime() + (delta_ms/1000) * clint_dev->clk_freq; // get time of next interrupt
 	set_mtimecmp(interrupt_time); // lorsque mtime >= mtimecmp, une interruption est générée
+    return ;
 }
 
 
@@ -35,6 +36,7 @@ void set_supervisor_timer_interrupt(uint64_t delta_ms)
 {
 	uint64_t interrupt_time = get_stime() + (delta_ms/1000) * clint_dev->clk_freq; // get time of next interrupt
 	set_stimecmp(interrupt_time); // lorsque stime >= stimecmp, une interruption est générée
+    return ;
 }
 
 void handle_mtimer_interrupt()
@@ -42,12 +44,14 @@ void handle_mtimer_interrupt()
 	printf("Tic machine \n");
 	set_machine_timer_interrupt(TIC_PER); // this fills the role of ack
 	tic++;
+    return ;
 }
 
 void handle_stimer_interrupt()
 {
 	// printf("Tic supervisor %d \n", tic);
     scheduler();
-	set_supervisor_timer_interrupt(TIC_PER); // this fills the role of ack
+	set_supervisor_timer_interrupt(100*TIC_PER); // this fills the role of ack
 	tic++;
+    return ;
 }

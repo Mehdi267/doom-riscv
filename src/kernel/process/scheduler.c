@@ -77,10 +77,9 @@ process* get_peek_element_queue_wrapper(queue_process_type type){
 
 void scheduler(){
     
-    debug_print_scheduler("[scheduler] Inside the scheduler with pid equal to %d \n", getpid());
+    debug_print_scheduler("[scheduler -> %d] Inside the scheduler with pid equal to %d \n",getpid() , getpid());
     //Process has been called before any execution has started
     int currently_running_process_id = getpid();
-    
 
     //Scheduler has been called directly for the first time 
     if (getpid() == -1){ // pid has not been set yet
@@ -91,7 +90,7 @@ void scheduler(){
             return;
         }
         setpid(top_process->pid);
-        debug_print_scheduler("[scheduler] Inside the scheduler with no process running, default launch of the peek process with id = %d", getpid());
+        debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, default launch of the peek process with id = %d", getpid(),  getpid());
         top_process->state = ACTIF;
         first_process_call(top_process->context_process); // pid is set by the activate method
     }
@@ -105,7 +104,10 @@ void scheduler(){
             return;
         }
         started_user_process = true;
-        debug_print_scheduler("[scheduler] Inside the scheduler with no process running, custom launch of the process with id = %d", getpid());
+        debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, custom launch of the process with id = %d\n", getpid(),  getpid());
+        debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
+        debug_print_scheduler("[scheduler -> %d] function adress of the process = %ld\n", getpid(), (long) get_process_struct_of_pid(getpid())->context_process->s1);
+        debug_print_scheduler("[scheduler -> %d] idle adress = %ld\n", getpid(), (long) idle);
         first_process_call(get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
     }
     else{
@@ -116,8 +118,8 @@ void scheduler(){
         if (top_process == NULL || current_process == NULL){
             return;
         }
-        debug_print_scheduler("[scheduler] current process pid = %d, peek pid = %d\n", current_process->pid, top_process->pid);
-        debug_print_scheduler("[scheduler] current process priority = %d, peek priority = %d\n", current_process->prio, top_process->prio);
+        debug_print_scheduler("[scheduler -> %d] current process pid = %d, peek pid = %d\n", getpid(), current_process->pid, top_process->pid);
+        debug_print_scheduler("[scheduler -> %d] current process priority = %d, peek priority = %d\n", getpid(), current_process->prio, top_process->prio);
         if (top_process->prio >= current_process->prio){
             pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
             //In this case we switch the process
@@ -127,7 +129,7 @@ void scheduler(){
             context_switch(current_process->context_process, top_process->context_process);
         }
     }
-    debug_print_scheduler("[scheduler] I managed to return to the scheduler %d\n",getpid());
+    debug_print_scheduler("[scheduler -> %d] I managed to return to the scheduler %d\n",getpid(),getpid());
     return;
 
 }
