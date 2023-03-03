@@ -57,8 +57,15 @@ static void delegate_traps()
     * we would like to exploit the methods that we were added for trap handling in this mode like strap_entry, strap_handler
     * in order to have more control over what we do for that reason we exploit the two registers :
     *  medeleg(exceptions) and mideleg(interrupts) for delegating the appropriate traps to the appropriate mode
+    *
+    * We want to delegate all exceptions but it there are some exceptions that cannot be
+    * delegated.
+    *
+    * We could chain the exceptiion like exception1 | exception2 | ... | exceptionN (chaining ors).
+    * Or just try to delegate all them and the exceptions that cannot be delegated their bit
+    * will not be changed bc is hard wired 0
   */
-	csr_set(medeleg, SIE_STIE);
+  csr_set(medeleg, MAX_INT);
   csr_set(mideleg, SIE_STIE);
 }
 
