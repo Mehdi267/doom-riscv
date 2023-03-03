@@ -36,10 +36,10 @@ context_switch:
 	sd s11, 104(a0)
     csrr t0, sscratch
     sd t0, 112(a0) 
-    csrr t0, sstatus
-    sd t0, 120(a0) 
-    csrr t0, sip
-    sd t0, 128(a0) 
+    # csrr t0, sstatus
+    # sd t0, 120(a0) 
+    # csrr t0, sip
+    # sd t0, 128(a0) 
 
 	# Restauration du contexte
 	ld sp,    0(a1)
@@ -66,8 +66,8 @@ context_switch:
 
     # On passe la main au nouveau processus
 
-	# csrw sepc, ra
-	# sret 
+	csrw sepc, ra
+	sret 
 
     jr ra
 
