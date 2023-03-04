@@ -16,7 +16,7 @@
 
 
 typedef enum _queue_type {ACTIVATABLE_QUEUE, ASLEEP_QUEUE} queue_process_type;
-
+extern scheduler_struct* scheduler_main;
 
 /**
  * @brief Global process queue

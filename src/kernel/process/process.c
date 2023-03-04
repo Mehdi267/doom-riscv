@@ -20,6 +20,11 @@ int initialize_process_hash_table(){
     if (pid_process_hash_table == NULL){
         return -1;
     }
+    scheduler_main = (scheduler_struct*) malloc(sizeof(scheduler_struct));
+    scheduler_main -> main_context = (context_t*) malloc(sizeof(context_t));
+    if (scheduler_main == NULL){;
+        return -1;
+    }
     return 0;
 }
 
@@ -50,8 +55,10 @@ int activate_and_launch_process(process* process_to_activate){
     delete_process_from_queue_wrapper(process_to_activate, ACTIVATABLE_QUEUE);
     process_to_activate->state = ACTIF;
     
-    started_user_process = true;
-    first_process_call(get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
+    // started_user_process = true;
+    // first_process_call(get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
+    set_supervisor_timer_interrupt(100); 
+    while(1){}
     return 0;
 }
 
@@ -75,6 +82,7 @@ int idle(void *arg)
                             get_pid_name(getpid()), 
                             getpid(), 
                             cast_pointer_into_a_long(arg));
+
         // scheduler();
     }
 }

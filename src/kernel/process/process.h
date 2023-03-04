@@ -14,9 +14,9 @@
 #include "queue.h"
 #include "stdlib.h"
 #include "stdio.h"
-#include <stdio.h>
-#include <stddef.h>
-#include <stdarg.h>
+#include "stddef.h"
+#include "stdarg.h"
+#include "stdbool.h"
 
 #define MAXPRIO 256
 #define MINPRIO 1
@@ -69,8 +69,7 @@ typedef struct context {
    uint64_t s10;
    uint64_t s11;
    uint64_t sscratch;
-   uint64_t sstatus;
-   uint64_t sip;
+   uint64_t sepc;
 } context_t;
 
 
@@ -114,7 +113,16 @@ typedef struct process_t{
    link link_queue_activable; //used to link the activatable processes 
    link link_queue_asleep; //used to link the asleep process
    int return_value; // return value of the process, used in waitpid
+   bool called_before;
 } process;
+
+
+/**
+ * @brief used to save the main execution context
+*/
+typedef struct scheduler_t{
+   context_t* main_context; 
+} scheduler_struct;
 
 
 /**
@@ -309,7 +317,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the scheduler,
  *  meaning when we debug the scheduler we use the debug_print_scheduler
  */
-#define DEBUG_SCHEDULER_LEVEL 2 //Indicates if debug type is actuve
+#define DEBUG_SCHEDULER_LEVEL 0 //Indicates if debug type is actuve
 
 #define debug_print_scheduler(fmt, ...) \
         do {if (DEBUG_SCHEDULER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \

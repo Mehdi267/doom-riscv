@@ -59,6 +59,14 @@ extern hash_t* get_process_hash_table(void);
 */
 extern int validate_action_process_valid(process* process_pid);
 
+/**
+ * @brief set supervisor interrupts to the value given a fnction argument
+*/
+extern void set_supervisor_interrupts(bool val);
+
+
+
+
 
 
 #endif
