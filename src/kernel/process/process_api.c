@@ -66,11 +66,15 @@ int leave_queue_process_if_needed(process* process_to_leave){
     if(process_to_leave == NULL){
         return -1;
     }
-    if (process_to_leave->state == ACTIVATABLE){
-        delete_process_from_queue_wrapper(process_to_leave, ACTIVATABLE_QUEUE);
-    }
-    else if (process_to_leave->state == ASLEEP){
-        delete_process_from_queue_wrapper(process_to_leave, ASLEEP_QUEUE);
+    switch(process_to_leave->state) {
+        case ACTIVATABLE:
+            delete_process_from_queue_wrapper(process_to_leave, ACTIVATABLE_QUEUE);
+            break;
+        case ASLEEP:
+            delete_process_from_queue_wrapper(process_to_leave, ASLEEP_QUEUE);
+            break;
+        default:
+            break;
     }
     return 0;
 }
@@ -132,10 +136,7 @@ static int free_child_zombie_process(process* process_to_free){
    if (process_to_free->state != ZOMBIE){
        return -1;
    }
-   if (hash_del(get_process_hash_table(), cast_int_to_pointer(process_to_free->pid))<0){
-       return -1;
-   }
-   free(process_to_free);
+   process_to_free->state = KILLED;
    return 0;
 }
 
@@ -181,20 +182,20 @@ static int free_process_arg_and_fix_tree_link(process* process_to_free, process*
    }      
 }
 
-
 /**
 * @brief this method is called when we exit a process, it will make the
 * children of the process that are still alive orphans and it will free all the zombie
 * children
 * @param parent_process the process that will do apply the action on to
 * @returns the value 0 if the the operation was a success and a negative value otherwise
+* @note this method will return 0 if the process does not have any children
 */
 static int make_children_orphans_and_kill_zombies(process* parent_process){
    if (parent_process == NULL){
        return -1;
    }
    if (parent_process->children_head == NULL && parent_process->children_tail == NULL){
-       return -1;
+       return 0;
    }
    else{
        process* temp_process = parent_process->children_head;
@@ -218,10 +219,9 @@ static int make_children_orphans_and_kill_zombies(process* parent_process){
 
 
 
-
 /**
-* @brief called when we exit a process, it will transform the currently running process into a
-* zombie if the parent is still alive or it will kill the process if the parent is dead
+* @brief called when we exit a process, it will transform the currently  running process or a custom 
+* process into a zombie if the parent is still alive or it will kill the process if the parent is dead
 * @param  curent_or_custom indicates if we want to apply the function to the current process or a custom process.
 * True for current, false for custom
 * @param pid the id of the process that we will apply the action on if we choose to work with a custom process 
@@ -229,10 +229,12 @@ static int make_children_orphans_and_kill_zombies(process* parent_process){
 */
 static int turn_current_process_into_a_zombie_or_kill_it(bool curent_or_custom, int pid){
     process* current_process = NULL;
-    if (curent_or_custom){
+    if (curent_or_custom == true){
+        //We apply the kill process to the currently running process 
         current_process = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(getpid()), NULL));
     }
     else{
+        //We do the action on a custom process specified using the pid given in the function argument 
         current_process = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(pid), NULL));   
     }
     if (current_process == NULL){
@@ -241,10 +243,8 @@ static int turn_current_process_into_a_zombie_or_kill_it(bool curent_or_custom, 
     if (make_children_orphans_and_kill_zombies(current_process)<0){
         return -1;
     }
-    if (current_process->parent != NULL){
-        current_process->state = ZOMBIE;
-    }
-    else{
+    current_process->state = ZOMBIE;
+    if (current_process->parent == NULL){
         return free_child_zombie_process(current_process);
     }
     return 0;
@@ -254,14 +254,17 @@ static int turn_current_process_into_a_zombie_or_kill_it(bool curent_or_custom, 
 
 
 void exit_process(int retval){
-   debug_print("I am in exit method with argument/ temp pid = %d \n", retval);
-   if (validate_action_process_valid(get_process_struct_of_pid(getpid())) < 0 ||
-         turn_current_process_into_a_zombie_or_kill_it(false, 0)<0){
-       // Something went terribly wrong if we are in here
-       exit(-1);
-   }
-   get_process_struct_of_pid(getpid())->return_value = retval;
-   while(1){}
+    debug_print("I am in exit method with argument/ temp pid = %d \n", retval);
+    if (validate_action_process_valid(get_process_struct_of_pid(getpid())) < 0){
+        // Something went terribly wrong if we are in here
+        exit(-1);
+    }
+    if (turn_current_process_into_a_zombie_or_kill_it(true, 0)<0){
+        // Something went terribly wrong if we are in here
+        exit(-1);
+    }
+    get_process_struct_of_pid(getpid())->return_value = retval;
+    while(1){}
 }
 
 
@@ -340,7 +343,7 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     // at the end as this will be important in the case the user uses a return call
     new_process->context_process->ra = (uint64_t) process_call_wrapper;
     new_process->context_process->s1 = (uint64_t) pt_func;
-    debug_print("[start -> %d] function adress funciton adress = %ld\n", new_process->pid, (long) pt_func);
+    // debug_print("[start -> %d] function adress funciton adress = %ld\n", new_process->pid, (long) pt_func);
     new_process->context_process->s2 = (uint64_t) arg;
     new_process->context_process->sepc = (uint64_t) process_call_wrapper;
 
@@ -395,17 +398,18 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
 
 
 int waitpid(int pid, int *retvalp){
+    debug_print("[waitpid] Inside waitpid with pid  = %d", pid);
     if (get_process_struct_of_pid(getpid())->children_head == NULL &&
         get_process_struct_of_pid(getpid())->children_tail == NULL ){
         return -1;
     }
     process* temp_process = NULL;
-    process* temp_process_before= NULL;
+    process* temp_process_before = NULL;
     int pid_to_return;
     // negative pid, we find the first zombie and we take its return value and free it
     if (pid<0){
-        temp_process = get_process_struct_of_pid(getpid())->children_head;
-        temp_process_before = temp_process;
+        // temp_process = get_process_struct_of_pid(getpid())->children_head;
+        // temp_process_before = temp_process;
         while(true){
             temp_process = get_process_struct_of_pid(getpid())->children_head;
             temp_process_before = temp_process;
@@ -424,7 +428,7 @@ int waitpid(int pid, int *retvalp){
     else{
         temp_process = get_process_struct_of_pid(getpid())->children_head;
         temp_process_before = temp_process;
-        // We check that the pid belongs to a child
+        // We check that the pid is a child to the process that called this method
         while (temp_process != NULL){
             if (temp_process->pid == pid){
                 break;

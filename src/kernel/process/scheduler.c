@@ -77,66 +77,101 @@ process* get_peek_element_queue_wrapper(queue_process_type type){
 
 
 void scheduler(){
-        debug_print_scheduler("[scheduler -> %d] Inside the scheduler with pid equal to %d \n",getpid() , getpid());
-        //Process has been called before any execution has started
+    debug_print_scheduler_no_arg("\n-----------------Scheduler--------------------\n");
+    debug_print_scheduler("[scheduler -> %d] Inside the scheduler with pid equal to %d \n",
+                            getpid(), getpid());
+    //Process has been called before any execution has started
+    if (scheduler_main == NULL){
+        return ;
+    }
+    //Scheduler has been called directly for the first time 
+    if (getpid() == -1){ // pid has not been set yet
+        process* top_process = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
+        if (top_process == NULL){
+            return;
+        }
+        pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
+        setpid(top_process->pid);
         set_supervisor_interrupts(true);
-        int currently_running_process_id = getpid();
-        if (scheduler_main == NULL){
-            return ;
+        debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, default launch of the peek process with id = %d", getpid(),  getpid());
+        debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
+        top_process->state = ACTIF;
+        started_user_process = true;
+        context_switch(scheduler_main->main_context, top_process->context_process); // pid is set by the activate method
+    }
+    //Custom process launch enable // the user must set a valid pid
+    if (started_user_process == false){
+        set_supervisor_interrupts(true);
+        //In this case no process is running and we have called the scheduler for the first time
+        // yet in this case, we want to start with a custom process/ that has been set by the user
+        // in the pid field and the user has also eliminated the process from the queue
+        process* top_process = get_process_struct_of_pid(getpid());
+        if (top_process == NULL){
+            return;
         }
+        started_user_process = true;
+        debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, custom launch of the process with id = %d\n", getpid(),  getpid());
+        debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
+        debug_print_scheduler("[scheduler -> %d] function adress of the process = %ld\n", getpid(), (long) get_process_struct_of_pid(getpid())->context_process->s1);
+        debug_print_scheduler("[scheduler -> %d] idle adress = %ld\n", getpid(), (long) idle);
+        context_switch(scheduler_main->main_context, get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
+    }
+    else{
+        //In here we treat the normal case 
+        //We take the current process struct:
+        process* current_process = get_process_struct_of_pid(getpid());
+        process* top_process = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
+        if (top_process == NULL || current_process == NULL){
+            return; 
+        }
+        debug_print_scheduler("[scheduler -> %d] current process pid = %d, peek pid = %d\n", getpid(), current_process->pid, top_process->pid);
+        debug_print_scheduler("[scheduler -> %d] [current process name --> |%s|], [peek name --> |%s|]\n", getpid(), current_process->process_name, top_process->process_name);
+        debug_print_scheduler("[scheduler -> %d] current process priority = %d, peek priority = %d\n", getpid(), current_process->prio, top_process->prio);
         
-        //Scheduler has been called directly for the first time 
-        if (getpid() == -1){ // pid has not been set yet
-            //TODO VÉRIFIE QUE LA LIST N'EST PAS VIDE, CE NE PEUX JAMAIS ÊTRE LE CAS CAR LA LISTE DOIT CONTENIR IDLE MAIS 
-            // C'EST IMPORTANT POUR TROUVER LES ERREURS LORS DU DEBUG
-            process* top_process = pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
-            if (top_process == NULL){
-                return;
-            }
-            setpid(top_process->pid);
-            debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, default launch of the peek process with id = %d", getpid(),  getpid());
-            top_process->state = ACTIF;
-            // first_process_call(top_process->context_process); // pid is set by the activate method
-            context_switch(scheduler_main->main_context, top_process->context_process); // pid is set by the activate method
-        }
-        //Custom process enable // the user must set a valid pid
-        if (started_user_process == false){
-            //In this case no process is running and we have called the scheduler for the first time
-            // yet in this case, we want to start with a custom process/ that has been set by the user
-            // in the pid field and the user has also eliminated the process from the queue
-            process* top_process = get_process_struct_of_pid(getpid());
-            if (top_process == NULL){
-                return;
-            }
-            started_user_process = true;
-            debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, custom launch of the process with id = %d\n", getpid(),  getpid());
-            debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
-            debug_print_scheduler("[scheduler -> %d] function adress of the process = %ld\n", getpid(), (long) get_process_struct_of_pid(getpid())->context_process->s1);
-            debug_print_scheduler("[scheduler -> %d] idle adress = %ld\n", getpid(), (long) idle);
-            // first_process_call(get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
-            context_switch(scheduler_main->main_context, get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
-        }
-        else{
-            //In here we treat the normal case 
-            //We take the current process struct:
-            process* current_process = get_process_struct_of_pid(currently_running_process_id);
-            process* top_process = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
-            if (top_process == NULL || current_process == NULL){
-                return;
-            }
-            debug_print_scheduler("[scheduler -> %d] current process pid = %d, peek pid = %d\n", getpid(), current_process->pid, top_process->pid);
-            debug_print_scheduler("[scheduler -> %d] current process priority = %d, peek priority = %d\n", getpid(), current_process->prio, top_process->prio);
+        //If the process was actif when this treatement was called, then 
+        //we swap the process if the peek prio is higher then the current prio
+        //and we place the old process if the activatable queue
+        if (current_process->state == ACTIF){
             if (top_process->prio >= current_process->prio){
+                //In this case we switch the process and 
                 pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
-                //In this case we switch the process
                 setpid(top_process->pid);
+                set_supervisor_interrupts(true);
                 top_process->state = ACTIF;
                 add_process_to_queue_wrapper(current_process, ACTIVATABLE_QUEUE);  
                 context_switch(current_process->context_process, top_process->context_process);
             }
+            debug_print_scheduler("[scheduler -> %d] Sticking with the same process id = %d\n", getpid(), current_process->pid);
         }
-        debug_print_scheduler("[scheduler -> %d] I managed to return to the scheduler %d\n",getpid(),getpid());
-    debug_print_scheduler("[scheduler -> %d] PANICC PACNICC-> %d\n",getpid(),getpid());
+        //If the process was killed we free its data 
+        //and jump directly into an other context
+        else if(current_process->state == KILLED){
+            pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
+            setpid(top_process->pid);
+            set_supervisor_interrupts(true);
+            top_process->state = ACTIF;
+            if (hash_del(get_process_hash_table(), cast_int_to_pointer(current_process->pid))<0){
+                //Something went wrong
+                return ;
+            }
+            free(current_process);
+            direct_context_swap(top_process->context_process);
+        }
+        //if the process was placed in an other state when this was called
+        //then we change the context directly and we don't place the process in the 
+        //activatable queue
+        else{
+            
+            debug_print_scheduler("[scheduler -> %d] Current process is not in a actif state= %d swaping to %d\n", 
+                                    getpid(), current_process->pid, top_process->pid);
+            pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
+            setpid(top_process->pid);
+            set_supervisor_interrupts(true);
+            top_process->state = ACTIF;
+            context_switch(current_process->context_process, top_process->context_process);
+        }
+    }
+    debug_print_scheduler("[scheduler -> %d] I managed to return to the scheduler %d\n",getpid(),getpid());
 }
 
 /**

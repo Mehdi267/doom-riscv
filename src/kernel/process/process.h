@@ -18,18 +18,36 @@
 #include "stdarg.h"
 #include "stdbool.h"
 
+/**
+ * @brief global function constants
+ * @param MAXPRIO the maximun priority of a process
+ * @param MINPRIO the minimun priority of a process
+ * @param NBPROC the higest number of process that we can define at a time
+ * @param PROCESS_SETUP_SIZE defines the overhead that is needed for a every process(still experimental)
+ *  
+*/
 #define MAXPRIO 256
 #define MINPRIO 1
 #define NBPROC 30
 #define PROCESS_SETUP_SIZE 2
-#define IDLE_PROCESS_ID 1
 
 /**
-* Global variables
-* pid_process_hash_table: Hash table that associates to every pid the process struct associated to it
-* current_running_process_pid: Id of the process that is currently executing
-* pid_iterator : Pid iterator that will be used to associate to every process a unique pid
-* idle_process : idle process ie process that does nothing and have infinite loop
+ * @brief These variables define the execution state of the program
+ * @param DEBUG will launch debug process and eventually will print the debug messages 
+ * @param TESTING will launch the testing process and will call the kernel_tests
+ * @param RELEASE will not do the above and launch the kernel is production mode
+ * @note IMPORTANT : Only one of these variables should defined at a time
+ * @param 
+*/
+// #define DEBUG
+#define TESTING
+// #define RELEASE
+
+/**
+* @brief Global variables
+* @param pid_process_hash_table: Hash table that associates to every pid the process struct associated to it
+* @param current_running_process_pid: Id of the process that is currently executing
+* @param pid_iterator : Pid iterator that will be used to associate to every process a unique pid
 */
 extern hash_t* pid_process_hash_table;
 extern int current_running_process_pid;
@@ -84,8 +102,19 @@ typedef struct context {
    * @param ASLEEP: The process called wait_clock, the sleep primitive until a given time.
    * @param BLOCKEDQUEUE : 
    * @param Zombie: The process has either terminated or been terminated by the kill system call and its father is still alive and has not yet waitpided on it.
+   * @param KILLED: The process has been terminated and will be removed shortly from memory 
 */
-typedef enum _process_state {ACTIF, ACTIVATABLE, BLOCKEDSEMAPHORE, BLOCKEDIO, BLOCKEDQUEUE, BLOCKEDWAITCHILD, ASLEEP, ZOMBIE} process_state;
+typedef enum _process_state {   ACTIF,
+                                ACTIVATABLE,
+                                BLOCKEDSEMAPHORE,
+                                BLOCKEDIO,
+                                BLOCKEDQUEUE,
+                                BLOCKEDWAITCHILD,
+                                ASLEEP,
+                                ZOMBIE,
+                                KILLED
+} process_state;
+
 
 
 /**
@@ -145,7 +174,7 @@ extern int initialize_process_workflow();
 * @return the value 0 if there were no errors and a negative number if there were errors
 * @note THERE SHOULD NOT BE AN ACTIF PROCESS WHEN WE LAUNCH THIS or we will throw an error
 */
-extern int activate_and_launch_process(process* process_to_activate);
+extern int activate_and_launch_custom_process(process* process_to_activate);
 
 /**
  * @brief launches the scheduler with not set defined process, the process that 
@@ -169,6 +198,14 @@ extern void process_call_wrapper(void);
 */
 extern void context_switch(context_t *current, context_t *future);
 
+/**
+ * @brief This method is called when we want to jump to the context of a process
+ * directly with doinga context switch, this will happen when a process is killed
+ * and we don't need its context any more nor the memory it holds thus in this scenario we kill
+ * it
+ * @param future the context that we will go to 
+ */
+extern void direct_context_swap(context_t *future);
 
 /**
 * @brief Runs the first executed process
@@ -215,6 +252,7 @@ extern int check_if_new_prio_is_higher_and_call_scheduler(int newprio);
 * @brief Checks if the process is an queue and leaves that queue if needed \n
 * We only use the state of the process to make this assumption regarding the process
 * location.
+* @param process_to_leave the process that will be removed from the queues 
 * @return a negative value if there were any problems
 */
 extern int leave_queue_process_if_needed(process* process_to_leave);
@@ -310,7 +348,7 @@ extern int idle(void *arg);
  * code. Inspired from :
  * https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
  */
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 0
 
 #define debug_print(fmt, ...) \
         do {if (DEBUG_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -321,12 +359,17 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the scheduler,
  *  meaning when we debug the scheduler we use the debug_print_scheduler
  */
-#define DEBUG_SCHEDULER_LEVEL 0 //Indicates if debug type is actuve
+#define DEBUG_SCHEDULER_LEVEL  2//Indicates if debug type is actuve
 
 #define debug_print_scheduler(fmt, ...) \
         do {if (DEBUG_SCHEDULER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
             if (DEBUG_SCHEDULER_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+#define debug_print_scheduler_no_arg(fmt, ...) \
+        do {if (DEBUG_SCHEDULER_LEVEL){ printf(fmt);} } while (0)
+
+
 
 /**
  * @brief the following macro are used to debug the processes,
@@ -338,6 +381,24 @@ extern int idle(void *arg);
         do {if (DEBUG_PROCESS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
             if (DEBUG_PROCESS_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+/**
+ * @brief the following macro are used to debug the processes,
+ *  meaning when we debug the scheduler we use the debug_print_process
+ */
+#define DEBUG_TESTING_LEVEL 1 //Indicates if debug type is active
+
+#define debug_print_tests(fmt, ...) \
+        do {if (DEBUG_TESTING_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_TESTING_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+#define print_test_no_arg(fmt, ...) \
+        do {if (DEBUG_TESTING_LEVEL){ printf(fmt);} } while (0)
+
+
+
+
 
 
 #endif

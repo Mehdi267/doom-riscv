@@ -1,3 +1,12 @@
+br scheduler.c:150
+br direct_context_swap
+br scheduler
+//
+br free_child_zombie_process
+br exit_process
+br turn_current_process_into_a_zombie_or_kill_it
+br make_children_orphans_and_kill_zombies
+//
 br mtrap_entry
 br machine_trap_entry.S:49
 br scheduler.c:131
@@ -17,6 +26,7 @@ br idle
 br process_1
 br process_2
 br scheduler.c:132
+br exit_process
 define nr
 n
 info reg

@@ -51,7 +51,7 @@ void handle_mtimer_interrupt()
 void handle_stimer_interrupt()
 {
     set_supervisor_interrupts(false);
-	printf("\nTic supervisor %d \n", tic);
+	// printf("\nTic supervisor %d \n", tic);
 	set_supervisor_timer_interrupt(TIC_PER); 
 	scheduler();
 	tic++;

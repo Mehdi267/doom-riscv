@@ -2,49 +2,72 @@
 #define _TESTS_H_
 
 #include "stdint.h"
-
-#define DUMMY_VAL 0xDEADCAFE
+#include "../process/process.h"
 
 /*
  * Run kernel test suite
  */
-int64_t kernel_tests(void *arg);
+int kernel_tests(void *arg);
 
 /*
  * Start a simple process
  */
-int64_t test0(void* arg);
+int test0(void* arg);
 
 /*
  * Start a process with a parameter
  * End normally
  * Father wait for his child
  */
-int64_t test1(void* arg);
+int test1(void* arg);
 
 /*
  * Test kill and exit
  */
-int64_t test2(void* arg);
+int test2(void* arg);
 
 /*
  * Prioities and chprio
  */
-int64_t test3(void* arg);
+int test3(void* arg);
 
 /*
  * shared time and active waiting
  */
-int64_t test4(void* arg);
+int test4(void* arg);
 
 /*
  * Robustness of the scheduler
  */
-int64_t test5(void* arg);
+int test5(void* arg);
 
 /*
  * Semaphores or message queues test
  */
-int64_t test10(void* arg);
+int test10(void* arg);
+
+
+typedef struct test_apps {
+    const char *test_name;
+    const uint16_t test_id;
+    int test_return_value;
+} test_apps_t ;
+
+/**
+ * @brief Generates a test report showing all of the executed tests and their status
+ * @param test_table a table taht contains test_apps indicating every test ran and 
+ * the retutn value of every test from whichwe ill get a return value
+*/
+void generate_test_report(test_apps_t* test_table);
+
+// /**
+//  * A table that holds the data structs for the tests
+//  */
+// extern  test_apps_t test_table[];
+
+// /**
+//  * This function will help located the test using their name
+// */
+// extern  test_apps_t *find_app(uint16_t test_id);
 
 #endif /* _TESTS_H_ */

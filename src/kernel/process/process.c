@@ -14,30 +14,44 @@
 #include "stdio.h"
 #include "scheduler.h"
 #include "../timer.h"
+#include "../tests/tests.h"
 
 int initialize_process_hash_table(){
     pid_process_hash_table = (hash_t*) malloc(sizeof(hash_t));
     if (pid_process_hash_table == NULL){
         return -1;
     }
+    return 0;
+}
+
+/**
+ * @brief setup_main_context is used to allocate space for a scheduler_struct 
+ * in which we will store the main exection context when the scheduler is first called
+ * @return 0 if the declaration is everything goes well and -1 in case of an error 
+*/
+static int setup_main_context(){
     scheduler_main = (scheduler_struct*) malloc(sizeof(scheduler_struct));
+    if (scheduler_main == NULL){
+        return -1;
+    }
     scheduler_main -> main_context = (context_t*) malloc(sizeof(context_t));
-    if (scheduler_main == NULL){;
+    if (scheduler_main->main_context == NULL){
         return -1;
     }
     return 0;
 }
 
-
 static int create_idle_process(){
     int pid_idle = start(idle, 1000, 1, "idle", cast_int_to_pointer(300));
-    debug_print_process("[create_idle_process] idle pid = %d\n", pid_idle);
-    debug_print_process("[create_idle_process] idle funciton adress = %ld\n", (long) idle);
+    // debug_print_process("[create_idle_process] idle pid = %d\n", pid_idle);
+    // debug_print_process("[create_idle_process] idle function adress = %ld\n", (long) idle);
     return pid_idle;
 }
 
 
-int activate_and_launch_process(process* process_to_activate){
+
+int activate_and_launch_custom_process(process* process_to_activate){
+    //This mehtod is mostly used for debugging, use with care
     if (process_to_activate == NULL){
         return -1;
     }
@@ -55,8 +69,6 @@ int activate_and_launch_process(process* process_to_activate){
     delete_process_from_queue_wrapper(process_to_activate, ACTIVATABLE_QUEUE);
     process_to_activate->state = ACTIF;
     
-    // started_user_process = true;
-    // first_process_call(get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
     set_supervisor_timer_interrupt(100); 
     while(1){}
     return 0;
@@ -96,6 +108,23 @@ int idle(void *arg)
 }
 
 
+/**
+ * @brief declares a process from which we will start our tests
+ * 
+*/
+static int declares_a_test_process()
+{
+    #ifdef TESTING
+        int p1 = start(kernel_tests, 4000, 2, "kernel_tests", cast_int_to_pointer(0));
+        if (p1<0){
+            return -1;
+        }   
+    #endif
+    return 0;
+}
+
+
+
 int process_1(void *arg)
 {
     int i = 0;
@@ -106,9 +135,7 @@ int process_1(void *arg)
                             getpid(), 
                             cast_pointer_into_a_long(arg));
         // scheduler();
-        // if (i == 6){
-        //     return 1;
-        // }
+        if (i == 6){ return 1;}
     }
 }
 
@@ -126,6 +153,21 @@ int process_2(void *arg)
     }
 }
 
+/**
+ * @brief Defines random processes that are used for debugging purposes
+*/
+static int declares_debug_processes()
+{
+    #ifdef DEBUG
+        int p1 = start(process_1, 1000, 1, "proc1", cast_int_to_pointer(100));
+        int p2 = start(process_2, 1000, 1, "proc2", cast_int_to_pointer(200));
+        if (p1<0 || p2<0){
+            return -1;
+        }
+    #endif
+    return 0;
+}
+
 
 int initialize_process_workflow(){
     init_scheduling_process_queue();
@@ -135,14 +177,19 @@ int initialize_process_workflow(){
     if (hash_init_direct(pid_process_hash_table)<0){
         return -1;
     }
+    if (setup_main_context() <0){;
+        return -1;
+    }
     if (create_idle_process()<0){
         return -1;
     }
-    int p1 = start(process_1, 1000, 1, "proc1", cast_int_to_pointer(100));
-    int p2 = start(process_2, 1000, 1, "proc2", cast_int_to_pointer(200));
-    if (p1<0 || p2<0){
+    //Will only launch the process if the debug mode is set
+    if (declares_debug_processes()<0){
+        return -1;
+    }
+    //Will only launch the process if the testing mode is set
+    if (declares_a_test_process()<0){
         return -1;
     }
     return 0;
 }
-

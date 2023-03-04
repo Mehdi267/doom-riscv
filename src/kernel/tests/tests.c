@@ -1,16 +1,42 @@
 #include <stddef.h>
 #include <stdio.h>
-
 #include "tests.h"
 
+#define NUMBEROFTESTS 3
 
-int64_t kernel_tests(void *arg) {
-	int64_t rc = 0;
+void generate_test_report(test_apps_t* test_table){
+	print_test_no_arg("--------------TESTS REPORT START--------------\n");	
+	for (int test_iter = 0 ; test_iter<NUMBEROFTESTS ; test_iter ++ ){
+		debug_print_tests("Ran test id = %d // Test name = %s, Test status =",
+					 test_table[test_iter].test_id,
+					 test_table[test_iter].test_name);
+		if (test_table[test_iter].test_return_value)
+		{
+			//Test failed
+			debug_print_tests(" FAILED // Return value = %d \n",
+								test_table[test_iter].test_return_value );
+		}
+		else{
+			debug_print_tests(" PASSED // Return value = %d \n",
+								test_table[test_iter].test_return_value );	
+		}
+	}
+	print_test_no_arg("--------------TESTS REPORT END--------------\n");	
+}
 
-	puts("Run kernel test suite:");
-	if (test0(NULL))
-		rc = 1;
+int kernel_tests(void *arg) {
+	/**
+	 * Rc is used to indicate if the tests failed
+	*/
+	int rc = 0;
 
+	test_apps_t test_table[NUMBEROFTESTS] = {
+		{"test0", 0, 0},
+		{"test1", 1, 0},
+		{"test2", 2, 0},
+	};
+
+	print_test_no_arg("\n---------------------kernel_tests executing---------------------\n");
 	/*
 	 * Dans un second temps (quand vous aurez la création de task/processus), les tests devront
 	 * être exécutés dans un processus dédié.
@@ -22,5 +48,23 @@ int64_t kernel_tests(void *arg) {
 	 * 	rc = 1;
 	 */
 
+	print_test_no_arg("\n-------------------Test0 START-------------------\n");
+	/**
+	 * Test 0*/	
+	int test_rc;
+	int pid = start(test0, 1000, 10, "Test 0",  0);
+	waitpid(pid, &test_rc);
+	test_table[0].test_return_value = test_rc;
+	print_test_no_arg("\n INSIDE KERNEL TESTS\n");
+	print_test_no_arg("\n-------------------Test0 END-------------------\n");
+	
+	print_test_no_arg("\n-------------------Test1 START-------------------\n");
+	// /**
+	//  * Test 1*/	
+	pid = start(test1, 1000, 10, "Test 1",  0);
+	waitpid(pid, &test_rc);
+	test_table[1].test_return_value = test_rc;
+	print_test_no_arg("\n-------------------Test1 END-------------------\n");
+	generate_test_report(test_table);
 	return rc;
 }
