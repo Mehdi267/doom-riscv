@@ -62,6 +62,14 @@ int activate_and_launch_process(process* process_to_activate){
     return 0;
 }
 
+
+void activate_and_launch_scheduler(void){
+    set_supervisor_timer_interrupt(100); 
+    while(1){}
+    return;
+}
+
+
 void validation_process(){
     uint8_t variable = 42;
     uint8_t *ptr1 = &variable;

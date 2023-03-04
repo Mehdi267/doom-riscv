@@ -59,11 +59,7 @@ context_switch:
     csrw sscratch, t0
     ld t0, 120(a1) 
     csrw sepc, t0
-
-
-    # On passe la main au nouveau processus
-	# csrw sepc, ra
-	# sret 
-
+	
+	
     jr ra
 

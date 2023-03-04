@@ -113,7 +113,6 @@ typedef struct process_t{
    link link_queue_activable; //used to link the activatable processes 
    link link_queue_asleep; //used to link the asleep process
    int return_value; // return value of the process, used in waitpid
-   bool called_before;
 } process;
 
 
@@ -148,6 +147,11 @@ extern int initialize_process_workflow();
 */
 extern int activate_and_launch_process(process* process_to_activate);
 
+/**
+ * @brief launches the scheduler with not set defined process, the process that 
+ * we will launch will be taken directly from the queue 
+*/
+void activate_and_launch_scheduler(void);
 
 /**
 * @brief this method is used to to process function calls, by using the argument given

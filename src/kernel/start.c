@@ -38,7 +38,8 @@ int kernel_start()
 	// puts(str);
 
 	printf("hello there");
-   if (activate_and_launch_process(get_process_struct_of_pid(1))<0){
+	activate_and_launch_scheduler();
+   	if (activate_and_launch_process(get_process_struct_of_pid(1))<0){
         return -1;
     }
 	while (1) wfi(); //endort le processeur en attente d'une interruption

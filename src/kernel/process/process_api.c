@@ -342,7 +342,7 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     new_process->context_process->s1 = (uint64_t) pt_func;
     debug_print("[start -> %d] function adress funciton adress = %ld\n", new_process->pid, (long) pt_func);
     new_process->context_process->s2 = (uint64_t) arg;
-    new_process->context_process->sepc = (uint64_t) 0;
+    new_process->context_process->sepc = (uint64_t) process_call_wrapper;
 
     // We must created a stack that has the size of a frame and place it in the kernel 
     // memory space that will be used to handle interrupts for this process
