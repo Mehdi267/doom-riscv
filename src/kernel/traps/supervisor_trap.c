@@ -23,6 +23,12 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 		switch (scause & ~INTERRUPT_CAUSE_FLAG) {
 			case intr_s_timer: // in case the s timer interrupt has not been delegated to supervisor mode
 				handle_stimer_interrupt();
+				/**
+				 * We clear the bit in the sip register that was responsible for this interrupt 
+				 * so that we don't jump into the same interrupt again
+				*/
+				csr_clear(sip, MIP_STIP);
+				// csr_set(sip, intr_s_timer);
 				break;
 			default:
 				die(
@@ -32,8 +38,9 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 				break;
 		}
 	} else {
-		// Exception cause
+		// TODO ADD SYSTEM CALLS TREATEMENT
 		switch (scause) {
+			case intr_s_timer: 
 			default:
 				blue_screen(tf);
 				// no return

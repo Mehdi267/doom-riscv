@@ -4,7 +4,8 @@
 #include "drivers/clint.h"
 #include "timer.h"
 #include "drivers/auxval.h"
-
+#include "process/scheduler.h"
+#include "process/helperfunc.h"
 int tic;
 /*
  * Set machine timer
@@ -28,27 +29,31 @@ void set_machine_timer_interrupt(uint64_t delta_ms)
 
 	uint64_t interrupt_time = get_mtime() + (delta_ms/1000) * clint_dev->clk_freq; // get time of next interrupt
 	set_mtimecmp(interrupt_time); // lorsque mtime >= mtimecmp, une interruption est générée
+    return ;
 }
 
 
 void set_supervisor_timer_interrupt(uint64_t delta_ms)
 {
-	uint64_t interrupt_time = get_stime() + (delta_ms/1000) * clint_dev->clk_freq; // get time of next interrupt
+	uint64_t interrupt_time = get_stime() + ( delta_ms * clint_dev->clk_freq )/1000; // get time of next interrupt
 	set_stimecmp(interrupt_time); // lorsque stime >= stimecmp, une interruption est générée
+    return ;
 }
 
 void handle_mtimer_interrupt()
 {
-	puts("test machine!\n");
-	printf("Tic \n");
+	printf("Tic machine \n");
 	set_machine_timer_interrupt(TIC_PER); // this fills the role of ack
 	tic++;
+    return ;
 }
 
 void handle_stimer_interrupt()
 {
-	puts("test supervisor!\n");
-	printf("Tic \n");
-	set_supervisor_timer_interrupt(TIC_PER); // this fills the role of ack
+    set_supervisor_interrupts(false);
+	// printf("\nTic supervisor %d \n", tic);
+	set_supervisor_timer_interrupt(TIC_PER); 
+	scheduler();
 	tic++;
+    return;
 }

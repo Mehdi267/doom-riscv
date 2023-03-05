@@ -15,7 +15,8 @@
 #include "stdint.h"
 #include "string.h"
 #include "riscv.h"
-
+#include "process/process.h"
+#include "process/helperfunc.h"
 #include "drivers/splash.h"
 #include "tests/tests.h"
 
@@ -24,6 +25,10 @@ int kernel_start()
 	splash_screen();
 	splash_vga_screen();
 
+	if (initialize_process_workflow()<0){
+		puts("error while setting up process");
+		exit(-1);
+	}
 	/**
 	 * These lines are used for debugging purposes, they are not relevant
 	 * please don't remove them
@@ -32,10 +37,14 @@ int kernel_start()
 	// sprintf(str,"%li",csr_read(mstatus));
 	// puts(str);
 
+	// printf("hello there");
+	activate_and_launch_scheduler();
 
-	puts("hello there");
+   	if (activate_and_launch_custom_process(get_process_struct_of_pid(1))<0){
+        return -1;
+    }
 	while (1) wfi(); //endort le processeur en attente d'une interruption
 	
-	exit(kernel_tests(NULL));
+	// exit(kernel_tests(NULL));
 
 }

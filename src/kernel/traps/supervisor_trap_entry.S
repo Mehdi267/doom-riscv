@@ -44,8 +44,10 @@
 .text
     .align 4
 strap_entry:
-    # On bascule sur la stack machine (la même pour tout le monde)
-    csrrw sp, sscratch, sp
+    # On bascule sur la stack supervisor interrupt
+    # Using this command we swap the sscratch register and the sp register  
+    # meaning : sp<-sscratch //   sscratch<-sp
+    csrrw sp, sscratch, sp 
     # On alloue la struct trap_frame sur la pile
     addi sp, sp, -37*8
     # Sauvegarde minimaliste du contexte (registre à la charge du caller)

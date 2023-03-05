@@ -5,8 +5,8 @@
 # define TIC_PER 50
 
 /*
- * Prototypes
- */
+* Prototypes
+*/
 
 
 void handle_mtimer_interrupt();

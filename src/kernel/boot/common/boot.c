@@ -15,6 +15,8 @@
 #include "traps/trap.h"
 #include "timer.h"
 #include "drivers/splash.h"
+#include "frame_dist.h"
+#include "pages.h"
 
 extern void _start();
 extern void test();
@@ -57,15 +59,8 @@ static void delegate_traps()
     * we would like to exploit the methods that we were added for trap handling in this mode like strap_entry, strap_handler
     * in order to have more control over what we do for that reason we exploit the two registers :
     *  medeleg(exceptions) and mideleg(interrupts) for delegating the appropriate traps to the appropriate mode
-    *
-    * We want to delegate all exceptions but it there are some exceptions that cannot be
-    * delegated.
-    *
-    * We could chain the exceptiion like exception1 | exception2 | ... | exceptionN (chaining ors).
-    * Or just try to delegate all them and the exceptions that cannot be delegated their bit
-    * will not be changed bc is hard wired 0
   */
-  csr_set(medeleg, MAX_INT);
+	csr_set(medeleg, SIE_STIE);
   csr_set(mideleg, SIE_STIE);
 }
 
@@ -90,6 +85,7 @@ static inline void setup_pmp(void) {
                        : : "r"(pmpc), "r"(pmpa) : "t0");
 }
 
+
 /**
 * Cette fonction fera la configuration nécessaire pour le passage dans le mode
 * de superviseur à partir du mode machine qui est le mode dans lequel on boot
@@ -97,38 +93,38 @@ static inline void setup_pmp(void) {
 */
 static inline void enter_supervisor_mode() {
 
-  // Il faut obligatoirement configurer la protection de la mémoire physique
-  // avant de passer en mode superviseur.
-  setup_pmp();
+    // Il faut obligatoirement configurer la protection de la mémoire physique
+    // avant de passer en mode superviseur.
+    setup_pmp();
 
 
-  /*
+    /*
     * Configuration du mode à utiliser lors de l'instruction mret.
     *
     * CSR concernés: mepc et mstatus.
     * Voir aussi riscv.h pour la macro mret().
-  */
+    */
 
-  // changing to supervisor mode
-  //On met dans le registre mepc l'adresse de la méthode
-  //qu'on exécutera en mode superviseur qui dans ce cas la méthode
-  //kernel_start défini dans le fichier start.c
-  csr_write(mepc, kernel_start);
+    // changing to supervisor mode
+    //On met dans le registre mepc l'adresse de la méthode
+    //qu'on exécutera en mode superviseur qui dans ce cas la méthode
+    //kernel_start défini dans le fichier start.c
+    csr_write(mepc, kernel_start);
 
-  // L'objectif du code  suivant est dans le mettre dans la case MPP
-  // du registre csr mstatus le niveau auquel on veut en aller après avoir traité
-  // l'interruption auquel on est maintenant. Dans notre cas on veut passer du mode
-  // actuel qui est le mode machine vers le mode superviseur qui est identifié avec
-  // les bits suivants : 01
-  csr_set(mstatus, MSTATUS_MPP_0);
-  csr_clear(mstatus, MSTATUS_MPP_1);
+    // L'objectif du code  suivant est dans le mettre dans la case MPP
+    // du registre csr mstatus le niveau auquel on veut en aller après avoir traité
+    // l'interruption auquel on est maintenant. Dans notre cas on veut passer du mode
+    // actuel qui est le mode machine vers le mode superviseur qui est identifié avec
+    // les bits suivants : 01
+    csr_set(mstatus, MSTATUS_MPP_0);
+    csr_clear(mstatus, MSTATUS_MPP_1);
 
-	//enables global Supervisor mode interrupts
-	csr_set(sstatus, SSTATUS_SIE);
+    //enables global Supervisor mode interrupts
+    csr_set(sstatus, SSTATUS_SIE);
 
-  // Le passage au niveau mit dans le registre sera fait automatiquement avec l'instruction
-  // mret qui changera le niveau suivant ce qui existe dans mpp
-  mret();
+    // Le passage au niveau mit dans le registre sera fait automatiquement avec l'instruction
+    // mret qui changera le niveau suivant ce qui existe dans mpp
+    mret();
 }
 
 
@@ -144,37 +140,50 @@ static inline void enter_supervisor_mode() {
 */
 __attribute__((noreturn)) void boot_riscv()
 {
-  // Configuration des composants spécifiques à la machine (uart / htif, timer et interruptions externes).
-  arch_setup();
+    // Configuration des composants spécifiques à la machine (uart / htif, timer et interruptions externes).
+    arch_setup();
 
 
-  display_info_proc();
-  display_misa_info();
+    display_info_proc();
 
-  // Délégations des interruptions et des exceptions
-  delegate_traps();
+    // Délégations des interruptions et des exceptions
+    delegate_traps();
 
-  //On désactive pour le moment la mémoire virtuel,
-  //éventuellement il faut revenir sur cela
-  //et changer la valeur stockée dans le registre
-  csr_write(satp, 0);
+    //On désactive pour le moment la mémoire virtuel,
+    //éventuellement il faut revenir sur cela
+    //et changer la valeur stockée dans le registre
+    csr_write(satp, 0);
 
-  //We disable machine mode interrupts
-  csr_clear(mstatus, MSTATUS_MIE);
+    //We disable machine mode interrupts
+    csr_clear(mstatus, MSTATUS_MIE);
 
-	//enables timer interrupts for the Supervisor mode
-	csr_set(sie, SIE_STIE);
-	
-	//init timer to 0
-	tic = 0;
+    //enables timer interrupts for the Supervisor mode
+    csr_set(sie, SIE_STIE);
 
-	//set first timer interrupt
-	set_supervisor_timer_interrupt(0);
+    //init timer to 0
+    tic = 0;
 
+    init_frames();
+
+  /*Création du directory (table des pages de premier niveau) 
+  qui sera utilisé par l'ensemble des processus kernel.*/
+  page_table *ppn = init_directory();
+
+  //printf("%d",check_validity(ppn->pte_list +0));
+  //printf("%d",is_leaf(ppn->pte_list + 0));
+  //prints 11 =>OK
+
+  //on active et configure satp
+  csr_write(satp, 0x8000000000000000 | (long unsigned int) ppn); //ppn is 24b0000
+
+  //validation
+  set_gigapage(ppn->pte_list + 1, 0x100000000, true, true, false);
+
+  csr_write(satp, 0); 
   /**
    * This function will enter in the supervisor mode and it will enable
    * supervisor mode intterupts
-  */
-	enter_supervisor_mode();
-	__builtin_unreachable();
+   */
+  enter_supervisor_mode();
+  __builtin_unreachable();
 }

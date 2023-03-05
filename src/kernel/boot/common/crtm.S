@@ -35,16 +35,10 @@ _start:
     csrw    mscratch, t0
     add    t2,t0,x0 # used for debugging
 
+    #------------------Supervisor setup------------------
+
     #On se redéplace par rapport à la pile 
     #du process qui est en cours d'execution
-    csrr    t0, mhartid # mhardid is just number of the thread currectly running
-    slli    t0, t0, STACK_SHIFT # shift left logic immediate  src, dest, 10: t0 = t0<<10
-
-setup_smode:
-    # Mise en place du vecteur de trap machine
-    la      t0, strap_entry # load adress mtrap_entry in t0
-    csrw    stvec, t0 # write mtrap_entry in mtvec
-
     csrr    t0, mhartid # mhardid is just number of the thread currectly running
     slli    t0, t0, STACK_SHIFT # shift left logic immediate  src, dest, 10: t0 = t0<<10
 
@@ -57,10 +51,10 @@ setup_smode:
     # On parque les harts autres que le premier pour booter sur un seul core.
     csrr    a0, mhartid # read cssr and store in a0
     bnez    a0, park # if (a0 != 0) goto park;
+
+
     j       boot_riscv
 
-    .align 4
-    .global strap_stacks
     # Endormissement du hart et réveil possible sur interruption IPI
 park:
     wfi # wait for interruption
