@@ -7,17 +7,17 @@
 void generate_test_report(test_apps_t* test_table){
 	print_test_no_arg("--------------TESTS REPORT START--------------\n");	
 	for (int test_iter = 0 ; test_iter<NUMBEROFTESTS ; test_iter ++ ){
-		debug_print_tests("Ran test id = %d // Test name = %s, Test status =",
+		debug_print_tests("Ran test id = %d // Test name = %s // Test status =",
 					 test_table[test_iter].test_id,
 					 test_table[test_iter].test_name);
 		if (test_table[test_iter].test_return_value)
 		{
 			//Test failed
-			debug_print_tests(" FAILED // Return value = %d \n",
+			debug_print_tests("\x1B[1\x1B[31m FAILED \x1b[0m// Return value = %d\n",
 								test_table[test_iter].test_return_value );
 		}
 		else{
-			debug_print_tests(" PASSED // Return value = %d \n",
+			debug_print_tests("\x1B[1m\x1B[32m PASSED \x1b[0m// Return value = %d\n",
 								test_table[test_iter].test_return_value );	
 		}
 	}
