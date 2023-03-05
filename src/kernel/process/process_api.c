@@ -66,6 +66,10 @@ int leave_queue_process_if_needed(process* process_to_leave){
     if(process_to_leave == NULL){
         return -1;
     }
+    debug_print_exit_m("\nTrying to remove %s from a queue id %d process state  = %d\n", 
+                process_to_leave->process_name,
+                process_to_leave->pid,
+                process_to_leave->state);   
     switch(process_to_leave->state) {
         case ACTIVATABLE:
             delete_process_from_queue_wrapper(process_to_leave, ACTIVATABLE_QUEUE);
@@ -91,16 +95,26 @@ int getprio(int pid){
 }
 
 
-int check_if_new_prio_is_higher_and_call_scheduler(int newprio){
+int check_if_new_prio_is_higher_and_call_scheduler(int newprio, bool current_or_queue, int prio_to_compare_queue){
     if (!(newprio <= MAXPRIO && newprio >= MINPRIO)){
        return -1;
     }
-    int currently_running_prio = getprio(getpid());
-    if (currently_running_prio < 0){
-        return -1;
+    if (current_or_queue == true){
+        int currently_running_prio = getprio(getpid());
+        if (currently_running_prio < 0){
+            return -1;
+        }
+        if (currently_running_prio < newprio){
+            scheduler();
+        }
     }
-    if (currently_running_prio < newprio){
-        scheduler();
+    else{
+        if (prio_to_compare_queue < 0){
+            return -1;
+        }
+        if (prio_to_compare_queue > newprio){
+            scheduler();
+        }
     }
     return 0;
 }
@@ -116,10 +130,16 @@ int chprio(int pid, int newprio){
    if (validate_action_process_valid(process_pid) < 0){
        return -1;
    }
+   int old_prio = process_pid->prio;
    process_pid->prio = newprio;
-   check_if_new_prio_is_higher_and_call_scheduler(newprio);
+   process* head_of_queue = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
+   if (head_of_queue == NULL){
+        //No other activatable process we go back to executing this process
+        return old_prio;
+   }
+   check_if_new_prio_is_higher_and_call_scheduler(newprio, false, head_of_queue->prio);
    // If the process is placed in an execution queue, it must be replaced within that queue
-   return pid;
+   return old_prio;
 }
 
 
@@ -130,19 +150,35 @@ int chprio(int pid, int newprio){
 * @returns the value 0 if the the operation was a success and a negative value otherwise
 */
 static int free_child_zombie_process(process* process_to_free){
-   if (process_to_free==NULL){
-       return -1;
-   }
-   if (process_to_free->state != ZOMBIE){
-       return -1;
-   }
-   process_to_free->state = KILLED;
-   return 0;
+    if (process_to_free==NULL){
+        return -1;
+    }
+    if (process_to_free->state != ZOMBIE){
+        return -1;
+    }
+    debug_print_exit_m("\nTrying to free with pid = %d and name = %s \n",process_to_free->pid, process_to_free->process_name);
+    if (process_to_free->pid == getpid()){
+        //If we exit the process from the process it self meaning exit process was called
+        //In this case the process will be removed by the scheduler
+        process_to_free->state = KILLED;
+    }
+    else{
+        debug_print_exit_m("\nFreeing the process with pid = %d and name = %s \n",process_to_free->pid, process_to_free->process_name);
+        //If we killed the process using the kill method then we can removea it directly
+        if (hash_del(get_process_hash_table(), cast_int_to_pointer(process_to_free->pid))<0){
+            //Something went wrong ....
+            return -1;
+        }
+        free(process_to_free);
+        process_to_free = 0;
+    }
+    return 0;
 }
 
 
 /**
-* @brief Free a process and removes it from the parent children
+* @brief Free a process and removes it from the parent's children
+* @note This function must be called on a process that has a parent
 * @param process_to_free the process to free
 * @param before_process the siblings that comes before the process, might have the same value
 * @returns the value 0 if the the operation was a success and a negative value otherwise
@@ -191,29 +227,29 @@ static int free_process_arg_and_fix_tree_link(process* process_to_free, process*
 * @note this method will return 0 if the process does not have any children
 */
 static int make_children_orphans_and_kill_zombies(process* parent_process){
-   if (parent_process == NULL){
-       return -1;
-   }
-   if (parent_process->children_head == NULL && parent_process->children_tail == NULL){
-       return 0;
-   }
-   else{
-       process* temp_process = parent_process->children_head;
-       while (temp_process != NULL){
-           // We free the process in this casse
-           if (temp_process->state == ZOMBIE){
-               //  We don't need to the fix the links of the elements because their relationship
-               //  is not relevant after this call
-               process * process_to_free = temp_process;
-               temp_process = temp_process->next_sibling;
-               if (free_child_zombie_process(process_to_free)<0){
-                   return -1;
-               }
-               continue;
-           }
-           temp_process=temp_process->next_sibling;
-       }
-   }
+    if (parent_process == NULL){
+        return -1;
+    }
+    if (parent_process->children_head == NULL && parent_process->children_tail == NULL){
+        return 0;
+    }
+    else{
+        process* temp_process = parent_process->children_head;
+        while (temp_process != NULL){
+            // We free the process in this casse
+            if (temp_process->state == ZOMBIE){
+                //  We don't need to the fix the links of the elements because their relationship
+                //  is not relevant after this call
+                process * process_to_free = temp_process;
+                temp_process = temp_process->next_sibling;
+                if (free_child_zombie_process(process_to_free)<0){
+                    return -1;
+                }
+                continue;
+            }
+            temp_process=temp_process->next_sibling;
+        }
+    }
    return 0;
 }
 
@@ -247,6 +283,15 @@ static int turn_current_process_into_a_zombie_or_kill_it(bool curent_or_custom, 
     if (current_process->parent == NULL){
         return free_child_zombie_process(current_process);
     }
+    else{
+        //If the parent is waiting for a child we wake it and see
+        //if the child that left correspand to that child that the parent 
+        //was waiting for.  
+        if (current_process->parent->state == BLOCKEDWAITCHILD){
+            current_process->parent->state = ACTIVATABLE;    
+            add_process_to_queue_wrapper(current_process->parent, ACTIVATABLE_QUEUE);
+        }
+    }
     return 0;
 }
 
@@ -254,7 +299,7 @@ static int turn_current_process_into_a_zombie_or_kill_it(bool curent_or_custom, 
 
 
 void exit_process(int retval){
-    debug_print("I am in exit method with argument/ temp pid = %d \n", retval);
+    debug_print_exit_m("I am in exit method with argument/ temp pid = %d \n", retval);
     if (validate_action_process_valid(get_process_struct_of_pid(getpid())) < 0){
         // Something went terribly wrong if we are in here
         exit(-1);
@@ -388,17 +433,13 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
 
     //------------We activate this new process if it has a higher priority-----------
     // This function must be called a the very end
-    check_if_new_prio_is_higher_and_call_scheduler(new_process->prio);
-
+    check_if_new_prio_is_higher_and_call_scheduler(new_process->prio, true, 0);
     return new_process->pid;
 }
 
 
-
-
-
 int waitpid(int pid, int *retvalp){
-    debug_print("[waitpid] Inside waitpid with pid  = %d", pid);
+    debug_print_exit_m("[waitpid] Inside waitpid with pid  = %d\n", pid);
     if (get_process_struct_of_pid(getpid())->children_head == NULL &&
         get_process_struct_of_pid(getpid())->children_tail == NULL ){
         return -1;
@@ -420,8 +461,9 @@ int waitpid(int pid, int *retvalp){
                 temp_process_before = temp_process;
                 temp_process=temp_process->next_sibling;
             }
+            get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;    
+            scheduler();
         }
-        pid_to_return = temp_process->pid;
     }
     // positive pid, we verify pid is a child and then we take its return value and
     // we kill it
@@ -446,11 +488,15 @@ int waitpid(int pid, int *retvalp){
             if (temp_process->state == ZOMBIE){
                 break;
             }
+            get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;    
+            scheduler();
         }
     }
     // We take the return value of the process and then we kill it
     pid_to_return = temp_process->pid;
-    *retvalp = temp_process->return_value; 
+    if (retvalp != NULL){
+        *retvalp = temp_process->return_value; 
+    }
     if (free_process_arg_and_fix_tree_link(temp_process, temp_process_before)<0){
         return -1;
     }
@@ -459,12 +505,16 @@ int waitpid(int pid, int *retvalp){
 
 
 int kill(int pid){
+    if (pid == idleId){
+        //Idle process cannot be killed
+        return -1;
+    }
     process* process_pid = get_process_struct_of_pid(pid);
     if (process_pid == NULL){
         return -1;
     }
     if (validate_action_process_valid(process_pid) < 0){
-        return -1;
+       return -1;
     }
     if (process_pid->pid == getpid()){
         return -1;// We cannot kill the current process from the current process

@@ -158,7 +158,7 @@ int process_2(void *arg)
 */
 static int declares_debug_processes()
 {
-    #ifdef DEBUG
+    #ifdef DEBUG_SCHEDULER
         int p1 = start(process_1, 1000, 1, "proc1", cast_int_to_pointer(100));
         int p2 = start(process_2, 1000, 1, "proc2", cast_int_to_pointer(200));
         if (p1<0 || p2<0){

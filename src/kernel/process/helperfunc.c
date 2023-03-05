@@ -25,6 +25,11 @@ long cast_pointer_into_a_long(void * pointer){
     return (long) pointer;
 }
 
+int cast_pointer_into_a_int(void * pointer){
+    return (int)((long) pointer);
+}
+
+
 void set_supervisor_interrupts(bool val){
     if (val){
         csr_set(sstatus, 2);

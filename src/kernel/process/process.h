@@ -30,6 +30,7 @@
 #define MINPRIO 1
 #define NBPROC 30
 #define PROCESS_SETUP_SIZE 2
+#define idleId 1
 
 /**
  * @brief These variables define the execution state of the program
@@ -42,6 +43,8 @@
 // #define DEBUG
 #define TESTING
 // #define RELEASE
+// #define DEBUG_SCHEDULER
+
 
 /**
 * @brief Global variables
@@ -125,7 +128,21 @@ typedef int	(*process_function_t)	(void*);
 
 
 /**
-* @brief this structure is given to all processesn it will stored at the kernel level
+  * @brief this structure is given to all processesn it will stored at the kernel level
+  * @param pid  id of the process
+  * @param process_name  process name
+  * @param state  state of the process
+  * @param ssize  total the size allocated to the process
+  * @param prio  priority of the process
+  * @param context_process we store here the current execution context of the process ie the important registers
+  * @param func  the function that is associated to the process  not very important and will be removed later
+  * @param parent  parent process
+  * @param children_head  the head of the children process
+  * @param children_tail  the tail of the children_process
+  * @param next_sibling  next sibling of the current process, this parameter is used to link the children of a process
+  * @param link_queue_activable used to link the activatable processes 
+  * @param link_queue_asleep used to link the asleep process
+  * @param return_value  return value of the process, used in waitpid
 */
 typedef struct process_t{
    int pid; // id of the process
@@ -143,6 +160,7 @@ typedef struct process_t{
    link link_queue_asleep; //used to link the asleep process
    int return_value; // return value of the process, used in waitpid
 } process;
+
 
 
 /**
@@ -243,9 +261,14 @@ extern int getpid(void);
 * @brief checks if the newprio that was given to a process is superior to 
 * priority of the currectly running proess and it were to be the case we will 
 * call the scheduler
+* @param current_or_queue this value idicates if the new prio will be compared to the currently running prio
+* of a prio given as function argument \n
+* True-> compare to current prio
+* False-> compare to prio given as function arugment
+* @param prio_to_compare_queue a set prio that we will compare the new prio to if the bool argument is False
 * @return a negative value if there were any problems
 */
-extern int check_if_new_prio_is_higher_and_call_scheduler(int newprio);
+int check_if_new_prio_is_higher_and_call_scheduler(int newprio, bool current_or_queue, int prio_to_compare_queue);
 
 
 /**
@@ -359,7 +382,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the scheduler,
  *  meaning when we debug the scheduler we use the debug_print_scheduler
  */
-#define DEBUG_SCHEDULER_LEVEL  2//Indicates if debug type is actuve
+#define DEBUG_SCHEDULER_LEVEL 0 //Indicates if debug type is actuve
 
 #define debug_print_scheduler(fmt, ...) \
         do {if (DEBUG_SCHEDULER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -375,12 +398,25 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_PROCESS_LEVEL 2 //Indicates if debug type is active
+#define DEBUG_PROCESS_LEVEL  0 //Indicates if debug type is active
 
 #define debug_print_process(fmt, ...) \
         do {if (DEBUG_PROCESS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
             if (DEBUG_PROCESS_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+
+/**
+ * @brief the following macro are used to debug the processes,
+ *  meaning when we debug the scheduler we use the debug_print_process
+ */
+#define DEBUG_EXIT_METHODS_LEVEL 0 //Indicates if debug type is active
+
+#define debug_print_exit_m(fmt, ...) \
+        do {if (DEBUG_EXIT_METHODS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_EXIT_METHODS_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
 
 /**
  * @brief the following macro are used to debug the processes,
@@ -395,10 +431,6 @@ extern int idle(void *arg);
 
 #define print_test_no_arg(fmt, ...) \
         do {if (DEBUG_TESTING_LEVEL){ printf(fmt);} } while (0)
-
-
-
-
 
 
 #endif

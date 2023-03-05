@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "tests.h"
 
-#define NUMBEROFTESTS 3
+#define NUMBEROFTESTS 6
 
 void generate_test_report(test_apps_t* test_table){
 	print_test_no_arg("--------------TESTS REPORT START--------------\n");	
@@ -31,9 +31,12 @@ int kernel_tests(void *arg) {
 	int rc = 0;
 
 	test_apps_t test_table[NUMBEROFTESTS] = {
-		{"test0", 0, 0},
-		{"test1", 1, 0},
-		{"test2", 2, 0},
+		{test0, "test0", 0, 0},
+		{test1, "test1", 1, 0},
+		{test2, "test2", 2, 0},
+		{test3, "test3", 3, 0},
+		{test4, "test4", 4, 0},
+		{test5, "test5", 5, 0},
 	};
 
 	print_test_no_arg("\n---------------------kernel_tests executing---------------------\n");
@@ -47,24 +50,17 @@ int kernel_tests(void *arg) {
 	 * if (test_rc)
 	 * 	rc = 1;
 	 */
-
-	print_test_no_arg("\n-------------------Test0 START-------------------\n");
-	/**
-	 * Test 0*/	
-	int test_rc;
-	int pid = start(test0, 1000, 10, "Test 0",  0);
-	waitpid(pid, &test_rc);
-	test_table[0].test_return_value = test_rc;
-	print_test_no_arg("\n INSIDE KERNEL TESTS\n");
-	print_test_no_arg("\n-------------------Test0 END-------------------\n");
 	
-	print_test_no_arg("\n-------------------Test1 START-------------------\n");
-	// /**
-	//  * Test 1*/	
-	pid = start(test1, 1000, 10, "Test 1",  0);
-	waitpid(pid, &test_rc);
-	test_table[1].test_return_value = test_rc;
-	print_test_no_arg("\n-------------------Test1 END-------------------\n");
+	int test_rc;
+	int pid;
+	for (int test_iter = 0 ; test_iter<NUMBEROFTESTS ; test_iter ++ ){
+		debug_print_tests("\n-------------------%s START-------------------\n", test_table[test_iter].test_name);
+		pid = start(test_table[test_iter].test_func, 4000, 128,test_table[test_iter].test_name, 0);
+		waitpid(pid, &test_rc);
+		test_table[test_iter].test_return_value = test_rc;		
+		debug_print_tests("\n-------------------%s END-------------------\n", test_table[test_iter].test_name);
+	}
+
 	generate_test_report(test_table);
 	return rc;
 }

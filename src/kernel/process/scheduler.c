@@ -17,6 +17,8 @@
 #include "assert.h"
 #include "scheduler.h"
 #include "stdbool.h"
+#include "stddef.h"
+#include "stddef.h"
 
 
 LIST_HEAD(activatable_process_queue);
@@ -70,7 +72,6 @@ process* get_peek_element_queue_wrapper(queue_process_type type){
         return queue_top(&asleep_process_queue, process, link_queue_asleep);
     }
     return NULL;
-
 }
 
 
@@ -91,7 +92,9 @@ void scheduler(){
             return;
         }
         pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
-        setpid(top_process->pid);
+        if (setpid(top_process->pid)<0){
+            return;
+        }
         set_supervisor_interrupts(true);
         debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, default launch of the peek process with id = %d", getpid(),  getpid());
         debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
@@ -134,38 +137,50 @@ void scheduler(){
         if (current_process->state == ACTIF){
             if (top_process->prio >= current_process->prio){
                 //In this case we switch the process and 
+                debug_print_scheduler("[scheduler -> %d] Swapping process current pid = %d ->>>>>>>> peek pid = %d\n", getpid(), current_process->pid, top_process->pid);
                 pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
-                setpid(top_process->pid);
+                if (setpid(top_process->pid)<0){ 
+                    return;
+                }
+                current_process->state = ACTIVATABLE;
                 set_supervisor_interrupts(true);
                 top_process->state = ACTIF;
                 add_process_to_queue_wrapper(current_process, ACTIVATABLE_QUEUE);  
+                debug_print_scheduler("[scheduler -> %d] Swapping process current pid = %d ->>>>>>>> peek pid = %d\n", top_process->pid , current_process->pid, top_process->pid);
                 context_switch(current_process->context_process, top_process->context_process);
             }
-            debug_print_scheduler("[scheduler -> %d] Sticking with the same process id = %d\n", getpid(), current_process->pid);
+            else{
+                debug_print_scheduler("[scheduler -> %d] Sticking with the same process id = %d\n", getpid(), current_process->pid);
+            }
         }
         //If the process was killed we free its data 
         //and jump directly into an other context
         else if(current_process->state == KILLED){
+            debug_print_scheduler("[scheduler -> %d] I am in a killed process id = %d, moving to process = %d\n",
+                                    getpid(), current_process->pid, top_process->pid);
             pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
-            setpid(top_process->pid);
+            if (setpid(top_process->pid)<0){
+                return;
+            }
             set_supervisor_interrupts(true);
             top_process->state = ACTIF;
             if (hash_del(get_process_hash_table(), cast_int_to_pointer(current_process->pid))<0){
-                //Something went wrong
                 return ;
             }
             free(current_process);
+            current_process = 0;
             direct_context_swap(top_process->context_process);
         }
         //if the process was placed in an other state when this was called
         //then we change the context directly and we don't place the process in the 
         //activatable queue
         else{
-            
             debug_print_scheduler("[scheduler -> %d] Current process is not in a actif state= %d swaping to %d\n", 
                                     getpid(), current_process->pid, top_process->pid);
             pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
-            setpid(top_process->pid);
+            if (setpid(top_process->pid)<0){
+                return;
+            }
             set_supervisor_interrupts(true);
             top_process->state = ACTIF;
             context_switch(current_process->context_process, top_process->context_process);

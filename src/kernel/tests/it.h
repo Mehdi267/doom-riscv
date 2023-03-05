@@ -1,3 +1,5 @@
+#include "tests.h"
+
 #ifndef _IC_H_
 #define _IC_H_
 

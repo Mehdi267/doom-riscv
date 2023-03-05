@@ -3,6 +3,7 @@
 
 #include "stdint.h"
 #include "../process/process.h"
+#include "../process/helperfunc.h"
 
 /*
  * Run kernel test suite
@@ -13,6 +14,12 @@ int kernel_tests(void *arg);
  * Start a simple process
  */
 int test0(void* arg);
+
+/**
+ * IT test
+ */
+extern void test_it();
+
 
 /*
  * Start a process with a parameter
@@ -48,6 +55,7 @@ int test10(void* arg);
 
 
 typedef struct test_apps {
+    process_function_t test_func;
     const char *test_name;
     const uint16_t test_id;
     int test_return_value;
