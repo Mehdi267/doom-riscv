@@ -8,12 +8,35 @@
 #include "process.h"
 #include "stddef.h"
 
+#include "stdio.h"
+#include "assert.h"
+#include "stddef.h"
+#include "stdlib.h"
+#include "stdint.h"
+#include "string.h"
+#include "riscv.h"
+
+
 void* cast_int_to_pointer(int int_to_cast){
     return (void*)((long) int_to_cast);
 }
 
 long cast_pointer_into_a_long(void * pointer){
     return (long) pointer;
+}
+
+int cast_pointer_into_a_int(void * pointer){
+    return (int)((long) pointer);
+}
+
+
+void set_supervisor_interrupts(bool val){
+    if (val){
+        csr_set(sstatus, 2);
+    }
+    else{
+        csr_clear(sstatus, 2);
+    }
 }
 
 process* get_process_struct_of_pid(int pid){

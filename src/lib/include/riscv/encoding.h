@@ -187,5 +187,8 @@
 
 #endif
 
+// my encodings
+
+#define MAX_INT 0xFFFFFFFFFFFFFFFF
 
 #endif  /* _LIBC_RISCV_ENCODING_H_ */

@@ -3,7 +3,8 @@
 #include "stdio.h"
 #include "assert.h"
 
-int64_t test0(void *arg)
+
+int test0(void *arg)
 {
 	(void)arg;
 

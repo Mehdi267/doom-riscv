@@ -27,7 +27,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 				 * We clear the bit in the sip register that was responsible for this interrupt 
 				 * so that we don't jump into the same interrupt again
 				*/
-				// csr_clear(sip, intr_s_timer);
+				csr_clear(sip, MIP_STIP);
 				// csr_set(sip, intr_s_timer);
 				break;
 			default:
@@ -38,7 +38,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 				break;
 		}
 	} else {
-		// Exception cause
+		// TODO ADD SYSTEM CALLS TREATEMENT
 		switch (scause) {
 			case CAUSE_LOAD_ACCESS:
 			case CAUSE_STORE_ACCESS:
@@ -46,6 +46,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 			case CAUSE_STORE_PAGE_FAULT:
 				//allocate_new_page();
 				break;
+			case intr_s_timer: 
 			default:
 				blue_screen(tf);
 				// no return

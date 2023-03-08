@@ -35,6 +35,8 @@ _start:
     csrw    mscratch, t0
     add    t2,t0,x0 # used for debugging
 
+    #------------------Supervisor setup------------------
+
     #On se redéplace par rapport à la pile 
     #du process qui est en cours d'execution
     csrr    t0, mhartid # mhardid is just number of the thread currectly running

@@ -16,9 +16,15 @@
 extern void* cast_int_to_pointer(int);
 
 /**
- * @brief Casts a pointer into an int
+ * @brief Casts a pointer into an long
 */
 extern long cast_pointer_into_a_long(void * pointer);
+
+/**
+ * @brief Casts a pointer into an int
+*/
+extern int cast_pointer_into_a_int(void * pointer);
+
 
 /**
  * @brief returns the struct process that holds the pid given as the function argument pid
@@ -61,5 +67,14 @@ extern int validate_action_process_valid(process* process_pid);
 
 // mask an adress with a long int
 #define MASK_ADDRESS(a, i) ((unsigned long int)(a) & (i));
+/**
+ * @brief set supervisor interrupts to the value given a fnction argument
+*/
+extern void set_supervisor_interrupts(bool val);
+
+
+
+
+
 
 #endif
