@@ -160,9 +160,6 @@ __attribute__((noreturn)) void boot_riscv()
     //enables timer interrupts for the Supervisor mode
     csr_set(sie, SIE_STIE);
 
-    //init timer to 0
-    tic = 0;
-
     init_frames();
 
   /*Création du directory (table des pages de premier niveau) 
