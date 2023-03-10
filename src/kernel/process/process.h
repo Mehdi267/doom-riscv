@@ -159,6 +159,7 @@ typedef struct process_t{
    link link_queue_activable; //used to link the activatable processes 
    link link_queue_asleep; //used to link the asleep process
    int return_value; // return value of the process, used in waitpid
+   int64_t sleep_time;
 } process;
 
 
