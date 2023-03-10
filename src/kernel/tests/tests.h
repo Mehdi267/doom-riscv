@@ -48,6 +48,8 @@ int test4(void* arg);
  */
 int test5(void* arg);
 
+// todo add comment
+int test6(void *arg);
 /*
  * Semaphores or message queues test
  */
