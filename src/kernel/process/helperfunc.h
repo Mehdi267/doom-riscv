@@ -9,7 +9,7 @@
 
 #include "stdint.h"
 #include "process.h"
-
+#include "../pages.h"
 /**
  * @brief Casts an int to a void * pointer 
 */
@@ -46,6 +46,9 @@ extern char* getname(void);
  * @return the name of the process with the pid given ad the function argument or NULL if it can't find it
  */
 extern char* get_pid_name(int pid);
+
+
+extern void print_pte(page_table_entry *pte);   
 
 
 /**

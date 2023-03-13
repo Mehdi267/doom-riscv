@@ -63,6 +63,11 @@ static void delegate_traps()
     */
     csr_set(medeleg, SIE_STIE);
     csr_set(mideleg, SIE_STIE);
+    //page fault delegation 
+    csr_set(medeleg, SIE_INST_PAGE_FAULT);
+    csr_set(medeleg, SIE_INST_PAGE_FAULT);
+    csr_set(medeleg, SIE_STORE_PAGE_FAULT);
+
 }
 
 
@@ -125,30 +130,13 @@ static inline void enter_supervisor_mode() {
 
     //set mxr to one to access executable pages
     csr_set(sstatus, SSTATUS_MXR);
-
+    csr_set(sstatus, SSTATUS_SUM);
     // Le passage au niveau mit dans le registre sera fait automatiquement avec l'instruction
     // mret qui changera le niveau suivant ce qui existe dans mpp
     mret();
 }
 
-/**
- * @brief Sets up kernel memory managament
- * 
- * @return int 
- */
-static int init_kernel_memory(){
-    init_frames();
-    /** Creating kernel page table that has :
-     * - a gigabyte pages that is used to store all kernel memory that will be used for scheduling 
-     * process managment and intterupt handeling and other things (view memory layout at https://gitlab.ensimag.fr/pcserv/documentation-risc-v/-/wikis/Adressage-et-m%C3%A9moire-virtuelle)
-     */
-    page_table *kernel_base_page_table = init_directory();
-    if (kernel_base_page_table == NULL){
-        return -1;
-    }
-    csr_write(satp, 0x8000000000000000 | (long unsigned int) kernel_base_page_table); //ppn is 24b0000
-    return 0;
-}
+
 
 /*
 * boot_riscv
@@ -180,15 +168,14 @@ __attribute__((noreturn)) void boot_riscv()
     //init timer to 0
     tic = 0;
 
-    if (init_kernel_memory() <0){
-        printf("Paniced when allocating space for the kernel");
-        exit(-1);
-    }
+    init_frames();
 
-    //validation
-    //set_gigapage(ppn->pte_list + 1, 0x100000000, true, true, false);
 
-    csr_write(satp, 0); 
+    // if (init_kernel_memory() <0){
+    //     printf("Panicked when allocating space for the kernel");
+    //     exit(-1);
+    // }
+
     /**
      * This function will enter in the supervisor mode and it will enable
      * supervisor mode intterupts

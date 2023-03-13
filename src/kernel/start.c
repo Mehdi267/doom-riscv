@@ -22,24 +22,35 @@
 
 int kernel_start()
 {
+
+    puts("ekaznlkea");
+    /** Creating kernel page table that has :
+     * - a gigabyte pages that is used to store all kernel memory that will be used for scheduling 
+     * process managment and intterupt handeling and other things (view memory layout at https://gitlab.ensimag.fr/pcserv/documentation-risc-v/-/wikis/Adressage-et-m%C3%A9moire-virtuelle)
+    */
+    page_table *kernel_base_page_table = init_directory();
+    if (kernel_base_page_table == NULL){
+        return -1;
+    }
+    long satp_value =  0x8000000000000000 | (long unsigned int) kernel_base_page_table;
+    csr_write(satp, satp_value); //ppn is 24b0000  
+    
 	splash_screen();
 	splash_vga_screen();
 
-	//if (initialize_process_workflow()<0){
-	//	puts("error while setting up process");
-	//	exit(-1);
-	//}
 
-  uint8_t variable = 42;
-  uint8_t *ptr1 = &variable;
-  uint8_t *ptr2 = ptr1 + 0x100000000;
 
-  printf("ptr1 @%p = %u\n", ptr1, *ptr1);
-  printf("ptr2 @%p = %u\n", ptr2, *ptr2);	
-  if (*ptr1 == *ptr2)
-      puts("Test mémoire virtuelle OK");
-  else
-      puts("Test mémoire virtuelle FAIL");
+
+    uint8_t variable = 42;
+    uint8_t *ptr1 = &variable;
+    uint8_t *ptr2 = ptr1 + 0x100000000;
+
+    printf("ptr1 @%p = %u\n", ptr1, *ptr1);
+    printf("ptr2 @%p = %u\n", ptr2, *ptr2);	
+    if (*ptr1 == *ptr2)
+        puts("Test mémoire virtuelle OK");
+    else
+        puts("Test mémoire virtuelle FAIL");
 
 	/**
 	 * These lines are used for debugging purposes, they are not relevant
@@ -50,6 +61,11 @@ int kernel_start()
 	// puts(str);
 
 	// printf("hello there");
+    // if (initialize_process_workflow()<0){
+	// 	puts("error while setting up process");
+	// 	exit(-1);
+	// }
+
 	// activate_and_launch_scheduler();
 
 	
@@ -57,8 +73,8 @@ int kernel_start()
    	// if (activate_and_launch_custom_process(get_process_struct_of_pid(1))<0){
     //     return -1;
     // }
-	while (1) wfi(); //endort le processeur en attente d'une interruption
+	// while (1) wfi(); //endort le processeur en attente d'une interruption
 	
 	// exit(kernel_tests(NULL));
-
+    return 0;  
 }

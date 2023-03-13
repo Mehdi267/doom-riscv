@@ -13,6 +13,9 @@
 #define PPN1_MASK 0x1FF
 #define PPN2_MASK 0x3FFFFFF
 
+#define KERNEL_SPACE 0
+#define VRAM_SPACE 2
+
 #define MEGAPAGE_SIZE_EXP 21
 #define MEGAPAGE_SIZE ((unsigned long)1<<MEGAPAGE_SIZE_EXP)
 #define GIGAPAGE_SIZE_EXP 30

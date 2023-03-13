@@ -1,3 +1,15 @@
+// br kernel_start
+//
+br strap_handler
+br mtrap_handler
+layout src
+//
+br boot_riscv
+br init_kernel_memory
+br kernel_start
+br enter_supervisor_mode
+br splash_screen
+//
 br test3
 br waitpid
 br free_child_zombie_process

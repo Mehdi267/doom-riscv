@@ -14,6 +14,8 @@
  */
 page_table *create_page_table(){
     page_table *ptr = (page_table *) get_frame(); //Allocates data for the page table
+    print_pte(ptr->pte_list);
+    // debug_print_memory("valid = %p \n ", ptr->pte_list[0]);
     if (ptr == NULL){
         return NULL;
     }
@@ -22,6 +24,8 @@ page_table *create_page_table(){
     memset(ptr, 0, FRAME_SIZE);
     return ptr;
 }
+
+
 
 /**
  * @brief init_directory creates the page table that we will be used by the kernel
@@ -33,33 +37,20 @@ page_table *init_directory(){
   if (directory_ptr == NULL){return NULL;}
   page_table_entry *pte_kernel = directory_ptr->pte_list+0; // La 1ère PTE du directory pointera vers la gigapage
   //Giga page for kernel memory // stack
-  set_leaf_page(pte_kernel, 0, true, true, true, GIGA); //gigapage is RWX, starting from the adress 0
-  debug_print_memory("size == %ld \n", sizeof(page_table_entry));
+  configure_page_entry(pte_kernel, KERNEL_SPACE, true, true, true, GIGA); //gigapage is RWX, starting from the adress 0
   debug_print_memory("Init directory giga byte page table adress = %lx \n", cast_pointer_into_a_long(directory_ptr));
+  print_pte(pte_kernel);
   //We also need to add the memory related space for graphical setup to the page table
   //These giga pages are read/write only
-  page_table_entry *pte_graphic_memory_1 = directory_ptr->pte_list+8; 
-  page_table_entry *pte_graphic_memory_2 = directory_ptr->pte_list+16; 
-  set_leaf_page(pte_kernel, 0, true, true, false, GIGA);  
-  set_leaf_page(pte_kernel, 0, true, true, false, GIGA);  
+  page_table_entry *pte_graphic_memory_1 = directory_ptr->pte_list+1; 
+  page_table_entry *pte_graphic_memory_2 = directory_ptr->pte_list+2; 
+  configure_page_entry(pte_graphic_memory_1, VRAM_SPACE, true, true, false, GIGA);
+  configure_page_entry(pte_graphic_memory_2, VRAM_SPACE+1, true, true, false, GIGA);  
   return directory_ptr;
 }
 
-void set_gigapage(page_table_entry *pte, long unsigned int address, bool read, bool write, bool exec){
-    //address is relative to satp.ppn
-    assert(read || !write); //or the page would be invalid
-    assert(read || exec); //or the page is not a leaf
-    set_valid(pte);
-    set_read(pte, read);
-    set_write(pte, write);
-    set_exec(pte, exec);
-    //in accordance to point 6 of 4.3.2, we have to set ppn[1] and ppn[0] to 0
-    //The value of these ppn are not relevant since we only use pp2 
-    //to get the adress of the giga byte page
-    set_ppn0(pte, 0);
-    set_ppn1(pte, 0);
-    set_ppn2(pte, address);
-}
+
+
 
 void configure_page_entry(page_table_entry *pte, long unsigned int address, bool read, bool write, bool exec, page_type_t page_type){
     //address is relative to satp.ppn
@@ -95,6 +86,22 @@ void configure_page_entry(page_table_entry *pte, long unsigned int address, bool
         default:
             break;
     }
+}
+
+void set_gigapage(page_table_entry *pte, long unsigned int address, bool read, bool write, bool exec){
+    //address is relative to satp.ppn
+    assert(read || !write); //or the page would be invalid
+    assert(read || exec); //or the page is not a leaf
+    set_valid(pte);
+    set_read(pte, read);
+    set_write(pte, write);
+    set_exec(pte, exec);
+    //in accordance to point 6 of 4.3.2, we have to set ppn[1] and ppn[0] to 0
+    //The value of these ppn are not relevant since we only use pp2 
+    //to get the adress of the giga byte page
+    set_ppn0(pte, 0);
+    set_ppn1(pte, 0);
+    set_ppn2(pte, address);
 }
 
 

@@ -138,6 +138,6 @@ page_table *init_directory();
  * @param page_type refers to different page size 
  * that we are working with could be GIGA/MEGA/KILO
  */
-void configure_page_entry(page_table_entry *pte, long unsigned int address, bool read, bool write, bool exec, page_type_t page_type){
+extern void configure_page_entry(page_table_entry *pte, long unsigned int address, bool read, bool write, bool exec, page_type_t page_type);
 
 #endif

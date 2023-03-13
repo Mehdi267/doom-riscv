@@ -9,3 +9,4 @@ gdbinit
 text.txt
 */.vscode
 .vscode
+src/gdbinit
