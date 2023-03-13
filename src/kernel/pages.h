@@ -11,8 +11,31 @@ Gestion des tables de pages, PTEs, directory
 cf p85 of privileged doc
 struct sur 64 bits 
 */
+
+
+/**
+ * @brief page_type_t is used to differentiate different page sizes
+ * @param GIGA  refers to the gigabyte page
+ * @param MEGA refers to the 2 megabyte page
+ * @param KILO refers to the 4096 byte page
+*/
+typedef enum _page_type {  
+                        GIGA,
+                        MEGA,
+                        KILO  
+} page_type_t;
+
+
+
+/**
+ * @brief page_table_entry is 64 bits value that is associated to every page.
+ * With this variable we can identify if we can read or write or exeecute the data that 
+ * is in this page. Some other control elements are also present read: 
+ * 4.3.1 Addressing and Memory Protection of the priviliged doc
+ * @param ppn0 and pp1 and ppn2 are used to associated to every page the physical adresses that it belongs to 
+*/
 typedef struct page_table_entry{
-    unsigned int ppn2 : 26; //pas au "bon" endroit, mais c'est normal, sinon la struct prend plus de 64 bits
+    unsigned int ppn2 : 26; //pas au "bon" endroit, mais c'est normal, sinon la struct prend plus de 64 bits 
     unsigned int valid : 1;
     unsigned int read : 1;
     unsigned int write : 1;
@@ -31,29 +54,70 @@ typedef struct page_table_entry{
     //64
 } page_table_entry;
 
-//def d'une page table
+
+/**
+ * @brief A page table is associated to every process and kernel the physical adress of this struct 
+ * will be placed in the satp register so that every running element(process or kernel) can locate its 
+ * pages 
+ * @param pte_list containes the pages that will be associated to this process
+ * which are in this case limited to 512 that set by the constant PT_SIZE
+ */
 typedef struct page_table{
-    //512PTEs de 8 octets
     page_table_entry pte_list[PT_SIZE];
 } page_table;
 
+/**
+ * @brief page_table_wrapper_t is a wrapper for the page table struct that holds additional inforamtion
+ * regarding the page table
+ * @param number_of_entries hold the number pte that have been placed in this page table
+ */
+typedef struct page_table_wrapper{
+    page_table* table;
+    int number_of_entries;
+} page_table_wrapper_t;
+
+
+/**
+ * @brief Create a page table object
+ * 
+ * @return page_table* an adress to a struct that contains a page table
+ * of NULL if any errors occured
+ */
 page_table *create_page_table();
 
+/**
+ * Makes the bit v in the page_table_entry pte valid(true -- 1)
+*/
 void set_valid(page_table_entry *pte);
+/**
+ * Makes the bit v in the page_table_entry pte invalid(false -- 0)
+*/
 void set_invalid(page_table_entry *pte);
 
+/**
+ * Checks if a page is valid
+*/
 bool check_validity(page_table_entry *pte);
 
+/**
+ * Sets the approriate bit to the value specified in the bool value
+*/
 void set_write(page_table_entry *pte, bool write);
 void set_read(page_table_entry *pte, bool read);
 void set_exec(page_table_entry *pte, bool exec);
 
+/**
+ * Checks if the pte is a leaf meaning that the R/W/X are not null
+*/
 bool is_leaf(page_table_entry *pte);
 
 void set_ppn2(page_table_entry *pte, unsigned int ppn);
 void set_ppn1(page_table_entry *pte, unsigned int ppn);
 void set_ppn0(page_table_entry *pte, unsigned int ppn);
 
+/**
+ * Make a page a gigabytes page
+*/
 void set_gigapage(page_table_entry *pte, long unsigned int adress, bool read, bool write, bool exec);
 
 void link_pte(page_table_entry *pte, void *address);
@@ -65,5 +129,18 @@ void link_pte(page_table_entry *pte, void *address);
 * renvoie l'adresse physique du directory
 */
 page_table *init_directory();
+
+/**
+ * @brief 
+ * 
+ * @param pte 
+ * @param address 
+ * @param read 
+ * @param write 
+ * @param exec determines if we want  
+ * @param page_type refers to different page size 
+ * that we are working with could be GIGA/MEGA/KILO
+ */
+void configure_page_entry(page_table_entry *pte, long unsigned int address, bool read, bool write, bool exec, page_type_t page_type){
 
 #endif

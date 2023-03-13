@@ -41,7 +41,7 @@
  * @param 
 */
 // #define DEBUG
-#define TESTING
+// #define TESTING
 // #define RELEASE
 // #define DEBUG_SCHEDULER
 
@@ -106,7 +106,7 @@ typedef struct context {
    * @param BLOCKEDQUEUE : 
    * @param Zombie: The process has either terminated or been terminated by the kill system call and its father is still alive and has not yet waitpided on it.
    * @param KILLED: The process has been terminated and will be removed shortly from memory 
-*/
+*/  
 typedef enum _process_state {   ACTIF,
                                 ACTIVATABLE,
                                 BLOCKEDSEMAPHORE,
@@ -426,8 +426,7 @@ extern int idle(void *arg);
 
 
 /**
- * @brief the following macro are used to debug the processes,
- *  meaning when we debug the scheduler we use the debug_print_process
+ * @brief the following macro are used when running the tests
  */
 #define DEBUG_TESTING_LEVEL 1 //Indicates if debug type is active
 
@@ -440,5 +439,19 @@ extern int idle(void *arg);
         do {if (DEBUG_TESTING_LEVEL){ printf(fmt);} } while (0)
 
 
-#endif
 
+/**
+ * @brief the following macro are used to debug the memory management
+ */
+#define DEBUG_MEMORY_LEVEL 1 //Indicates if debug type is active
+
+#define debug_print_memory(fmt, ...) \
+        do {if (DEBUG_MEMORY_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_MEMORY_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+#define print_memory_no_arg(fmt, ...) \
+        do {if (DEBUG_MEMORY_LEVEL){ printf(fmt);} } while (0)
+
+
+#endif
