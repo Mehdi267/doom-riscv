@@ -30,6 +30,7 @@ void set_gigapage(page_table_entry *pte, long unsigned int adress, bool read, bo
     set_ppn0(pte, 0);
     set_ppn1(pte, 0);
     set_ppn2(pte, adress);
+    //pte->resU = 1;
 }
 
 

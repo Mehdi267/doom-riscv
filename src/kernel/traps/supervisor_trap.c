@@ -46,7 +46,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 			case CAUSE_STORE_PAGE_FAULT:
 				//allocate_new_page();
 				break;
-			case intr_s_timer: 
+			//case intr_s_timer: 
 			default:
 				blue_screen(tf);
 				// no return

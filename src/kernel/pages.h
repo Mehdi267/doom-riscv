@@ -11,24 +11,22 @@ Gestion des tables de pages, PTEs, directory
 cf p85 of privileged doc
 struct sur 64 bits 
 */
-typedef struct page_table_entry{
-    unsigned int ppn2 : 26; //pas au "bon" endroit, mais c'est normal, sinon la struct prend plus de 64 bits
+typedef struct __attribute__ ((packed)) page_table_entry {
     unsigned int valid : 1;
     unsigned int read : 1;
     unsigned int write : 1;
     unsigned int exec : 1;
     unsigned int resU: 1;
     unsigned int global : 1;
-    //32
     unsigned int resA : 1;
     unsigned int resD : 1;
     unsigned int rsw : 2;
     unsigned int ppn0 : 9;
     unsigned int ppn1 : 9;
+    unsigned int ppn2 : 26;
     unsigned int reserved : 7;
     unsigned int pbmt : 2;
     unsigned int n : 1;
-    //64
 } page_table_entry;
 
 //def d'une page table

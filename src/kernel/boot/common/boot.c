@@ -123,6 +123,9 @@ static inline void enter_supervisor_mode() {
     //enables global Supervisor mode interrupts
     csr_set(sstatus, SSTATUS_SIE);
 
+    //set mxr to one to access executable pages
+    csr_set(sstatus, SSTATUS_MXR);
+
     // Le passage au niveau mit dans le registre sera fait automatiquement avec l'instruction
     // mret qui changera le niveau suivant ce qui existe dans mpp
     mret();
@@ -177,16 +180,20 @@ __attribute__((noreturn)) void boot_riscv()
   process_memory_allocator(3000);
 
   //on active et configure satp
-  csr_write(satp, 0x8000000000000000 | (long unsigned int) ppn); //ppn is 24b0000
+  csr_write(satp, 0x8000000000000000 | ((long unsigned int) ppn >> 12)); //ppn is 24a0000, mode is sv39
+
+  set_gigapage(ppn->pte_list, 0, true, true, true); //RWX
+
 
   //validation
-  //set_gigapage(ppn->pte_list + 1, 0x100000000, true, true, false);
+  set_gigapage(ppn->pte_list + 1, 0x100000000, true, true, true);
 
-  csr_write(satp, 0); 
+
   /**
    * This function will enter in the supervisor mode and it will enable
    * supervisor mode intterupts
    */
   enter_supervisor_mode();
+
   __builtin_unreachable();
 }
