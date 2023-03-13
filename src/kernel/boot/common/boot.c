@@ -123,6 +123,9 @@ static inline void enter_supervisor_mode() {
     //enables global Supervisor mode interrupts
     csr_set(sstatus, SSTATUS_SIE);
 
+    //set mxr to one to access executable pages
+    csr_set(sstatus, SSTATUS_MXR);
+
     // Le passage au niveau mit dans le registre sera fait automatiquement avec l'instruction
     // mret qui changera le niveau suivant ce qui existe dans mpp
     mret();
