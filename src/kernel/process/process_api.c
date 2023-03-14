@@ -387,9 +387,9 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     // be made the right argument that is in s2 and it also has to call the exit_process method
     // at the end as this will be important in the case the user uses a return call
     new_process->context_process->ra = (uint64_t) process_call_wrapper;
-    new_process->context_process->s1 = (uint64_t) pt_func;
+    new_process->context_process->s[1] = (uint64_t) pt_func;
     // debug_print("[start -> %d] function adress funciton adress = %ld\n", new_process->pid, (long) pt_func);
-    new_process->context_process->s2 = (uint64_t) arg;
+    new_process->context_process->s[2] = (uint64_t) arg;
     new_process->context_process->sepc = (uint64_t) process_call_wrapper;
 
     // We must created a stack that has the size of a frame and place it in the kernel 
