@@ -15,8 +15,6 @@
 #include "traps/trap.h"
 #include "timer.h"
 #include "drivers/splash.h"
-#include "frame_dist.h"
-#include "pages.h"
 #include "process/process.h"
 
 extern void _start();
@@ -130,7 +128,6 @@ static inline void enter_supervisor_mode() {
 
     //set mxr to one to access executable pages
     csr_set(sstatus, SSTATUS_MXR);
-    csr_set(sstatus, SSTATUS_SUM);
     // Le passage au niveau mit dans le registre sera fait automatiquement avec l'instruction
     // mret qui changera le niveau suivant ce qui existe dans mpp
     mret();
@@ -168,7 +165,6 @@ __attribute__((noreturn)) void boot_riscv()
     //init timer to 0
     tic = 0;
 
-    init_frames();
 
 
     // if (init_kernel_memory() <0){

@@ -11,7 +11,7 @@
 #include "stdlib.h"
 #include "helperfunc.h"
 #include "stdio.h"
-#include "frame_dist.h"
+#include "../memory/frame_dist.h"
 #include "stdbool.h"
 #include "queue.h"
 #include "assert.h"

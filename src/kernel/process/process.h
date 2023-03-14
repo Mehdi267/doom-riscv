@@ -37,6 +37,7 @@
  * @param DEBUG will launch debug process and eventually will print the debug messages 
  * @param TESTING will launch the testing process and will call the kernel_tests
  * @param RELEASE will not do the above and launch the kernel is production mode
+ * @param TESTING_MEMORY will not do the above and launch the kernel is production mode
  * @note IMPORTANT : Only one of these variables should defined at a time
  * @param 
 */
@@ -44,7 +45,7 @@
 #define TESTING
 // #define RELEASE
 // #define DEBUG_SCHEDULER
-
+#define TESTING_MEMORY
 
 /**
 * @brief Global variables
@@ -378,7 +379,7 @@ extern int idle(void *arg);
  * code. Inspired from :
  * https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
  */
-#define DEBUG_LEVEL 2
+#define DEBUG_LEVEL 0 //Indicates if debug type is active 
 
 #define debug_print(fmt, ...) \
         do {if (DEBUG_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -389,7 +390,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the scheduler,
  *  meaning when we debug the scheduler we use the debug_print_scheduler
  */
-#define DEBUG_SCHEDULER_LEVEL 2 //Indicates if debug type is actuve
+#define DEBUG_SCHEDULER_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_scheduler(fmt, ...) \
         do {if (DEBUG_SCHEDULER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -405,7 +406,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_PROCESS_LEVEL  2 //Indicates if debug type is active
+#define DEBUG_PROCESS_LEVEL  0 //Indicates if debug type is active
 
 #define debug_print_process(fmt, ...) \
         do {if (DEBUG_PROCESS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -417,7 +418,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_EXIT_METHODS_LEVEL 2 //Indicates if debug type is active
+#define DEBUG_EXIT_METHODS_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_exit_m(fmt, ...) \
         do {if (DEBUG_EXIT_METHODS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \

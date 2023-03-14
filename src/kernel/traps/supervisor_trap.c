@@ -17,7 +17,6 @@
 
 void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 {
-    printf("[start] hello world start scauce %ld \n", scause);
 	if (scause & INTERRUPT_CAUSE_FLAG) {
 		// Interruption cause
 		uint8_t interrupt_number = scause & ~INTERRUPT_CAUSE_FLAG;

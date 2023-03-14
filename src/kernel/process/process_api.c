@@ -6,10 +6,8 @@
 #include "stdlib.h"
 #include "helperfunc.h"
 #include "stdio.h"
-#include "frame_dist.h"
 #include "stdbool.h"
 #include "scheduler.h"
-#include "pages.h"
 #include <assert.h>
 
 
@@ -23,8 +21,8 @@
 #include "traps/trap.h"
 #include "timer.h"
 #include "drivers/splash.h"
-#include "frame_dist.h"
-#include "pages.h"
+#include "../memory/frame_dist.h"
+#include "../memory/pages.h"
 #include "encoding.h"
 
 

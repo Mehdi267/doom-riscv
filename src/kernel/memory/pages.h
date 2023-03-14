@@ -102,42 +102,33 @@ bool check_validity(page_table_entry *pte);
 void set_write(page_table_entry *pte, bool write);
 void set_read(page_table_entry *pte, bool read);
 void set_exec(page_table_entry *pte, bool exec);
+void set_user_mode(page_table_entry *pte, bool user_mode);
 
 /**
  * Checks if the pte is a leaf meaning that the R/W/X are not null
 */
 bool is_leaf(page_table_entry *pte);
 
+//These three functions set the ppn registers to the values 
+//set in the function argument
 void set_ppn2(page_table_entry *pte, unsigned int ppn);
 void set_ppn1(page_table_entry *pte, unsigned int ppn);
 void set_ppn0(page_table_entry *pte, unsigned int ppn);
 
-/**
- * Make a page a gigabytes page
-*/
-void set_gigapage(page_table_entry *pte, long unsigned int adress, bool read, bool write, bool exec);
-
 void link_pte(page_table_entry *pte, void *address);
 
-/**
-* Crée le directory utilisé par l'ensemble des process kernels 
-* Crée la page contenant la mémoire du noyau et les directories
-* Cette page est référencée par une pte du directory
-* renvoie l'adresse physique du directory
-*/
-page_table *init_directory();
 
 /**
- * @brief 
- * 
- * @param pte 
- * @param address 
- * @param read 
- * @param write 
- * @param exec determines if we want  
+ * @brief Configures the page entry given as argument
+ * using the parameters given also as arguments  
+ * @param pte pointer to the page table entry
+ * @param address make the page code excutable
+ * @param read make the page code readable
+ * @param write make the page code writable 
+ * @param exec make the page code excutable  
  * @param page_type refers to different page size 
  * that we are working with could be GIGA/MEGA/KILO
  */
-extern void configure_page_entry(page_table_entry *pte, long unsigned int address, bool read, bool write, bool exec, page_type_t page_type);
+extern void configure_page_entry(page_table_entry *pte, long unsigned int address, bool read, bool write, bool exec, bool user_mode, page_type_t page_type);
 
 #endif

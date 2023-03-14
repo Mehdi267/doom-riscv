@@ -41,21 +41,23 @@ void set_supervisor_interrupts(bool val){
 
 void print_pte(page_table_entry *pte)
 {
-    debug_print_memory("valid = %i \n ",pte->valid);
-    debug_print_memory("read = %i \n ",pte->read);
-    debug_print_memory("write = %i \n ",pte->write);
-    debug_print_memory("exec = %i \n ",pte->exec);
-    debug_print_memory("res = %i \n ",pte->resU);
-    debug_print_memory("global = %i \n ",pte->global);
-    debug_print_memory("resA = %i \n ",pte->resA);
-    debug_print_memory("resD = %i \n ",pte->resD);
-    debug_print_memory("rsw = %i \n ",pte->rsw);
-    debug_print_memory("ppn0 = %i \n ",pte->ppn0);
-    debug_print_memory("ppn1 = %i \n ",pte->ppn1);
-    debug_print_memory("ppn2 = %i \n ",pte->ppn2);
-    debug_print_memory("reserved = %i \n ",pte->reserved);
-    debug_print_memory("pbmt = %i \n ",pte->pbmt);
-    debug_print_memory("n = %i \n ",pte->n);
+    print_memory_no_arg("----------------Pte values start----------------\n");
+    debug_print_memory("valid = %d \n",pte->valid);
+    debug_print_memory("read = %d \n",pte->read);
+    debug_print_memory("write = %d \n",pte->write);
+    debug_print_memory("exec = %d \n",pte->exec);
+    debug_print_memory("res = %d \n",pte->resU);
+    debug_print_memory("global = %d \n",pte->global);
+    debug_print_memory("resA = %d \n",pte->resA);
+    debug_print_memory("resD = %d \n",pte->resD);
+    debug_print_memory("rsw = %d \n",pte->rsw);
+    debug_print_memory("ppn0 = %d \n",pte->ppn0);
+    debug_print_memory("ppn1 = %d \n",pte->ppn1);
+    debug_print_memory("ppn2 = %d \n",pte->ppn2);
+    debug_print_memory("reserved = %d \n",pte->reserved);
+    debug_print_memory("pbmt = %d \n",pte->pbmt);
+    debug_print_memory("n = %d \n",pte->n);
+    print_memory_no_arg("----------------Pte values end----------------\n");
 }
 
 

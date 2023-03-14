@@ -9,7 +9,7 @@
 
 #include "stdint.h"
 #include "process.h"
-#include "../pages.h"
+#include "../memory/pages.h"
 /**
  * @brief Casts an int to a void * pointer 
 */
@@ -47,7 +47,11 @@ extern char* getname(void);
  */
 extern char* get_pid_name(int pid);
 
-
+/**
+ * @brief print_pte display a page table entry in a human readable format
+ * displaying the value associated to every segement 
+ * @param pte the page table entry that we canto display
+ */
 extern void print_pte(page_table_entry *pte);   
 
 

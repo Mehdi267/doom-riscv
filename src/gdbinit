@@ -1,9 +1,4 @@
-// br kernel_start
-//
-br strap_handler
-br mtrap_handler
-layout src
-//
+
 br boot_riscv
 br init_kernel_memory
 br kernel_start
