@@ -53,7 +53,7 @@ static void delegate_traps()
      * "By default, all traps at any privilege level are handled in machine mode" page 43 privileged isa
      * With this line we can conclude that if we are in the supervisor mode or any mode and we are met with an interrupt
      * we go directly to the machine thus use mtvec and the machine trap handling functions like mtrap_entry and ... .
-     * As it was already added in the machine tap handler we can detect that the interrupt was called from the supervisor
+     * As it was already added in the machine trap handler we can detect that the interrupt was called from the supervisor
      * mode and the appropriate function but this is not the proper approach because when we are in the supervisor mode,
      * we would like to exploit the methods that we were added for trap handling in this mode like strap_entry, strap_handler
      * in order to have more control over what we do for that reason we exploit the two registers :

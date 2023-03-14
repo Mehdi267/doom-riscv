@@ -23,12 +23,6 @@ page_table *create_page_table(){
     return ptr;
 }
 
-
-
-
-
-
-
 void configure_page_entry(page_table_entry *pte, long unsigned int address, 
                             bool read,
                             bool write,

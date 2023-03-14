@@ -33,8 +33,25 @@
 #define FRAME_SIZE_EXP 12
 #define FRAME_SIZE ((unsigned long)1<<FRAME_SIZE_EXP)
 
+/**
+ * @brief Divides the free memory into chucks, the size of the chucks is depedant on the   
+ * size of the frame that specific to the operating system
+ */
 void init_frames();
-void *get_frame();
+
+/**
+ * @brief Returns a frame that is not been used, the size of the frame is equal to the constant FRAMZ_SIZE
+ * 
+ * @return void* Returns and adress to a frame if it found a free and NULL address 
+ it did not find any avalibale frames
+ */
+void * get_frame();
+
+/**
+ * @brief takes and adress to a frame and frees it(make it avaliable for future use)  
+ * 
+ * @param frame_ptr the adress of the frame that we want to release 
+ */
 void release_frame(void *frame_ptr);
 
 #endif

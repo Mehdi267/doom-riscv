@@ -109,8 +109,8 @@ void set_user_mode(page_table_entry *pte, bool user_mode);
 */
 bool is_leaf(page_table_entry *pte);
 
-//These three functions set the ppn registers to the values 
-//set in the function argument
+//These three functions set the ppn values in the pte
+//  to the given function arguments 
 void set_ppn2(page_table_entry *pte, unsigned int ppn);
 void set_ppn1(page_table_entry *pte, unsigned int ppn);
 void set_ppn0(page_table_entry *pte, unsigned int ppn);
