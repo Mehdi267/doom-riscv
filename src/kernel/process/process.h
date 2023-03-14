@@ -92,6 +92,7 @@ typedef struct context {
    uint64_t s11;
    uint64_t sscratch;
    uint64_t sepc;
+   uint64_t satp;
 } context_t;
 
 

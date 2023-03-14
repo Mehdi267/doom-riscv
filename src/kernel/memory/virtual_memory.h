@@ -9,6 +9,19 @@
 #ifndef _VIRTUAL_MEMORY_
 #define _VIRTUAL_MEMORY_
 
+/**
+ * @brief The following variables are used to deterine 
+ * the gigabytes at which the some memro yelements are stored
+ * @param KERNEL_SPACE 0->1
+ * @param USERSPACE 0->2
+ * @param VRAMSPACE 2->4
+*/
+
+#define KERNEL_SPACE 0
+#define USERSPACE 1
+#define VRAM_SPACE_1 2
+#define VRAM_SPACE_2 3
+
 //Kernel's base page table
 extern page_table *kernel_base_page_table;
 

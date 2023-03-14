@@ -25,7 +25,6 @@
 #include "../memory/pages.h"
 #include "encoding.h"
 
-
 // Hash table that associates to every pid the process struct associated to it
 hash_t *pid_process_hash_table = NULL;
 // Id of the process that is currently running this value will be changed dynamically by the scheduler

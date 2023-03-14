@@ -1,6 +1,6 @@
 /*
  * Frame allocator for the kernel
- */
+*/
 
 #ifndef _FRAME_DIST_H
 #define _FRAME_DIST_H
@@ -13,17 +13,6 @@
 #define PPN1_MASK 0x1FF
 #define PPN2_MASK 0x3FFFFFF
 
-/**
- * @brief The following variables are used to deterine 
- * the gigabytes at which the some memro yelements are stored
- * @param KERNEL_SPACE 0->1
- * @param USERSPACE 0->2
- * @param VRAMSPACE 2->4
- */
-#define KERNEL_SPACE 0
-#define USERSPACE 1
-#define VRAM_SPACE_1 2
-#define VRAM_SPACE_2 3
 
 #define MEGAPAGE_SIZE_EXP 21
 #define MEGAPAGE_SIZE ((unsigned long)1<<MEGAPAGE_SIZE_EXP)
@@ -43,7 +32,7 @@ void init_frames();
  * @brief Returns a frame that is not been used, the size of the frame is equal to the constant FRAMZ_SIZE
  * 
  * @return void* Returns and adress to a frame if it found a free and NULL address 
- it did not find any avalibale frames
+ * it did not find any avalibale frames
  */
 void * get_frame();
 
