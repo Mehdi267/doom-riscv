@@ -42,23 +42,16 @@ void configure_page_entry(page_table_entry *pte, long unsigned int address,
     //to get the adress of the giga byte page
     switch (page_type){
         case GIGA:
+            link_pte(pte, address);
             set_ppn0(pte, 0);
             set_ppn1(pte, 0);
-            set_ppn2(pte, address);
             break;
-        //These value are not right now but logically we nned to write to the 
-        //pp1 and pp2 when working with mega pages and all the locations 
-        //when working with kb pages
         case MEGA:
+            link_pte(pte, address);
             set_ppn0(pte, 0);
-            //We must take only certain bytes here
-            set_ppn1(pte, address);
-            set_ppn2(pte, address);
             break;
         case KILO:
-            set_ppn0(pte, address);
-            set_ppn1(pte, address);
-            set_ppn2(pte, address);
+            link_pte(pte, address);
             break;
         default:
             break;
@@ -124,11 +117,11 @@ void set_invalid(page_table_entry *pte){
 
 
 //link pte to address
-void link_pte(page_table_entry *pte, void *address){
-    address = (void *)((unsigned long int)address >> FRAME_SIZE_EXP); //we do not write the 12 zeros of the alignment
+void link_pte(page_table_entry *pte, long unsigned int address){
+    address = (void *)(address >> FRAME_SIZE_EXP); //we do not write the 12 zeros of the alignment
     pte->ppn0 = MASK_ADDRESS(address, PPN0_MASK);
-    address = (void *)((unsigned long int)address >> PPN0_SIZE);
+    address = (void *)(address >> PPN0_SIZE);
     pte->ppn1 = MASK_ADDRESS(address, PPN1_MASK);
-    address = (void *)((unsigned long int)address >> PPN1_SIZE);
+    address = (void *)(address >> PPN1_SIZE);
     pte->ppn2 = MASK_ADDRESS(address, PPN2_MASK);
 }

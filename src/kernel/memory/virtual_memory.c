@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <string.h>
 #include "riscv.h"
-
+#include "virtual_memory.h"
 
 page_table *kernel_base_page_table;
 

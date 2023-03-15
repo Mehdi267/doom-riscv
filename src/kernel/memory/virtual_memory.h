@@ -51,4 +51,17 @@ extern int set_up_virtual_memory();
  */
 extern void debug_memory_overlap();
 
+/**
+ * @brief A linked list for page table that will  be used for the level 1 and level 0 
+ * 
+ */
+typedef struct page_table_link_list{
+    page_table* table;
+    page_table_link_list_t* page_tables_level_0_linkedlist;
+    uint16_t usage;
+    page_table_link_list* next_page_link;
+} page_table_link_list_t;
+
+
+
 #endif

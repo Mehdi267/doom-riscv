@@ -115,7 +115,7 @@ void set_ppn2(page_table_entry *pte, unsigned int ppn);
 void set_ppn1(page_table_entry *pte, unsigned int ppn);
 void set_ppn0(page_table_entry *pte, unsigned int ppn);
 
-void link_pte(page_table_entry *pte, void *address);
+void link_pte(page_table_entry *pte, long unsigned int address);
 
 
 /**

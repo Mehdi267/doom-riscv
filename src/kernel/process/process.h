@@ -31,6 +31,7 @@
 #define NBPROC 30
 #define PROCESS_SETUP_SIZE 2
 #define idleId 1
+#define kernelId 0
 
 /**
  * @brief These variables define the execution state of the program
@@ -161,6 +162,8 @@ typedef struct process_t{
    link link_queue_activable; //used to link the activatable processes 
    link link_queue_asleep; //used to link the asleep process
    int return_value; // return value of the process, used in waitpid
+   page_table* page_table_level_2;
+   page_table_link_list_t* page_tables_level_1_linkedlist;
 } process;
 
 
