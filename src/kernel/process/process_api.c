@@ -68,41 +68,101 @@ int configure_page_table_linked_list_entry(page_table_link_list_t* link_to_confi
 * @return the address of the page that we allocated
 */
 void *process_memory_allocator(process* process_conf, unsigned long size){
-   if (size>GIGAPAGE_SIZE){
+    if (size>=GIGAPAGE_SIZE){
         return NULL;
-   }
-   //----------------------LEVEL 2-------
-   page_table* user_page_table_level_2 = create_page_table();
-   process_conf->page_table_level_2 = user_page_table_level_2;
-   //We copy the lernel page table
-   memcopy((void*) user_page_table_level_2, (void *) kernel_base_page_table, FRAME_SIZE);
-   //-----------------------LEVEL 1/LEVEL 2 LINK-------------------
-   page_table* user_page_table_level_1 = create_page_table();
-   configure_page_entry(user_page_table_level_2->pte_list+USERSPACE,
-                 (long unsigned int )user_page_table_level_1, false, false, false, true, KILO);
+    }
+    //----------------------LEVEL 2-------
+    page_table* user_page_table_level_2 = create_page_table();
+    process_conf->page_table_level_2 = user_page_table_level_2;
+    //We copy the lernel page table
+    memcopy((void*) user_page_table_level_2, (void *) kernel_base_page_table, FRAME_SIZE);
+    //-----------------------LEVEL 1/LEVEL 2 LINK-------------------
+    page_table* user_page_table_level_1 = create_page_table();
+    //We add a pointer in an pte in the second page table to the first page table
+    configure_page_entry(user_page_table_level_2->pte_list+USERSPACE,//pte number
+                    (long unsigned int )user_page_table_level_1, false, false, false, true, KILO);
 
-   configure_page_table_linked_list_entry(
+    configure_page_table_linked_list_entry(
         process_conf->page_tables_level_1_linkedlist,
         user_page_table_level_1,
         NULL,
         0,
-        NULL);
-   //------------------LEVEL 1/LEVEL0 LINK--------------------
-   page_table* user_page_table_level_0 = create_page_table();
-   page_table_entry* mega_table_entry = user_page_table_level_1->pte+process_conf->page_tables_level_1_linkedlist->usage;
-   configure_page_entry(mega_table_entry,
-                 (long unsigned int )user_page_table_level_0, false, false, false, true, KILO);
-   process_conf->page_tables_level_1_linkedlist->usage++;
-   configure_page_table_linked_list_entry(
+        NULL
+        );
+    //------------------LEVEL 1/LEVEL 0 LINK--------------------
+    //In here we create the first frame that will be used for the stack
+    page_table* user_page_table_level_0 = create_page_table();
+    //The index of pte will depend on the usage of the page
+    page_table_entry* mega_table_entry = user_page_table_level_1->pte_list+process_conf->page_tables_level_1_linkedlist->usage;
+    configure_page_entry(mega_table_entry,
+                    (long unsigned int )user_page_table_level_0, false, false, false, true, KILO);
+    process_conf->page_tables_level_1_linkedlist->usage++;
+    configure_page_table_linked_list_entry(
         process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist,
         user_page_table_level_0,//table associated with the node
         NULL,//no child
-        0,//usage
-        NULL//linked list linked
+        0,//usage of the page table
+        NULL//the next pte in the page is null so the link must be null
         );
+    page_table_entry* first_kilo_pte = user_page_table_level_0->pte_list+process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist->usage;
+    configure_page_entry(first_kilo_pte,
+                    (long unsigned int )get_frame(), true, true, true, true, KILO);
+    process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist->usage++;
 
-   return get_frame();
+    return get_frame();
 }
+
+/**
+ * @brief 
+ * 
+ * @param process_conf 
+ * @return int 
+ */
+int add_frame_to_process(process* process_conf){
+    //We check at this level that the process has been correctly set up
+    if (process_conf->page_table_level_2 == NULL){
+        return -1;
+    }
+    if (process_conf->page_tables_level_1_linkedlist == NULL){
+        return -1;
+    }
+    if (process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist == NULL){
+        return -1;
+    }
+    page_table_link_list_t* level_1_iter = process_conf->page_tables_level_1_linkedlist;
+    page_table_link_list_t* level_1_iter_prev = process_conf->page_tables_level_1_linkedlist;
+    while (true){
+        if (level_1_iter == NULL && ){
+            page_table* user_page_table_level_0 = create_page_table();
+            //The index of pte will depend on the usage of the page
+            page_table_entry* mega_table_entry = user_page_table_level_1->pte_list+process_conf->page_tables_level_1_linkedlist->usage;
+            configure_page_entry(mega_table_entry,
+                            (long unsigned int )user_page_table_level_0, false, false, false, true, KILO);
+            process_conf->page_tables_level_1_linkedlist->usage++;
+            configure_page_table_linked_list_entry(
+                process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist,
+                user_page_table_level_0,//table associated with the node
+                NULL,//no child
+                0,//usage of the page table
+                NULL//the next pte in the page is null so the link must be null
+                );
+            page_table_entry* first_kilo_pte = user_page_table_level_0->pte_list+process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist->usage;
+            configure_page_entry(first_kilo_pte,
+                            (long unsigned int )get_frame(), true, true, true, true, KILO);
+            process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist->usage++;
+            level_1_iter = 
+        }
+        if (level_1_iter->page_tables_level_0_linkedlist->usage == PT_SIZE){
+            level_1_iter_prev = level_1_iter;
+            level_1_iter = level_1_iter->next_page_link;
+            //If the value of this is NULL, then we must create a new link in linked list
+            //But we also have to check if it is possible to create this new link  
+        }
+
+    }
+
+}
+
 
 int setpid(int new_pid){
     // We start by checking that the process exists

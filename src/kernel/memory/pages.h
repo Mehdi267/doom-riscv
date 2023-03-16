@@ -122,7 +122,7 @@ void link_pte(page_table_entry *pte, long unsigned int address);
  * @brief Configures the page entry given as argument
  * using the parameters given also as arguments  
  * @param pte pointer to the page table entry
- * @param address make the page code excutable
+ * @param address the physical address that will be linked to the page
  * @param read make the page code readable
  * @param write make the page code writable 
  * @param exec make the page code excutable  

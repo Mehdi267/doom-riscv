@@ -17,7 +17,8 @@
 #include "stddef.h"
 #include "stdarg.h"
 #include "stdbool.h"
-
+#include "../memory/pages.h"
+#include "../memory/virtual_memory.h"
 /**
  * @brief global function constants
  * @param MAXPRIO the maximun priority of a process
@@ -338,9 +339,10 @@ extern int start(int (*pt_func)(void*), unsigned long ssize, int prio, const cha
 * form remains very basic and does not follow the project specifications
 * and it is only valid for a size that is less than then page size
 * @param size corresponds to the size that we want to allocate
+* @param process_conf the process at which the memory allocater will work on 
 * @return the address of the page that we allocated
 */
-void *process_memory_allocator(unsigned long size);
+void *process_memory_allocator(process* process_conf, unsigned long size);
 
 
 /**

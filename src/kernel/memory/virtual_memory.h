@@ -57,9 +57,9 @@ extern void debug_memory_overlap();
  */
 typedef struct page_table_link_list{
     page_table* table;
-    page_table_link_list_t* page_tables_level_0_linkedlist;
+    struct page_table_link_list* page_tables_level_0_linkedlist;
     uint16_t usage;
-    page_table_link_list* next_page_link;
+    struct page_table_link_list* next_page_link;
 } page_table_link_list_t;
 
 
