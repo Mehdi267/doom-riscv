@@ -17,6 +17,8 @@
 #include "stddef.h"
 #include "stdarg.h"
 #include "stdbool.h"
+#include "../memory/virtual_memory.h"
+#include "../memory/pages.h"
 
 /**
  * @brief global function constants
@@ -164,6 +166,7 @@ typedef struct process_t{
    int return_value; // return value of the process, used in waitpid
    page_table* page_table_level_2;
    page_table_link_list_t* page_tables_level_1_linkedlist;
+   int level_1_capacity;
 } process;
 
 
@@ -340,7 +343,7 @@ extern int start(int (*pt_func)(void*), unsigned long ssize, int prio, const cha
 * @param size corresponds to the size that we want to allocate
 * @return the address of the page that we allocated
 */
-void *process_memory_allocator(unsigned long size);
+void *process_memory_allocator(process* process_conf, unsigned long size);
 
 
 /**

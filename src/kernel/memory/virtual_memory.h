@@ -21,7 +21,7 @@
 #define USERSPACE 1
 #define VRAM_SPACE_1 2
 #define VRAM_SPACE_2 3
-
+#define SHARED_PAGES 4
 //Kernel's base page table
 extern page_table *kernel_base_page_table;
 
@@ -57,9 +57,12 @@ extern void debug_memory_overlap();
  */
 typedef struct page_table_link_list{
     page_table* table;
-    page_table_link_list_t* page_tables_level_0_linkedlist;
+    struct page_table_link_list* parent_page;
+    struct page_table_link_list* head_page;
+    struct page_table_link_list* tail_page;
+    struct page_table_link_list* next_page;
     uint16_t usage;
-    page_table_link_list* next_page_link;
+    int index;
 } page_table_link_list_t;
 
 

@@ -118,10 +118,11 @@ void set_invalid(page_table_entry *pte){
 
 //link pte to address
 void link_pte(page_table_entry *pte, long unsigned int address){
-    address = (void *)(address >> FRAME_SIZE_EXP); //we do not write the 12 zeros of the alignment
+    void* address_final = (void*) address;
+    address_final = (void *)((unsigned long int ) address_final >> FRAME_SIZE_EXP); //we do not write the 12 zeros of the alignment
     pte->ppn0 = MASK_ADDRESS(address, PPN0_MASK);
-    address = (void *)(address >> PPN0_SIZE);
+    address_final = (void *)((unsigned long int ) address_final >> PPN0_SIZE);
     pte->ppn1 = MASK_ADDRESS(address, PPN1_MASK);
-    address = (void *)(address >> PPN1_SIZE);
+    address_final = (void *)((unsigned long int ) address_final >> PPN1_SIZE);
     pte->ppn2 = MASK_ADDRESS(address, PPN2_MASK);
 }
