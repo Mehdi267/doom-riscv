@@ -41,6 +41,7 @@
  * @param TESTING will launch the testing process and will call the kernel_tests
  * @param RELEASE will not do the above and launch the kernel is production mode
  * @param TESTING_MEMORY will not do the above and launch the kernel is production mode
+ * @param USER_PROCESS_DEBUG set the sum bit in sstatus to one so that we can debug user process
  * @note IMPORTANT : Only one of these variables should defined at a time
  * @param 
 */
@@ -49,6 +50,7 @@
 // #define RELEASE
 // #define DEBUG_SCHEDULER
 #define TESTING_MEMORY
+#define USER_PROCESS_DEBUG
 
 /**
 * @brief Global variables
@@ -165,8 +167,7 @@ typedef struct process_t{
    link link_queue_asleep; //used to link the asleep process
    int return_value; // return value of the process, used in waitpid
    page_table* page_table_level_2;
-   page_table_link_list_t* page_tables_level_1_linkedlist;
-   int level_1_capacity;
+   page_table_link_list_t* page_tables_lvl_1_list;
 } process;
 
 

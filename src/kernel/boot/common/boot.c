@@ -128,6 +128,13 @@ static inline void enter_supervisor_mode() {
 
     //set mxr to one to access executable pages
     csr_set(sstatus, SSTATUS_MXR);
+    
+    #ifdef USER_PROCESS_DEBUG
+        //set sum value in sstatus to one to debug user processes
+        puts("this is working");
+        csr_set(sstatus, SSTATUS_SUM);
+    #endif
+
     // Le passage au niveau mit dans le registre sera fait automatiquement avec l'instruction
     // mret qui changera le niveau suivant ce qui existe dans mpp
     mret();

@@ -34,36 +34,164 @@ int current_running_process_pid = -1;
 // Pid iterator that will be used to associate to every process a unique pid
 int pid_iterator = 0;
 
+
+
 /**
- * @brief 
- * 
- * @param link_to_configure thel ink that we will configure : allocated memory for it and attach the other paramaters to it
- * @param table page_table attached to list
- * @param page_tables_level_0_linkedlist child page table taht will be used to link level 1 andlevel 0
- * @param usage indicates the the number of entries that we will be created by default in page
- * @param next_page_link the next page table linked list node 
- * @return int a negatif value if an error occured and positf value if there were no problems
+ * @brief  
+ * @param link_to_configure    
+ * @param table page table associated to the node
+ * @param parent_page the parent node of the currect node
+ * @param head_page child head of the node
+ * @param tail_page child tail of the node
+ * @param next_page node's brother 
+ * @return int 
  */
-int configure_page_table_linked_list_entry(page_table_link_list_t* link_to_configure, 
+int configure_page_table_linked_list_entry(page_table_link_list_t** link_to_configure, 
                                                 page_table* table,
                                                 page_table_link_list_t* parent_page,
                                                 page_table_link_list_t* head_page,
                                                 page_table_link_list_t* tail_page,
-                                                page_table_link_list_t* next_page,
+                                                page_table_link_list_t* next_page
                                                 ){
-    link_to_configure = (page_table_link_list_t*) malloc(sizeof(page_table_link_list_t));
-    if (link_to_configure == NULL){
+    if (table == NULL){
         return -1;
     }
-    link_to_configure->table = table;
-    link_to_configure->parent_page = parent_page;
-    link_to_configure->head_page = head_page;
-    link_to_configure->tail_page = tail_page;
-    link_to_configure->next_page = next_page;
-    link_to_configure->usage = 0;
-    link_to_configure->index = parent_page->usage;
+    *link_to_configure = (page_table_link_list_t*) malloc(sizeof(page_table_link_list_t));
+    if (*link_to_configure == NULL){
+        return -1;
+    }
+    page_table_link_list_t* node_conf = *link_to_configure;
+    node_conf->table = table;
+    node_conf->parent_page = parent_page;
+    node_conf->head_page = head_page;
+    node_conf->tail_page = tail_page;
+    node_conf->next_page = next_page;
+    node_conf->usage = 0;
+    if (parent_page != NULL){
+        node_conf->index = parent_page->usage;
+        parent_page->usage++;
+    }
     return 0;
 }
+
+/**
+ * @brief This functions take a parent linking node and appens a child to it
+ * 
+ * @param parent_page_w the parent node that we will append a child to
+ * @return a negative int if the operation was not succefully and a postive value other wise 
+ */
+int add_child_node_page_table(page_table_link_list_t * parent_page_w){
+    //We could go back to the parent and add an other gigabytes pages but we will work with only one gigabytes pages in here
+    if (parent_page_w->usage >= PT_SIZE){
+        return -1;
+    }
+    page_table* user_page_table_level_0 = create_page_table();
+    page_table_link_list_t* new_page_table_node = NULL;
+    if (configure_page_table_linked_list_entry(
+        &new_page_table_node,
+        user_page_table_level_0,//Table associated to the node
+        parent_page_w,
+        NULL,
+        NULL,
+        NULL
+        )<0){
+        return -1;
+    }
+    //We need to link the new page that was created to the parent
+    if (parent_page_w->head_page == NULL && parent_page_w->tail_page == NULL){
+        //No children
+        parent_page_w->head_page = new_page_table_node;
+        parent_page_w->tail_page = new_page_table_node;
+    }
+    else{
+        //Children exist
+        parent_page_w->tail_page->next_page = new_page_table_node;
+        parent_page_w->tail_page = new_page_table_node;
+    }
+    return 0;
+}
+
+int add_frame_to_process(process* proc_conf){
+    page_table_link_list_t* node_lvl1 = proc_conf->page_tables_lvl_1_list;
+    if (node_lvl1 == NULL){
+        return -1;
+    }
+    page_table_link_list_t* lvl0_iterator = node_lvl1->head_page;
+    while (lvl0_iterator != NULL){
+        if (lvl0_iterator->usage < PT_SIZE){
+            lvl0_iterator->usage++;
+        }
+        lvl0_iterator = lvl0_iterator->next_page;
+    }
+    if (add_child_node_page_table(node_lvl1) < 0){
+        return -1;
+    }
+    node_lvl1->tail_page->usage++;
+    return 0;
+}
+
+/**
+ * @brief This method should be called only after all the usage values have been set properly 
+ * and all of the tree like structures have set up
+ * @param proc_conf The process that we will configure its memory
+ * @return int a negatif int value if the allocation was not successful and a positive value otherwise
+ */
+int allocate_memory_final(process* proc_conf){
+    if (proc_conf->page_tables_lvl_1_list == NULL){
+        return -1;
+    }
+    //We take pointer associated with the mega page
+    //----------Lvl1------
+    page_table_link_list_t* lvl_1_node = proc_conf->page_tables_lvl_1_list;
+    int mega_page_usage = proc_conf->page_tables_lvl_1_list->usage;
+    page_table_entry* mega_table_entry;
+    //Naif check, we check if the table values have been modified before if it the case
+    //we leave directly because this method can only be called on processess that have not 
+    //initialised
+    // if (lvl_1_node->table->pte_list+0 != NULL){
+    //     return -1;
+    // }
+    //We also need to iterate over the kilo page tables since they also vary in this loop
+    //----------Lvl0-------
+    page_table_link_list_t* lvl_0_node_iter = lvl_1_node->head_page;
+    if(lvl_0_node_iter == NULL){
+        return -1;
+    }
+    page_table* kilo_page_table;
+    page_table_entry* kilo_table_entry;
+    int kilo_page_usage;
+    for (int mega_usage_iter = 0; mega_usage_iter < mega_page_usage; mega_usage_iter++){
+        //We add a link from the level 1 page table to level 0 page table
+        //
+        //      |-------|   |-------|       |-------|    
+        //      |       |   |       |       |       |
+        //      |       |   |       | --->  |       |   
+        //      |       |   |       |       |       |
+        //      |-------|   |-------|       |-------|
+        mega_table_entry = lvl_1_node->table->pte_list+mega_usage_iter;
+        kilo_page_table = lvl_0_node_iter->table;
+        if (kilo_page_table == NULL){
+            return -1;
+        }
+        configure_page_entry(mega_table_entry,
+                            (long unsigned int) kilo_page_table, false, false, false, true, KILO);
+        kilo_page_usage = lvl_0_node_iter->usage;
+        //Now we allocated memory to every node in kilo page table 
+        for (unsigned int kilo_table_usage = 0; kilo_table_usage < kilo_page_usage; kilo_table_usage++){
+            kilo_table_entry = lvl_0_node_iter->table->pte_list+kilo_table_usage;
+            //Final page level page must in the read/write/exec mode
+            configure_page_entry(kilo_table_entry,
+                        (long unsigned int )get_frame(), 
+                        true,
+                        true,
+                        true,
+                        true, 
+                        KILO);
+        }
+    }
+    return 0;
+}
+
 
 /**
 * @brief This function allocates memory for a process, it's current
@@ -76,49 +204,59 @@ void *process_memory_allocator(process* process_conf, unsigned long size){
     if (size>GIGAPAGE_SIZE){
         return NULL;
     }
-
+    int size_left = size;
     //----------------------LEVEL 2-------
     page_table* user_page_table_level_2 = create_page_table();
     process_conf->page_table_level_2 = user_page_table_level_2;
     //We copy the lernel page table
-    memcopy((void*) user_page_table_level_2, (void *) kernel_base_page_table, FRAME_SIZE);
+    memcpy((void*) user_page_table_level_2, (void *) kernel_base_page_table, FRAME_SIZE);
     //-----------------------LEVEL 1/LEVEL 2 LINK-------------------
-
     page_table* user_page_table_level_1 = create_page_table();
-
+    //We create in here the only page table that will exist at first level since virtual space in this os
+    //is limited to one gb
     configure_page_table_linked_list_entry(
-        process_conf->page_tables_level_1_linkedlist,
+        &process_conf->page_tables_lvl_1_list,
         user_page_table_level_1,
         NULL,
         NULL,
         NULL,
-        NULL);
-
-    //Make level 2 page table point to level 1 page table in the satp chain
-    configure_page_entry(user_page_table_level_2->pte_list+USERSPACE,
-                    (long unsigned int )user_page_table_level_1, false, false, false, true, KILO);
-    
-    //------------------LEVEL 1/LEVEL0 LINK--------------------
-    page_table* user_page_table_level_0 = create_page_table();
-    configure_page_table_linked_list_entry(
-        process_conf->page_tables_level_1_linkedlist->pg_table_lvl_0_lk_list,
-        user_page_table_level_0,//table associated with the node
-        NULL,//no child
-        0,//usage
-        NULL//linked list linked
+        NULL
         );
-    
-    page_table_entry* mega_table_entry = user_page_table_level_1->pte_table+process_conf->page_tables_level_1_linkedlist->usage;
-    //This can be done automatically later
-    configure_page_entry(mega_table_entry,
-                    (long unsigned int )user_page_table_level_0, false, false, false, true, KILO);
-    
+    if (process_conf->page_tables_lvl_1_list == NULL){
+        puts("[SOMEHING WENT BAD] -- \n");
+    }
+    //Make level 2 page table point to level 1 page table in the satp chain
+    // 
+    //      |-------|        |-------|       |-------|    
+    //      |       |        |       |       |       |
+    //      |       | -----> |       |       |       |   
+    //      |       |        |       |       |       |
+    //      |-------|        |-------|       |-------|
+    configure_page_entry(user_page_table_level_2->pte_list+USERSPACE,
+                    (long unsigned int )user_page_table_level_1,
+                    false,
+                    false, 
+                    false,
+                    true,
+                    KILO);
+
+    do{
+        if (add_frame_to_process(process_conf)<0){
+            puts("problem with memory allocator frame allocator\n");
+        }
+        size_left -= FRAME_SIZE;
+    }
+    while(size_left > 0);
+    if (process_conf->page_tables_lvl_1_list->head_page->table == NULL){
+        puts("TABLE IS NULL !!!!! \n");
+    }
+    if (allocate_memory_final(process_conf)){
+        puts("problem with final memory allocator\n");
+    }
     return get_frame();
 }
 
-int add_frame_to_process(process* proc_conf){
-    if (proc_conf->)
-}
+
 
 int setpid(int new_pid){
     // We start by checking that the process exists
@@ -402,7 +540,7 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     }
 
     // Naif check, we can do a thorough check of memory at this level
-    // in here or we can do that use memory api methods  
+    // or we can do that using memory api methods  
     if (!(ssize > 0)){
         return -1;
     }
@@ -440,8 +578,11 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     // We add PROCESS_SETUP_SIZE because we need space to call the function
     // and in order to place the exit method in the stack
     new_process->ssize = ssize + PROCESS_SETUP_SIZE;
+    new_process->page_table_level_2 = NULL;
+    new_process->page_tables_lvl_1_list = NULL;
 
-    void* frame_pointer = process_memory_allocator(new_process->ssize);
+    void* frame_pointer = process_memory_allocator(new_process, new_process->ssize);
+    frame_pointer = get_frame();
     if (frame_pointer == NULL){
         return -1;
     }
@@ -455,7 +596,8 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
         return -1;
     }
 
-    new_process->context_process->sp = (uint64_t) frame_pointer;
+    // new_process->context_process->sp = (uint64_t) frame_pointer;
+    new_process->context_process->sp = (uint64_t) 0x40000000;
     // During the context_switch we will call the process_call_wrapper that has to call
     // the method given as function argument that we placed in s1 also the call has to
     // be made the right argument that is in s2 and it also has to call the exit_process method
@@ -465,7 +607,10 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     // debug_print("[start -> %d] function adress funciton adress = %ld\n", new_process->pid, (long) pt_func);
     new_process->context_process->s2 = (uint64_t) arg;
     new_process->context_process->sepc = (uint64_t) process_call_wrapper;
-
+    new_process->context_process->satp = 0x8000000000000000 | 
+                                        ((long unsigned int) new_process->page_table_level_2>>12) |
+                                        ((long unsigned int) new_process->pid>>44)
+                                        ;
     // We must created a stack that has the size of a frame and place it in the kernel 
     // memory space that will be used to handle interrupts for this process
 
@@ -498,7 +643,7 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     new_process->next_sibling = NULL;
 
     //--------------Return value----------------
-    new_process->return_value= NULL;
+    new_process->return_value = NULL;
 
     //------------Add process to the activatable queue
     add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
