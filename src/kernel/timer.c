@@ -6,7 +6,8 @@
 #include "drivers/auxval.h"
 #include "process/scheduler.h"
 #include "process/helperfunc.h"
-int tic;
+#include "process/timer_api.h" // for counter
+#include <stdint.h>
 /*
  * Set machine timer
  *
@@ -44,16 +45,17 @@ void handle_mtimer_interrupt()
 {
 	printf("Tic machine \n");
 	set_machine_timer_interrupt(TIC_PER); // this fills the role of ack
-	tic++;
-    return ;
+	counter++;
+  return ;
 }
 
 void handle_stimer_interrupt()
 {
-    set_supervisor_interrupts(false);
+  set_supervisor_interrupts(false);
+	counter++;
+  /* printf("current interrupts = %lu\n", counter); */
 	// printf("\nTic supervisor %d \n", tic);
 	set_supervisor_timer_interrupt(TIC_PER); 
 	scheduler();
-	tic++;
-    return;
+  return;
 }

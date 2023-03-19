@@ -4,6 +4,8 @@
 #include "stdint.h"
 #include "../process/process.h"
 #include "../process/helperfunc.h"
+#include "../process/timer_api.h"
+#include "../process/memory_api.h"
 
 /*
  * Run kernel test suite
@@ -47,6 +49,17 @@ int test4(void* arg);
  * Robustness of the scheduler
  */
 int test5(void* arg);
+
+/*
+ * Robustness of the scheduler
+ */
+int test6(void* arg);
+
+/*
+ * Robustness of the scheduler
+ */
+int test7(void* arg);
+
 
 /*
  * Semaphores or message queues test

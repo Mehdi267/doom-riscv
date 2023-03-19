@@ -170,8 +170,8 @@ __attribute__((noreturn)) void boot_riscv()
     csr_set(sie, SIE_STIE);
 
     //init timer to 0
-    tic = 0;
 
+    init_frames();
 
 
     // if (init_kernel_memory() <0){

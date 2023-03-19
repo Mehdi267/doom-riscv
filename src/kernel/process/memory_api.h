@@ -56,4 +56,13 @@ extern void *shm_create(const char *key);
  */
 void *shm_acquire(const char *key);
 
+/**
+ * @brief Releases the frame from the current process the function checks that the current process has acquired 
+ * the shared page, if it did then the page unmapped for the current process. 
+ * @note If the shared page usage go down to zero then the shared page is released
+ * @param key the char associated with shared process
+ */
+void shm_release(const char *key);
+
+
 #endif

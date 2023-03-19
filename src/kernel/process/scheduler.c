@@ -19,10 +19,13 @@
 #include "stdbool.h"
 #include "stddef.h"
 #include "stddef.h"
+#include <stdint.h>
+#include "timer_api.h"
 
 
 LIST_HEAD(activatable_process_queue);
 LIST_HEAD(asleep_process_queue);
+
 // initially user process are not on, this will become true when we first visit the scheduler
 bool started_user_process = false; 
 scheduler_struct *scheduler_main;
@@ -37,7 +40,7 @@ void add_process_to_queue_wrapper(process* process_to_add, queue_process_type ty
         queue_add(process_to_add, &activatable_process_queue, process, link_queue_activable, prio);
     }
     else if (type == ASLEEP_QUEUE){
-        queue_add(process_to_add, &asleep_process_queue, process, link_queue_asleep, prio);
+        queue_add(process_to_add, &asleep_process_queue, process, link_queue_asleep, sleep_time);
     }
 }
 
@@ -75,12 +78,28 @@ process* get_peek_element_queue_wrapper(queue_process_type type){
 }
 
 
+uint64_t get_smallest_sleep_time() {
+  process* p = get_peek_element_queue_wrapper(ASLEEP_QUEUE);
+  if (p) {
+    assert(-p->sleep_time >= 0);
+    return -p->sleep_time;
+  }
+  return 0;
+}
 
 
 void scheduler(){
     debug_print_scheduler_no_arg("\n-----------------Scheduler--------------------\n");
     debug_print_scheduler("[scheduler -> %d] Inside the scheduler with pid equal to %d \n",
                             getpid(), getpid());
+
+    // awake process and insert the in activable queue;
+    uint64_t sleep_time = get_smallest_sleep_time();
+    while (sleep_time != 0 && current_clock() > sleep_time) { // several process can be awaken
+      process* awake = pop_element_queue_wrapper(ASLEEP_QUEUE);
+      add_process_to_queue_wrapper(awake, ACTIVATABLE_QUEUE);
+      sleep_time = get_smallest_sleep_time();
+    }
     //Process has been called before any execution has started
     if (scheduler_main == NULL){
         return ;

@@ -8,16 +8,16 @@
  */
 
 //#include <unistd.h>
-#include "stdio.h"
 #include "assert.h"
-#include "stddef.h"
-#include "stdlib.h"
-#include "stdint.h"
-#include "string.h"
-#include "riscv.h"
-#include "process/process.h"
-#include "process/helperfunc.h"
 #include "drivers/splash.h"
+#include "process/helperfunc.h"
+#include "process/process.h"
+#include "riscv.h"
+#include "stddef.h"
+#include "stdint.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
 #include "tests/tests.h"
 #include "memory/virtual_memory.h"
 
