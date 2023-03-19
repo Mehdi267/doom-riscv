@@ -16,6 +16,13 @@
 extern void* cast_int_to_pointer(int);
 
 /**
+ * @brief Casts a char* into a void* 
+ * @param char_star the char to cast 
+ * @return void* 
+ */
+void* cast_char_star_into_pointer(char* char_star);
+
+/**
  * @brief Casts a pointer into an long
 */
 extern long cast_pointer_into_a_long(void * pointer);
@@ -60,10 +67,24 @@ extern void print_pte(page_table_entry *pte);
  * the pid
 */
 extern int increment_pid_and_get_new_pid();
+
+/**
+ * @brief Increment the shared page table counter and returns the new value of the counter; 
+ * @return int 
+ */
+extern int increment_shared_page_counter();
+
 /**
  * @brief Returns the hash table tha map id with process structs
 */
 extern hash_t* get_process_hash_table(void);
+
+/**
+ * @brief Get the shared pages hash table object
+ * 
+ * @return hash_t*  
+ */
+extern hash_t* get_shared_pages_hash_table(void);
 
 /**
  * @brief Validate that the process is an state on which we can call system calls

@@ -43,7 +43,7 @@ ZYBO_MDP = root
 GDB_TARGET_HOST = localhost
 GDB_TARGET_PORT = 1234
 GDB_TARGET_REMOTE = $(GDB_TARGET_HOST):$(GDB_TARGET_PORT)
-GDBINIT_FILE = ./gdbinit
+GDBINIT_FILE = ./gdbinit_mehdi
 GDB_OPTS = -q \
     -ex "target remote $(GDB_TARGET_REMOTE)" \
     -ex "source $(GDBINIT_FILE)"

@@ -5,6 +5,7 @@
 */
 
 #include "process.h"
+#include "memory_api.h"
 #include "hash.h"
 #include "stddef.h"
 #include "string.h"
@@ -23,6 +24,7 @@ int initialize_process_hash_table(){
     }
     return 0;
 }
+
 
 /**
  * @brief setup_main_context is used to allocate space for a scheduler_struct 
@@ -175,6 +177,12 @@ int initialize_process_workflow(){
         return -1;
     }
     if (hash_init_direct(pid_process_hash_table)<0){
+        return -1;
+    }
+    if (initialize_share_pages_table()<0){
+        return -1;
+    }
+    if (hash_init_string(shared_memory_hash_table)){
         return -1;
     }
     if (setup_main_context() <0){;

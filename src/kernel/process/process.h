@@ -17,8 +17,10 @@
 #include "stddef.h"
 #include "stdarg.h"
 #include "stdbool.h"
-#include "../memory/pages.h"
 #include "../memory/virtual_memory.h"
+#include "../memory/pages.h"
+#include <stdint.h>
+
 /**
  * @brief global function constants
  * @param MAXPRIO the maximun priority of a process
@@ -40,6 +42,7 @@
  * @param TESTING will launch the testing process and will call the kernel_tests
  * @param RELEASE will not do the above and launch the kernel is production mode
  * @param TESTING_MEMORY will not do the above and launch the kernel is production mode
+ * @param USER_PROCESS_DEBUG set the sum bit in sstatus to one so that we can debug user process
  * @note IMPORTANT : Only one of these variables should defined at a time
  * @param 
 */
@@ -48,6 +51,7 @@
 // #define RELEASE
 // #define DEBUG_SCHEDULER
 #define TESTING_MEMORY
+#define USER_PROCESS_DEBUG
 
 /**
 * @brief Global variables
@@ -130,6 +134,38 @@ typedef enum _process_state {   ACTIF,
  */
 typedef int	(*process_function_t)	(void*);
 
+/**
+ * @brief used to save the main execution context
+*/
+typedef struct released_pages_struct{
+   uint16_t lvl2_index;
+   uint16_t lvl1_index;
+   uint16_t lvl0_index;
+   page_table* page_table; //Page table at which the process is positionned(Used to gain access speed)
+   struct released_pages_struct* next_released_page;
+} released_pages_t;
+
+/**
+ * @brief used to save all the pages that the current process is using
+*/
+typedef struct shared_pages_proc{
+   char *key;
+   uint16_t lvl2_index;
+   uint16_t lvl1_index;
+   uint16_t lvl0_index;
+   void* mapped_address;
+   page_table* page_table; //Page table at which the process is positionned(Used to gain access speed)
+   struct shared_pages_proc* next_shared_page;
+} shared_pages_proc_t;
+
+/**
+ * @brief used to save all the pages that the current process is using
+*/
+typedef struct shared_pages_wrap{
+   shared_pages_proc_t* head_shared_page;
+   shared_pages_proc_t* tail_shared_page;
+} shared_pages_wrap_t;
+
 
 /**
   * @brief this structure is given to all processesn it will stored at the kernel level
@@ -149,6 +185,7 @@ typedef int	(*process_function_t)	(void*);
   * @param return_value  return value of the process, used in waitpid
 */
 typedef struct process_t{
+   //-----------Process information--------
    int pid; // id of the process
    char *process_name; // process name
    process_state state; // state of the process
@@ -156,15 +193,24 @@ typedef struct process_t{
    uint16_t prio; // priority of the process
    context_t* context_process; //we store here the current execution context of the process ie the important registers
    process_function_t func; // the function that is associated to the process ; not very important and will be removed later
+   //-----------Process tree inforamtion--------
    struct process_t* parent; // parent process
    struct process_t* children_head; // the head of the children process
    struct process_t* children_tail; // the tail of the children_process
    struct process_t* next_sibling; // next sibling of the current process, this parameter is used to link the children of a process
+   //-----------Process chaining--------
    link link_queue_activable; //used to link the activatable processes 
    link link_queue_asleep; //used to link the asleep process
+   //-----------Process return value--------
    int return_value; // return value of the process, used in waitpid
+   //-----------Process memory management --------
    page_table* page_table_level_2;
-   page_table_link_list_t* page_tables_level_1_linkedlist;
+   page_table_link_list_t* page_tables_lvl_1_list;
+   uint16_t stack_shift; //indicates how many frames we need to shift to place the stack pointer 
+   //-----------Process shared memory management --------
+   hash_t* proc_shared_hash_table;
+   shared_pages_wrap_t* shared_pages;
+   released_pages_t* released_pages_list;
 } process;
 
 
@@ -334,15 +380,6 @@ extern int kill(int pid);
 */
 extern int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name, void *arg);
 
-/**
-* @brief This function allocates memory for a process, it's current
-* form remains very basic and does not follow the project specifications
-* and it is only valid for a size that is less than then page size
-* @param size corresponds to the size that we want to allocate
-* @param process_conf the process at which the memory allocater will work on 
-* @return the address of the page that we allocated
-*/
-void *process_memory_allocator(process* process_conf, unsigned long size);
 
 
 /**
@@ -459,6 +496,21 @@ extern int idle(void *arg);
 
 #define print_memory_no_arg(fmt, ...) \
         do {if (DEBUG_MEMORY_LEVEL){ printf(fmt);} } while (0)
+
+
+/**
+ * @brief the following macro are used to debug the memory api 
+ */
+#define DEBUG_MEMORY_API_LEVEL 1 //Indicates if debug type is active
+
+#define debug_print_memory_api(fmt, ...) \
+        do {if (DEBUG_MEMORY_API_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_MEMORY_API_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+#define print_memory_api_no_arg(fmt, ...) \
+        do {if (DEBUG_MEMORY_API_LEVEL){ printf(fmt);} } while (0)
+
 
 
 #endif

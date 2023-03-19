@@ -9,4 +9,5 @@ gdbinit
 text.txt
 */.vscode
 .vscode
-src/gdbinit
+src/gdbinit_mehdi
+src/Makefile

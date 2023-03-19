@@ -9,7 +9,7 @@
 #include "stdbool.h"
 #include "scheduler.h"
 #include <assert.h>
-
+#include "process_memory.h"
 
 #define FLOAT_TO_INT(x) (int)((x)+0.5)
 
@@ -34,134 +34,7 @@ int current_running_process_pid = -1;
 // Pid iterator that will be used to associate to every process a unique pid
 int pid_iterator = 0;
 
-/**
- * @brief 
- * 
- * @param link_to_configure thel ink that we will configure : allocated memory for it and attach the other paramaters to it
- * @param table page_table attached to list
- * @param page_tables_level_0_linkedlist child page table taht will be used to link level 1 andlevel 0
- * @param usage indicates the the number of entries that we will be created by default in page
- * @param next_page_link the next page table linked list node 
- * @return int a negatif value if an error occured and positf value if there were no problems
- */
-int configure_page_table_linked_list_entry(page_table_link_list_t* link_to_configure, 
-                                                page_table* table,
-                                                page_table_link_list_t* page_tables_level_0_linkedlist,
-                                                int usage,
-                                                page_table_link_list_t* next_page_link){
-    link_to_configure = (page_table_link_list_t*) malloc(sizeof(page_table_link_list_t));
-    if (link_to_configure == NULL){
-        return -1;
-    }
-    link_to_configure->table = table;
-    link_to_configure->page_tables_level_0_linkedlist = page_tables_level_0_linkedlist;
-    link_to_configure->usage = usage;
-    link_to_configure->next_page_link = next_page_link;
-    return 0;
-}
 
-/**
-* @brief This function allocates memory for a process, it's current
-* form remains very basic and does not follow the project specifications
-* and it is only valid for a size that is less than then page size
-* @param size corresponds to the size that we want to allocate
-* @return the address of the page that we allocated
-*/
-void *process_memory_allocator(process* process_conf, unsigned long size){
-    if (size>=GIGAPAGE_SIZE){
-        return NULL;
-    }
-    //----------------------LEVEL 2-------
-    page_table* user_page_table_level_2 = create_page_table();
-    process_conf->page_table_level_2 = user_page_table_level_2;
-    //We copy the lernel page table
-    memcopy((void*) user_page_table_level_2, (void *) kernel_base_page_table, FRAME_SIZE);
-    //-----------------------LEVEL 1/LEVEL 2 LINK-------------------
-    page_table* user_page_table_level_1 = create_page_table();
-    //We add a pointer in an pte in the second page table to the first page table
-    configure_page_entry(user_page_table_level_2->pte_list+USERSPACE,//pte number
-                    (long unsigned int )user_page_table_level_1, false, false, false, true, KILO);
-
-    configure_page_table_linked_list_entry(
-        process_conf->page_tables_level_1_linkedlist,
-        user_page_table_level_1,
-        NULL,
-        0,
-        NULL
-        );
-    //------------------LEVEL 1/LEVEL 0 LINK--------------------
-    //In here we create the first frame that will be used for the stack
-    page_table* user_page_table_level_0 = create_page_table();
-    //The index of pte will depend on the usage of the page
-    page_table_entry* mega_table_entry = user_page_table_level_1->pte_list+process_conf->page_tables_level_1_linkedlist->usage;
-    configure_page_entry(mega_table_entry,
-                    (long unsigned int )user_page_table_level_0, false, false, false, true, KILO);
-    process_conf->page_tables_level_1_linkedlist->usage++;
-    configure_page_table_linked_list_entry(
-        process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist,
-        user_page_table_level_0,//table associated with the node
-        NULL,//no child
-        0,//usage of the page table
-        NULL//the next pte in the page is null so the link must be null
-        );
-    page_table_entry* first_kilo_pte = user_page_table_level_0->pte_list+process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist->usage;
-    configure_page_entry(first_kilo_pte,
-                    (long unsigned int )get_frame(), true, true, true, true, KILO);
-    process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist->usage++;
-
-    return get_frame();
-}
-
-/**
- * @brief 
- * 
- * @param process_conf 
- * @return int 
- */
-int add_frame_to_process(process* process_conf){
-    //We check at this level that the process has been correctly set up
-    if (process_conf->page_table_level_2 == NULL){
-        return -1;
-    }
-    if (process_conf->page_tables_level_1_linkedlist == NULL){
-        return -1;
-    }
-    if (process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist == NULL){
-        return -1;
-    }
-    page_table_link_list_t* level_1_iter = process_conf->page_tables_level_1_linkedlist;
-    page_table_link_list_t* level_1_iter_prev = process_conf->page_tables_level_1_linkedlist;
-    while (true){
-        if (level_1_iter == NULL && ){
-            page_table* user_page_table_level_0 = create_page_table();
-            //The index of pte will depend on the usage of the page
-            page_table_entry* mega_table_entry = user_page_table_level_1->pte_list+process_conf->page_tables_level_1_linkedlist->usage;
-            configure_page_entry(mega_table_entry,
-                            (long unsigned int )user_page_table_level_0, false, false, false, true, KILO);
-            process_conf->page_tables_level_1_linkedlist->usage++;
-            configure_page_table_linked_list_entry(
-                process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist,
-                user_page_table_level_0,//table associated with the node
-                NULL,//no child
-                0,//usage of the page table
-                NULL//the next pte in the page is null so the link must be null
-                );
-            page_table_entry* first_kilo_pte = user_page_table_level_0->pte_list+process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist->usage;
-            configure_page_entry(first_kilo_pte,
-                            (long unsigned int )get_frame(), true, true, true, true, KILO);
-            process_conf->page_tables_level_1_linkedlist->page_tables_level_0_linkedlist->usage++;
-            level_1_iter = 
-        }
-        if (level_1_iter->page_tables_level_0_linkedlist->usage == PT_SIZE){
-            level_1_iter_prev = level_1_iter;
-            level_1_iter = level_1_iter->next_page_link;
-            //If the value of this is NULL, then we must create a new link in linked list
-            //But we also have to check if it is possible to create this new link  
-        }
-
-    }
-
-}
 
 
 int setpid(int new_pid){
@@ -446,7 +319,7 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     }
 
     // Naif check, we can do a thorough check of memory at this level
-    // in here or we can do that use memory api methods  
+    // or we can do that using memory api methods  
     if (!(ssize > 0)){
         return -1;
     }
@@ -484,8 +357,11 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     // We add PROCESS_SETUP_SIZE because we need space to call the function
     // and in order to place the exit method in the stack
     new_process->ssize = ssize + PROCESS_SETUP_SIZE;
+    new_process->page_table_level_2 = NULL;
+    new_process->page_tables_lvl_1_list = NULL;
 
-    void* frame_pointer = process_memory_allocator(new_process->ssize);
+    void* frame_pointer = process_memory_allocator(new_process, new_process->ssize);
+    frame_pointer = get_frame();
     if (frame_pointer == NULL){
         return -1;
     }
@@ -499,7 +375,8 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
         return -1;
     }
 
-    new_process->context_process->sp = (uint64_t) frame_pointer;
+    // new_process->context_process->sp = (uint64_t) frame_pointer;
+    new_process->context_process->sp = (uint64_t) 0x40000000+FRAME_SIZE*new_process->stack_shift;
     // During the context_switch we will call the process_call_wrapper that has to call
     // the method given as function argument that we placed in s1 also the call has to
     // be made the right argument that is in s2 and it also has to call the exit_process method
@@ -509,7 +386,10 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     // debug_print("[start -> %d] function adress funciton adress = %ld\n", new_process->pid, (long) pt_func);
     new_process->context_process->s2 = (uint64_t) arg;
     new_process->context_process->sepc = (uint64_t) process_call_wrapper;
-
+    new_process->context_process->satp = 0x8000000000000000 | 
+                                        ((long unsigned int) new_process->page_table_level_2>>12) |
+                                        ((long unsigned int) new_process->pid<<44)
+                                        ;
     // We must created a stack that has the size of a frame and place it in the kernel 
     // memory space that will be used to handle interrupts for this process
 
@@ -517,7 +397,7 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     if (interrupt_frame_pointer == NULL){
         return -1;
     }
-    new_process->context_process->sscratch = (uint64_t) interrupt_frame_pointer;
+    new_process->context_process->sscratch = (uint64_t) interrupt_frame_pointer+FRAME_SIZE  ;
 
     //--------------Tree management----------------
     // The parent of the process is the process that called the start method
@@ -542,8 +422,12 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     new_process->next_sibling = NULL;
 
     //--------------Return value----------------
-    new_process->return_value= NULL;
+    new_process->return_value = NULL;
 
+    //-------------Shared pages-------------------
+    new_process->shared_pages = NULL;
+    new_process->released_pages_list = NULL;
+    new_process->proc_shared_hash_table = NULL;
     //------------Add process to the activatable queue
     add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
 

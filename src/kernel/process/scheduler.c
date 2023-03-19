@@ -96,7 +96,7 @@ void scheduler(){
             return;
         }
         set_supervisor_interrupts(true);
-        debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, default launch of the peek process with id = %d", getpid(),  getpid());
+        debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, default launch of the peek process with id = %d\n", getpid(),  getpid());
         debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
         top_process->state = ACTIF;
         started_user_process = true;

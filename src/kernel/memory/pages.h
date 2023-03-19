@@ -14,16 +14,16 @@ struct sur 64 bits
 
 
 /**
- * @brief page_type_t is used to differentiate different page sizes
+ * @brief page_size_t is used to differentiate different page sizes
  * @param GIGA  refers to the gigabyte page
  * @param MEGA refers to the 2 megabyte page
  * @param KILO refers to the 4096 byte page
 */
-typedef enum _page_type {  
+typedef enum _page_size {  
                         GIGA,
                         MEGA,
                         KILO  
-} page_type_t;
+} page_size_t;
 
 
 /**
@@ -86,6 +86,7 @@ page_table *create_page_table();
  * Makes the bit v in the page_table_entry pte valid(true -- 1)
 */
 void set_valid(page_table_entry *pte);
+
 /**
  * Makes the bit v in the page_table_entry pte invalid(false -- 0)
 */
@@ -126,9 +127,9 @@ void link_pte(page_table_entry *pte, long unsigned int address);
  * @param read make the page code readable
  * @param write make the page code writable 
  * @param exec make the page code excutable  
- * @param page_type refers to different page size 
+ * @param page_size refers to different page size 
  * that we are working with could be GIGA/MEGA/KILO
  */
-extern void configure_page_entry(page_table_entry *pte, long unsigned int address, bool read, bool write, bool exec, bool user_mode, page_type_t page_type);
+extern void configure_page_entry(page_table_entry *pte, long unsigned int address, bool read, bool write, bool exec, bool user_mode, page_size_t page_size);
 
 #endif

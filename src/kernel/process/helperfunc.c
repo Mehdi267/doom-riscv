@@ -6,6 +6,7 @@
 
 #include "helperfunc.h"
 #include "process.h"
+#include "memory_api.h"
 #include "stddef.h"
 
 #include "stdio.h"
@@ -16,9 +17,12 @@
 #include "string.h"
 #include "riscv.h"
 
-
 void* cast_int_to_pointer(int int_to_cast){
     return (void*)((long) int_to_cast);
+}
+
+void* cast_char_star_into_pointer(char* char_star){
+    return (void*) char_star;
 }
 
 long cast_pointer_into_a_long(void * pointer){
@@ -91,6 +95,16 @@ char* get_pid_name(int pid){
 int increment_pid_and_get_new_pid(){
     pid_iterator++;
     return pid_iterator;
+}
+
+
+int increment_shared_page_counter(){
+    page_id_counter++;
+    return page_id_counter;
+}
+
+hash_t* get_shared_pages_hash_table(void){
+    return shared_memory_hash_table;
 }
 
 

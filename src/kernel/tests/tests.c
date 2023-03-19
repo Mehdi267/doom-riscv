@@ -28,7 +28,15 @@ int kernel_tests(void *arg) {
 	/**
 	 * Rc is used to indicate if the tests failed
 	*/
+	print_test_no_arg("\n---------------------Inside kernel tests---------------------\n");
 	int rc = 0;
+
+	// unsigned long int *addess_user_mode = (unsigned long int *) 0x40000000;
+	// unsigned long int x = *addess_user_mode;
+	// debug_print_tests("hello world %ld", x);
+	
+	print_test_no_arg("\n---------------------kernel_tests executing---------------------\n");
+
 
 	test_apps_t test_table[NUMBEROFTESTS] = {
 		{test0, "test0", 0, 0},

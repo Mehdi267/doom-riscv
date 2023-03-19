@@ -28,7 +28,7 @@ void configure_page_entry(page_table_entry *pte, long unsigned int address,
                             bool write,
                             bool exec,
                             bool user_mode,
-                            page_type_t page_type){
+                            page_size_t page_size){
     //address is relative to satp.ppn
     // assert(read || !write); //or the page would be invalid
     // assert(read || exec); //or the page is not a leaf
@@ -40,7 +40,7 @@ void configure_page_entry(page_table_entry *pte, long unsigned int address,
     //in accordance to point 6 of 4.3.2, we have to set ppn[1] and ppn[0] to 0
     //The value of these ppn are not relevant since we only use pp2 
     //to get the adress of the giga byte page
-    switch (page_type){
+    switch (page_size){
         case GIGA:
             link_pte(pte, address);
             set_ppn0(pte, 0);
@@ -68,7 +68,6 @@ void set_valid(page_table_entry *pte){
     pte->resD = 0;
     pte->reserved = 0;
 }
-
 
 bool check_validity(page_table_entry *pte){
     return pte->valid && !(pte->resA || pte->resD || pte->resU || pte->reserved);
@@ -118,11 +117,11 @@ void set_invalid(page_table_entry *pte){
 
 //link pte to address
 void link_pte(page_table_entry *pte, long unsigned int address){
-    void* address_pointer = (void* ) address;
-    address_pointer = (void *)( (unsigned long int )address_pointer >> FRAME_SIZE_EXP); //we do not write the 12 zeros of the alignment
+    address =  address >> FRAME_SIZE_EXP; //we do not write the 12 zeros of the alignment
     pte->ppn0 = MASK_ADDRESS(address, PPN0_MASK);
-    address_pointer = (void *)( (unsigned long int )address_pointer >> PPN0_SIZE);
+    address =  address >> PPN0_SIZE;
     pte->ppn1 = MASK_ADDRESS(address, PPN1_MASK);
-    address_pointer = (void *)( (unsigned long int )address_pointer >> PPN1_SIZE);
+    address =  address >> PPN1_SIZE;
     pte->ppn2 = MASK_ADDRESS(address, PPN2_MASK);
 }
+

@@ -3,6 +3,7 @@
 */
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "frame_dist.h"
 #include "pages.h"
 
@@ -21,6 +22,14 @@
 #define USERSPACE 1
 #define VRAM_SPACE_1 2
 #define VRAM_SPACE_2 3
+#define SHARED_PAGES 4
+
+#define KERNEL_SPACE_ADDRESS 0x0000000
+#define USERSPACE_ADDRESS 0x40000000
+#define VRAM_SPACE_1_ADDRESS 0x80000000
+#define VRAM_SPACE_2_ADDRESS 0xc0000000
+#define SHARED_PAGES_ADDRESS 0x100000000 //Not using this space just yet all of the pages are in the user page
+
 
 //Kernel's base page table
 extern page_table *kernel_base_page_table;
@@ -57,9 +66,15 @@ extern void debug_memory_overlap();
  */
 typedef struct page_table_link_list{
     page_table* table;
-    struct page_table_link_list* page_tables_level_0_linkedlist;
-    uint16_t usage;
-    struct page_table_link_list* next_page_link;
+    struct page_table_link_list* parent_page;
+    struct page_table_link_list* head_page;
+    struct page_table_link_list* tail_page;
+    struct page_table_link_list* next_page;
+    uint16_t usage; //Used for total usage
+    uint16_t stack_usage;//Used for stack usage. Associated with level 1 
+    uint16_t heap_usage;//Used for heap usage. Associated with level 1
+    uint16_t shared_memory_usage;//Used for Shared memory usage
+    int index;
 } page_table_link_list_t;
 
 
