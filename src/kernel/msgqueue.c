@@ -25,6 +25,7 @@ int pcreate(int count) {
   int index;
   if ((index = get_first_free_index()) < 0)
     return -1;
+  all_queues[index] = malloc(sizeof(msg_queue_t));
   all_queues[index]->msg_arr = malloc(sizeof(int) * count);
   link new_head = LIST_HEAD_INIT(new_head);
   all_queues[index]->blocked_process = new_head;
