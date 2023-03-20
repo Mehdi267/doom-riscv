@@ -22,6 +22,7 @@
 #include "timer.h"
 #include "traps/trap.h"
 
+#define MAX_SIZE_NAME 256
 #define secmalloc(p, n)                                                        \
   p = malloc(n);                                                               \
   if (p == NULL)                                                               \
