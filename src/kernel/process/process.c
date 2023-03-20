@@ -5,6 +5,7 @@
  */
 
 #include "process.h"
+#include "memory_api.h"
 #include "../tests/tests.h"
 #include "../timer.h"
 #include "hash.h"
@@ -23,6 +24,14 @@ int initialize_process_hash_table() {
   }
   return 0;
 }
+
+void activate_and_launch_scheduler(void){
+    set_supervisor_timer_interrupt(100); 
+    while(1){}
+    return;
+}
+
+
 
 /**
  * @brief setup_main_context is used to allocate space for a scheduler_struct
@@ -152,28 +161,34 @@ static int declares_debug_processes() {
   return 0;
 }
 
-int initialize_process_workflow() {
-  init_scheduling_process_queue();
-  if (initialize_process_hash_table() < 0) {
-    return -1;
-  }
-  if (hash_init_direct(pid_process_hash_table) < 0) {
-    return -1;
-  }
-  if (setup_main_context() < 0) {
-    ;
-    return -1;
-  }
-  if (create_idle_process() < 0) {
-    return -1;
-  }
-  // Will only launch the process if the debug mode is set
-  if (declares_debug_processes() < 0) {
-    return -1;
-  }
-  // Will only launch the process if the testing mode is set
-  if (declares_a_test_process() < 0) {
-    return -1;
-  }
-  return 0;
+
+int initialize_process_workflow(){
+    init_scheduling_process_queue();
+    if (initialize_process_hash_table()<0){
+        return -1;
+    }
+    if (hash_init_direct(pid_process_hash_table)<0){
+        return -1;
+    }
+    if (initialize_share_pages_table()<0){
+        return -1;
+    }
+    if (hash_init_string(shared_memory_hash_table)){
+        return -1;
+    }
+    if (setup_main_context() <0){;
+        return -1;
+    }
+    if (create_idle_process()<0){
+        return -1;
+    }
+    //Will only launch the process if the debug mode is set
+    if (declares_debug_processes()<0){
+        return -1;
+    }
+    //Will only launch the process if the testing mode is set
+    if (declares_a_test_process()<0){
+        return -1;
+    }
+    return 0;
 }

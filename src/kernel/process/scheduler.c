@@ -11,7 +11,7 @@
 #include "stdlib.h"
 #include "helperfunc.h"
 #include "stdio.h"
-#include "frame_dist.h"
+#include "../memory/frame_dist.h"
 #include "stdbool.h"
 #include "queue.h"
 #include "assert.h"
@@ -20,11 +20,12 @@
 #include "stddef.h"
 #include "stddef.h"
 #include <stdint.h>
-#include "../sync.h"
+#include "timer_api.h"
 
 
 LIST_HEAD(activatable_process_queue);
 LIST_HEAD(asleep_process_queue);
+
 // initially user process are not on, this will become true when we first visit the scheduler
 bool started_user_process = false; 
 scheduler_struct *scheduler_main;
@@ -94,12 +95,20 @@ void scheduler(){
 
     // awake process and insert the in activable queue;
     uint64_t sleep_time = get_smallest_sleep_time();
+    // printf("sleep time = %ld\n", sleep_time);
+    // printf("current_clock() = %ld\n", current_clock());
+    // process* peek_sleep = get_process_struct_of_pid(21);
+    // if (peek_sleep != NULL){
+    //     printf("peek sleep %d\n", peek_sleep->state);
+    // }
     while (sleep_time != 0 && current_clock() > sleep_time) { // several process can be awaken
       process* awake = pop_element_queue_wrapper(ASLEEP_QUEUE);
       add_process_to_queue_wrapper(awake, ACTIVATABLE_QUEUE);
       sleep_time = get_smallest_sleep_time();
     }
-    //Process has been called before any execution has started
+    //Scheduler has been called before any execution has started
+    //the scheduler_main is configured when we start the kernel if its value is null 
+    //then we found an error
     if (scheduler_main == NULL){
         return ;
     }
@@ -114,7 +123,7 @@ void scheduler(){
             return;
         }
         set_supervisor_interrupts(true);
-        debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, default launch of the peek process with id = %d", getpid(),  getpid());
+        debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, default launch of the peek process with id = %d\n", getpid(),  getpid());
         debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
         top_process->state = ACTIF;
         started_user_process = true;
@@ -125,7 +134,7 @@ void scheduler(){
         set_supervisor_interrupts(true);
         //In this case no process is running and we have called the scheduler for the first time
         // yet in this case, we want to start with a custom process/ that has been set by the user
-        // in the pid field and the user has also eliminated the process from the queue
+        // in the pid field and we also assume that user has also eliminated the process from the queue
         process* top_process = get_process_struct_of_pid(getpid());
         if (top_process == NULL){
             return;
@@ -133,7 +142,7 @@ void scheduler(){
         started_user_process = true;
         debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, custom launch of the process with id = %d\n", getpid(),  getpid());
         debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
-        debug_print_scheduler("[scheduler -> %d] function adress of the process = %ld\n", getpid(), (long) get_process_struct_of_pid(getpid())->context_process->s[1]);
+        debug_print_scheduler("[scheduler -> %d] function adress of the process = %ld\n", getpid(), (long) get_process_struct_of_pid(getpid())->context_process->s1);
         debug_print_scheduler("[scheduler -> %d] idle adress = %ld\n", getpid(), (long) idle);
         context_switch(scheduler_main->main_context, get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
     }

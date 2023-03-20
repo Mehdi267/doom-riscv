@@ -1,12 +1,14 @@
-#include "frame_dist.h"
+#include "../memory/frame_dist.h"
 #include "hash.h"
 #include "helperfunc.h"
-#include "mem.h"
-/* #include "process.h" */
-#include "scheduler.h"
-#include "stdbool.h"
-#include "stddef.h"
 #include "stdio.h"
+#include "stdbool.h"
+#include "scheduler.h"
+#include <assert.h>
+#include "process_memory.h"
+
+#define FLOAT_TO_INT(x) (int)((x)+0.5)
+
 #include "stdlib.h"
 #include "string.h" // for strcpy strlen
 
@@ -16,9 +18,10 @@
 
 #include "bios/info.h"
 #include "drivers/splash.h"
+#include "../memory/frame_dist.h"
+#include "../memory/pages.h"
 #include "encoding.h"
-#include "frame_dist.h"
-#include "pages.h"
+#include "../memory/virtual_memory.h"
 #include "timer.h"
 #include "traps/trap.h"
 
@@ -36,19 +39,8 @@ int current_running_process_pid = -1;
 // Pid iterator that will be used to associate to every process a unique pid
 int pid_iterator = 0;
 
-/**
- * @brief This function allocates memory for a process, it's current
- * form remains very basic and does not follow the project specifications
- * and it is only valid for a size that is less than then page size
- * @param size corresponds to the size that we want to allocate
- * @return the address of the page that we allocated
- */
-void *process_memory_allocator(unsigned long size) {
-  if (size <= FRAME_SIZE) {
-    return get_frame();
-  }
-  return NULL;
-}
+
+
 
 int setpid(int new_pid) {
   // We start by checking that the process exists
@@ -323,134 +315,139 @@ void exit_process(int retval) {
   }
 }
 
-// sec malloc mean secure malloc it verifies if pointer returne by malloc is
-// null and if it's the case returns -1
 
-int process_name_copy(process *p, const char *name) {
-  size_t size = strlen(name);
-  if (size > MAX_SIZE_NAME)
-    return -1;
-  secmalloc(p->process_name, size);
-  strcpy(p->process_name, name);
-  return 0;
-}
+int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name, void *arg){
+    //-------------------------------Input check--------------  
 
-int start(int (*pt_func)(void *), unsigned long ssize, int prio,
-          const char *name, void *arg) {
-  //-------------------------------Input check--------------
-  // We verify that the process that made this call is a validprocess ie not a
-  // zombie
-  if (!(getpid() == -1) &&
-      validate_action_process_valid(get_process_struct_of_pid(getpid())) < 0) {
-    return -1;
-  }
-  // We check that the function arguments are valid
-  if (!(prio <= MAXPRIO && prio >= MINPRIO))
-    return -1;
-
-  // Naif check, we can do a thorough check of memory at this level
-  // in here or we can do that use memory api methods
-  if (!(ssize > 0))
-    return -1;
-
-  //----------Process generation-----------
-  process *new_process;
-  secmalloc(new_process, sizeof(process));
-
-  //---------Create a new pid and and new process to hash table----------------
-
-  new_process->pid = increment_pid_and_get_new_pid();
-  hash_set(get_process_hash_table(), cast_int_to_pointer(new_process->pid),
-           new_process);
-
-  new_process->prio = prio;
-
-  if (process_name_copy(new_process, name) <
-      0) // this function fails if size of name its to big
-    return -1;
-
-  //--------------State config---------------------
-
-  new_process->state = ACTIVATABLE;
-
-  //---------------Memory config-----------------------
-
-  // We add PROCESS_SETUP_SIZE because we need space to call the function
-  // and in order to place the exit method in the stack
-  new_process->ssize = ssize + PROCESS_SETUP_SIZE;
-
-  void *frame_pointer = process_memory_allocator(new_process->ssize);
-  if (frame_pointer == NULL) {
-    return -1;
-  }
-
-  //--------------------Process function config-----------
-  new_process->func = pt_func;
-
-  //----------------Context setup-------------------------
-  new_process->context_process = (context_t *)malloc(sizeof(context_t));
-  if (new_process->context_process == NULL) {
-    return -1;
-  }
-
-  new_process->context_process->sp = (uint64_t)frame_pointer;
-  // During the context_switch we will call the process_call_wrapper that has to
-  // call the method given as function argument that we placed in s1 also the
-  // call has to be made the right argument that is in s2 and it also has to
-  // call the exit_process method at the end as this will be important in the
-  // case the user uses a return call
-  new_process->context_process->ra = (uint64_t)process_call_wrapper;
-  new_process->context_process->s[1] = (uint64_t)pt_func;
-  // debug_print("[start -> %d] function adress funciton adress = %ld\n",
-  // new_process->pid, (long) pt_func);
-  new_process->context_process->s[2] = (uint64_t)arg;
-  new_process->context_process->sepc = (uint64_t)process_call_wrapper;
-
-  // We must created a stack that has the size of a frame and place it in the
-  // kernel memory space that will be used to handle interrupts for this process
-
-  void *interrupt_frame_pointer = process_memory_allocator(FRAME_SIZE);
-  if (interrupt_frame_pointer == NULL) {
-    return -1;
-  }
-  new_process->context_process->sscratch = (uint64_t)interrupt_frame_pointer;
-
-  //--------------Tree management----------------
-  // The parent of the process is the process that called the start method
-  new_process->parent = (process *)hash_get(
-      get_process_hash_table(), cast_int_to_pointer(getpid()), NULL);
-
-  // if the parent process is null that means we created the head of the tree
-  // thus the new process is not attached to a parent
-  if (new_process->parent != NULL) {
-    // We add the new process as a child to the parent process
-    if (new_process->parent->children_tail != NULL) {
-      new_process->parent->children_tail->next_sibling = new_process;
-      new_process->parent->children_tail = new_process;
-    } else {
-      new_process->parent->children_head = new_process;
-      new_process->parent->children_tail = new_process;
+    // We verify that the process that made this call is a validprocess ie not a zombie 
+    if (!(getpid() == -1) && validate_action_process_valid(get_process_struct_of_pid(getpid())) < 0){
+        return -1;
     }
-  }
-  new_process->children_head = NULL;
-  new_process->children_tail = NULL;
-  new_process->next_sibling = NULL;
+    // We check that the function arguments are valid
+    if (!(prio<= MAXPRIO && prio>=MINPRIO)){
+        return -1;
+    }
 
-  //--------------Return value----------------
-  new_process->return_value = NULL;
+    // Naif check, we can do a thorough check of memory at this level
+    // or we can do that using memory api methods  
+    if (!(ssize > 0)){
+        return -1;
+    }
 
-  //------------Add process to the activatable queue
-  add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
+    //----------Process generation-----------
 
-  debug_print("[%s] created process with pid = %d \n",
-              new_process->process_name, new_process->pid);
+    process *new_process = (process*) malloc(sizeof(process));
+    if (new_process == NULL){
+        return -1;
+    }
 
-  //------------We activate this new process if it has a higher
-  //priority-----------
-  // This function must be called a the very end
-  check_if_new_prio_is_higher_and_call_scheduler(new_process->prio, true, 0);
-  return new_process->pid;
+    //---------Create a new pid and and new process to hash table----------------
+
+    new_process->pid = increment_pid_and_get_new_pid();
+    hash_set(get_process_hash_table(), cast_int_to_pointer(new_process->pid), new_process);
+
+    //--------------Priority config--------------
+
+    new_process->prio = prio;
+
+    //---------------Name config-----------------
+    new_process->process_name = (char*) malloc(strlen(name));
+    if (new_process->process_name == NULL){
+        return -1;
+    }
+    strcpy(new_process->process_name, name);
+
+    //--------------State config---------------------
+
+    new_process->state = ACTIVATABLE;
+
+    //---------------Memory config-----------------------
+
+    // We add PROCESS_SETUP_SIZE because we need space to call the function
+    // and in order to place the exit method in the stack
+    new_process->ssize = ssize + PROCESS_SETUP_SIZE;
+    new_process->page_table_level_2 = NULL;
+    new_process->page_tables_lvl_1_list = NULL;
+
+    void* frame_pointer = process_memory_allocator(new_process, new_process->ssize);
+    frame_pointer = get_frame();
+    if (frame_pointer == NULL){
+        return -1;
+    }
+
+    //--------------------Process function config-----------
+    new_process->func = pt_func;
+
+    //----------------Context setup-------------------------
+    new_process->context_process = (context_t*) malloc(sizeof(context_t));
+    if (new_process->context_process == NULL){
+        return -1;
+    }
+
+    // new_process->context_process->sp = (uint64_t) frame_pointer;
+    new_process->context_process->sp = (uint64_t) 0x40000000+FRAME_SIZE*new_process->stack_shift;
+    // During the context_switch we will call the process_call_wrapper that has to call
+    // the method given as function argument that we placed in s1 also the call has to
+    // be made the right argument that is in s2 and it also has to call the exit_process method
+    // at the end as this will be important in the case the user uses a return call
+    new_process->context_process->ra = (uint64_t) process_call_wrapper;
+    new_process->context_process->s1 = (uint64_t) pt_func;
+    // debug_print("[start -> %d] function adress funciton adress = %ld\n", new_process->pid, (long) pt_func);
+    new_process->context_process->s2 = (uint64_t) arg;
+    new_process->context_process->sepc = (uint64_t) process_call_wrapper;
+    new_process->context_process->satp = 0x8000000000000000 | 
+                                        ((long unsigned int) new_process->page_table_level_2>>12) |
+                                        ((long unsigned int) new_process->pid<<44)
+                                        ;
+    // We must created a stack that has the size of a frame and place it in the kernel 
+    // memory space that will be used to handle interrupts for this process
+
+    void* interrupt_frame_pointer = get_frame();
+    if (interrupt_frame_pointer == NULL){
+        return -1;
+    }
+    new_process->context_process->sscratch = (uint64_t) interrupt_frame_pointer+FRAME_SIZE  ;
+
+    //--------------Tree management----------------
+    // The parent of the process is the process that called the start method
+    new_process->parent = (process*) hash_get(get_process_hash_table(), cast_int_to_pointer(getpid()), NULL);
+
+
+    // if the parent process is null that means we created the head of the tree thus the new process
+    // is not attached to a parent
+    if (new_process->parent != NULL){
+        // We add the new process as a child to the parent process
+        if (new_process->parent->children_tail != NULL){
+            new_process->parent->children_tail->next_sibling = new_process;
+            new_process->parent->children_tail = new_process;
+        }
+        else{
+            new_process->parent->children_head = new_process;
+            new_process->parent->children_tail = new_process;
+        }
+    }
+    new_process->children_head = NULL;
+    new_process->children_tail = NULL;
+    new_process->next_sibling = NULL;
+
+    //--------------Return value----------------
+    new_process->return_value = NULL;
+
+    //-------------Shared pages-------------------
+    new_process->shared_pages = NULL;
+    new_process->released_pages_list = NULL;
+    new_process->proc_shared_hash_table = NULL;
+    //------------Add process to the activatable queue
+    add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
+
+    debug_print("[%s] created process with pid = %d \n", new_process->process_name, new_process->pid);
+
+    //------------We activate this new process if it has a higher priority-----------
+    // This function must be called a the very end
+    check_if_new_prio_is_higher_and_call_scheduler(new_process->prio, true, 0);
+    return new_process->pid;
 }
+
 
 int waitpid(int pid, int *retvalp) {
   debug_print_exit_m("[waitpid] Inside waitpid with pid  = %d\n", pid);
@@ -476,8 +473,12 @@ int waitpid(int pid, int *retvalp) {
         temp_process_before = temp_process;
         temp_process = temp_process->next_sibling;
       }
-      get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
-      scheduler();
+      if (temp_process == NULL){
+        get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
+      }
+      else{
+        break;
+      }
     }
   }
   // positive pid, we verify pid is a child and then we take its return value
@@ -504,7 +505,7 @@ int waitpid(int pid, int *retvalp) {
         break;
       }
       get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
-      scheduler();
+      
     }
   }
   // We take the return value of the process and then we kill it
@@ -518,6 +519,7 @@ int waitpid(int pid, int *retvalp) {
   }
   return pid_to_return;
 }
+
 
 int kill(int pid) {
   if (pid == idleId) {

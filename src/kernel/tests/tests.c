@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "tests.h"
 
-#define NUMBEROFTESTS 7
+#define NUMBEROFTESTS 8 
 
 void generate_test_report(test_apps_t* test_table){
 	print_test_no_arg("--------------TESTS REPORT START--------------\n");	
@@ -28,7 +28,15 @@ int kernel_tests(void *arg) {
 	/**
 	 * Rc is used to indicate if the tests failed
 	*/
+	print_test_no_arg("\n---------------------Inside kernel tests---------------------\n");
 	int rc = 0;
+
+	// unsigned long int *addess_user_mode = (unsigned long int *) 0x40000000;
+	// unsigned long int x = *addess_user_mode;
+	// debug_print_tests("hello world %ld", x);
+	
+	print_test_no_arg("\n---------------------kernel_tests executing---------------------\n");
+
 
 	test_apps_t test_table[NUMBEROFTESTS] = {
 		{test0, "test0", 0, 0},
@@ -37,8 +45,10 @@ int kernel_tests(void *arg) {
 		{test3, "test3", 3, 0},
 		{test4, "test4", 4, 0},
 		{test5, "test5", 5, 0},
-		{test6, "test6", 6, 0},
-	};
+		// {test6, "test6", 6, 0},//Test is so  slow
+		{test7, "test7", 7, 0},//Test is slow too
+        {test_memory, "test_memory", 8, 0},
+    };
 
 	print_test_no_arg("\n---------------------kernel_tests executing---------------------\n");
 	/*
@@ -61,6 +71,7 @@ int kernel_tests(void *arg) {
 		test_table[test_iter].test_return_value = test_rc;		
 		debug_print_tests("\n-------------------%s END-------------------\n", test_table[test_iter].test_name);
 	}
+	print_test_no_arg("\n---------------------kernel_tests Have been executed---------------------\n");
 
 	generate_test_report(test_table);
 	return rc;

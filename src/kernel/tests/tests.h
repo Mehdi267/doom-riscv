@@ -4,6 +4,8 @@
 #include "stdint.h"
 #include "../process/process.h"
 #include "../process/helperfunc.h"
+#include "../process/timer_api.h"
+#include "../process/memory_api.h"
 
 /*
  * Run kernel test suite
@@ -48,8 +50,22 @@ int test4(void* arg);
  */
 int test5(void* arg);
 
-// todo add comment
-int test6(void *arg);
+/*
+ * timer tests
+ */
+int test6(void* arg);
+
+/*
+ * Timer and shared memory
+ */
+int test7(void* arg);
+
+/*
+ * Test the process memory api
+ */
+int test_memory(void* arg);
+
+
 /*
  * Semaphores or message queues test
  */

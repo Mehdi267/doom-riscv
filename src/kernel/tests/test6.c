@@ -12,7 +12,7 @@
  *  On doit voir une alternance correcte des différents caractères.
  ******************************************************************************/
 
-#include "../sync.h"
+#include "../process/timer_api.h"
 #include "stdio.h"
 #include "assert.h"
 #include "tests.h"

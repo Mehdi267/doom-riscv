@@ -6,7 +6,7 @@
 #include "drivers/auxval.h"
 #include "process/scheduler.h"
 #include "process/helperfunc.h"
-#include "sync.h" // for counter
+#include "process/timer_api.h" // for counter
 #include <stdint.h>
 /*
  * Set machine timer

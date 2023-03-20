@@ -11,8 +11,10 @@
 #include "queue.h"
 #include "stdarg.h"
 #include "stdbool.h"
+#include "../memory/virtual_memory.h"
+#include "../memory/pages.h"
+#include <stdint.h>
 #include "stddef.h"
-#include "stdint.h"
 #include "stdio.h"
 #include "stdlib.h"
 
@@ -30,6 +32,7 @@
 #define NBPROC 30
 #define PROCESS_SETUP_SIZE 2
 #define idleId 1
+#define kernelId 0
 
 /**
  * @brief These variables define the execution state of the program
@@ -37,6 +40,8 @@
  * messages
  * @param TESTING will launch the testing process and will call the kernel_tests
  * @param RELEASE will not do the above and launch the kernel is production mode
+ * @param TESTING_MEMORY will not do the above and launch the kernel is production mode
+ * @param USER_PROCESS_DEBUG set the sum bit in sstatus to one so that we can debug user process
  * @note IMPORTANT : Only one of these variables should defined at a time
  * @param
  */
@@ -44,6 +49,8 @@
 #define TESTING
 // #define RELEASE
 // #define DEBUG_SCHEDULER
+#define TESTING_MEMORY
+#define USER_PROCESS_DEBUG
 
 /**
  * @brief Global variables
@@ -75,11 +82,23 @@ extern int initialize_process_hash_table();
  * supervisor/user processes.
  */
 typedef struct context {
-  uint64_t sp;
-  uint64_t ra;
-  uint64_t s[12]; // registers s0..s11
-  uint64_t sscratch;
-  uint64_t sepc;
+   uint64_t sp;
+   uint64_t ra;
+   uint64_t s0;
+   uint64_t s1;
+   uint64_t s2;
+   uint64_t s3;
+   uint64_t s4;
+   uint64_t s5;
+   uint64_t s6;
+   uint64_t s7;
+   uint64_t s8;
+   uint64_t s9;
+   uint64_t s10;
+   uint64_t s11;
+   uint64_t sscratch;
+   uint64_t sepc;
+   uint64_t satp;
 } context_t;
 
 /**
@@ -116,52 +135,89 @@ typedef enum _process_state {
 
 /**
  * \brief 	A process function
- * @param	arg : the argument that will be given to the function when the
- * process is called
+ * @param	arg : the argument that will be given to the function when the process is called 
  */
-typedef int (*process_function_t)(void *);
+typedef int	(*process_function_t)	(void*);
 
 /**
- * @brief this structure is given to all processesn it will stored at the kernel
- * level
- * @param pid  id of the process
- * @param process_name  process name
- * @param state  state of the process
- * @param ssize  total the size allocated to the process
- * @param prio  priority of the process
- * @param context_process we store here the current execution context of the
- * process ie the important registers
- * @param func  the function that is associated to the process  not very
- * important and will be removed later
- * @param parent  parent process
- * @param children_head  the head of the children process
- * @param children_tail  the tail of the children_process
- * @param next_sibling  next sibling of the current process, this parameter is
- * used to link the children of a process
- * @param link_queue_activable used to link the activatable processes
- * @param link_queue_asleep used to link the asleep process
- * @param return_value  return value of the process, used in waitpid
- */
-typedef struct process_t {
-  int pid;                    // id of the process
-  char *process_name;         // process name
-  process_state state;        // state of the process
-  uint32_t ssize;             // total the size allocated to the process
-  uint16_t prio;              // priority of the process
-  context_t *context_process; // we store here the current execution context of
-                              // the process ie the important registers
-  process_function_t func;  // the function that is associated to the process ;
-                            // not very important and will be removed later
-  struct process_t *parent; // parent process
-  struct process_t *children_head; // the head of the children process
-  struct process_t *children_tail; // the tail of the children_process
-  struct process_t
-      *next_sibling; // next sibling of the current process, this parameter is
-                     // used to link the children of a process
-  link link_queue_activable; // used to link the activatable processes
-  link link_queue_asleep;    // used to link the asleep process
-  int return_value;          // return value of the process, used in waitpid
-  int64_t sleep_time;
+ * @brief used to save the main execution context
+*/
+typedef struct released_pages_struct{
+   uint16_t lvl2_index;
+   uint16_t lvl1_index;
+   uint16_t lvl0_index;
+   page_table* page_table; //Page table at which the process is positionned(Used to gain access speed)
+   struct released_pages_struct* next_released_page;
+} released_pages_t;
+
+/**
+ * @brief used to save all the pages that the current process is using
+*/
+typedef struct shared_pages_proc{
+   char *key;
+   uint16_t lvl2_index;
+   uint16_t lvl1_index;
+   uint16_t lvl0_index;
+   void* mapped_address;
+   page_table* page_table; //Page table at which the process is positionned(Used to gain access speed)
+   struct shared_pages_proc* next_shared_page;
+} shared_pages_proc_t;
+
+/**
+ * @brief used to save all the pages that the current process is using
+*/
+typedef struct shared_pages_wrap{
+   shared_pages_proc_t* head_shared_page;
+   shared_pages_proc_t* tail_shared_page;
+} shared_pages_wrap_t;
+
+
+/**
+  * @brief this structure is given to all processesn it will stored at the kernel level
+  * @param pid  id of the process
+  * @param process_name  process name
+  * @param state  state of the process
+  * @param ssize  total the size allocated to the process
+  * @param prio  priority of the process
+  * @param context_process we store here the current execution context of the process ie the important registers
+  * @param func  the function that is associated to the process  not very important and will be removed later
+  * @param parent  parent process
+  * @param children_head  the head of the children process
+  * @param children_tail  the tail of the children_process
+  * @param next_sibling  next sibling of the current process, this parameter is used to link the children of a process
+  * @param link_queue_activable used to link the activatable processes 
+  * @param link_queue_asleep used to link the asleep process
+  * @param return_value  return value of the process, used in waitpid
+*/
+typedef struct process_t{
+   //-----------Process information--------
+   int pid; // id of the process
+   char *process_name; // process name
+   process_state state; // state of the process
+   uint32_t ssize; // total the size allocated to the process
+   uint16_t prio; // priority of the process
+   context_t* context_process; //we store here the current execution context of the process ie the important registers
+   process_function_t func; // the function that is associated to the process ; not very important and will be removed later
+   //-----------Process tree inforamtion--------
+   struct process_t* parent; // parent process
+   struct process_t* children_head; // the head of the children process
+   struct process_t* children_tail; // the tail of the children_process
+   struct process_t* next_sibling; // next sibling of the current process, this parameter is used to link the children of a process
+   //-----------Process chaining--------
+   link link_queue_activable; //used to link the activatable processes 
+   link link_queue_asleep; //used to link the asleep process
+   //-----------Process return value--------
+   int return_value; // return value of the process, used in waitpid
+   //-----------Process memory management --------
+   page_table* page_table_level_2; //Pointer to the level 2 page table associated with the process
+   page_table_link_list_t* page_tables_lvl_1_list;//pointer to the list that holds the lvl1 page table (limited to 1 atm)
+   uint16_t stack_shift; //indicates how many frames we need to shift to place the stack pointer 
+   //-----------Process shared memory management --------
+   hash_t* proc_shared_hash_table; //Hash table associated to the process link shared pages to their shared_pages_proc_t
+   shared_pages_wrap_t* shared_pages; //Wrapper to the linked list that holds process information 
+   released_pages_t* released_pages_list; //Linked list that hold the released shared pages' information
+   //----------------Timer management-------------------
+   int64_t sleep_time;
 } process;
 
 /**
@@ -372,7 +428,7 @@ extern int idle(void *arg);
  * code. Inspired from :
  * https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
  */
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 0 //Indicates if debug type is active 
 
 #define debug_print(fmt, ...)                                                  \
   do {                                                                         \
@@ -389,25 +445,17 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the scheduler,
  *  meaning when we debug the scheduler we use the debug_print_scheduler
  */
-#define DEBUG_SCHEDULER_LEVEL 0 // Indicates if debug type is actuve
+#define DEBUG_SCHEDULER_LEVEL 0 //Indicates if debug type is active
 
-#define debug_print_scheduler(fmt, ...)                                        \
-  do {                                                                         \
-    if (DEBUG_SCHEDULER_LEVEL == 1) {                                          \
-      printf(fmt, __VA_ARGS__);                                                \
-    }                                                                          \
-    if (DEBUG_SCHEDULER_LEVEL == 2) {                                          \
-      printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, __LINE__,          \
-             __func__, __VA_ARGS__);                                           \
-    }                                                                          \
-  } while (0)
+#define debug_print_scheduler(fmt, ...) \
+        do {if (DEBUG_SCHEDULER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_SCHEDULER_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
 
-#define debug_print_scheduler_no_arg(fmt, ...)                                 \
-  do {                                                                         \
-    if (DEBUG_SCHEDULER_LEVEL) {                                               \
-      printf(fmt);                                                             \
-    }                                                                          \
-  } while (0)
+#define debug_print_scheduler_no_arg(fmt, ...) \
+        do {if (DEBUG_SCHEDULER_LEVEL){ printf(fmt);} } while (0)
+
+
 
 /**
  * @brief the following macro are used to debug the processes,
@@ -444,8 +492,7 @@ extern int idle(void *arg);
   } while (0)
 
 /**
- * @brief the following macro are used to debug the processes,
- *  meaning when we debug the scheduler we use the debug_print_process
+ * @brief the following macro are used when running the tests
  */
 #define DEBUG_TESTING_LEVEL 1 // Indicates if debug type is active
 
@@ -466,5 +513,35 @@ extern int idle(void *arg);
       printf(fmt);                                                             \
     }                                                                          \
   } while (0)
+
+
+/**
+ * @brief the following macro are used to debug the memory management
+ */
+#define DEBUG_MEMORY_LEVEL 0 //Indicates if debug type is active
+
+#define debug_print_memory(fmt, ...) \
+        do {if (DEBUG_MEMORY_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_MEMORY_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+#define print_memory_no_arg(fmt, ...) \
+        do {if (DEBUG_MEMORY_LEVEL){ printf(fmt);} } while (0)
+
+
+/**
+ * @brief the following macro are used to debug the memory api 
+ */
+#define DEBUG_MEMORY_API_LEVEL 0 //Indicates if debug type is active
+
+#define debug_print_memory_api(fmt, ...) \
+        do {if (DEBUG_MEMORY_API_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_MEMORY_API_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+#define print_memory_api_no_arg(fmt, ...) \
+        do {if (DEBUG_MEMORY_API_LEVEL){ printf(fmt);} } while (0)
+
+
 
 #endif

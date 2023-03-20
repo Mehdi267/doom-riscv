@@ -39,8 +39,14 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 		}
 	} else {
 		// TODO ADD SYSTEM CALLS TREATEMENT
+        printf("{exception scause} %ld\n", scause);
 		switch (scause) {
-			case intr_s_timer: 
+			// case CAUSE_FETCH_PAGE_FAULT:
+            //     break;
+			// case CAUSE_STORE_PAGE_FAULT:
+			// 	printf("found execption \n");
+			// 	break;
+			// // case intr_s_timer: 
 			default:
 				blue_screen(tf);
 				// no return

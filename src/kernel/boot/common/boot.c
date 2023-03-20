@@ -15,8 +15,7 @@
 #include "traps/trap.h"
 #include "timer.h"
 #include "drivers/splash.h"
-#include "frame_dist.h"
-#include "pages.h"
+#include "process/process.h"
 
 extern void _start();
 extern void test();
@@ -41,27 +40,32 @@ static void delegate_traps()
 	 * Rien à faire ici dans un premier temps!
 	 * CSR concernés: mideleg et medeleg.
 	 */
+    
+    /**
+     * @brief   This function call delegated timer interrupt to the Supervisor mode 
+     *  instead of machine mode 
+     * --Long version:
+     * ---1/---
+     * "Traps never transition from a more-privileged mode to a less-privileged mode." page 44 privileged isa
+     * We can conclude with the line above that when we are in machine mode or supervisor mode trap we cannot
+     * to a lower privileged mode which will be the supervisor mode/user mode in this case
+     * ---2/---
+     * "By default, all traps at any privilege level are handled in machine mode" page 43 privileged isa
+     * With this line we can conclude that if we are in the supervisor mode or any mode and we are met with an interrupt
+     * we go directly to the machine thus use mtvec and the machine trap handling functions like mtrap_entry and ... .
+     * As it was already added in the machine trap handler we can detect that the interrupt was called from the supervisor
+     * mode and the appropriate function but this is not the proper approach because when we are in the supervisor mode,
+     * we would like to exploit the methods that we were added for trap handling in this mode like strap_entry, strap_handler
+     * in order to have more control over what we do for that reason we exploit the two registers :
+     *  medeleg(exceptions) and mideleg(interrupts) for delegating the appropriate traps to the appropriate mode
+    */
+    csr_set(medeleg, SIE_STIE);
+    csr_set(mideleg, SIE_STIE);
+    //page fault delegation 
+    csr_set(medeleg, SIE_INST_PAGE_FAULT);
+    csr_set(medeleg, SIE_INST_PAGE_FAULT);
+    csr_set(medeleg, SIE_STORE_PAGE_FAULT);
 
-	/**
-   * @brief   This function call delegated timer interrupt to the Supervisor mode 
-   *  instead of machine mode 
-   * --Long version:
-    * ---1/---
-    * "Traps never transition from a more-privileged mode to a less-privileged mode." page 44 privileged isa
-    * We can conclude with the line above that when we are in machine mode or supervisor mode trap we cannot
-    * to a lower privileged mode which will be the supervisor mode/user mode in this case
-    * ---2/---
-    * "By default, all traps at any privilege level are handled in machine mode" page 43 privileged isa
-    * With this line we can conclude that if we are in the supervisor mode or any mode and we are met with an interrupt
-    * we go directly to the machine thus use mtvec and the machine trap handling functions like mtrap_entry and ... .
-    * As it was already added in the machine tap handler we can detect that the interrupt was called from the supervisor
-    * mode and the appropriate function but this is not the proper approach because when we are in the supervisor mode,
-    * we would like to exploit the methods that we were added for trap handling in this mode like strap_entry, strap_handler
-    * in order to have more control over what we do for that reason we exploit the two registers :
-    *  medeleg(exceptions) and mideleg(interrupts) for delegating the appropriate traps to the appropriate mode
-  */
-	csr_set(medeleg, SIE_STIE);
-  csr_set(mideleg, SIE_STIE);
 }
 
 
@@ -122,10 +126,20 @@ static inline void enter_supervisor_mode() {
     //enables global Supervisor mode interrupts
     csr_set(sstatus, SSTATUS_SIE);
 
+    //set mxr to one to access executable pages
+    csr_set(sstatus, SSTATUS_MXR);
+    
+    #ifdef USER_PROCESS_DEBUG
+        //set sum value in sstatus to one to debug user processes
+        csr_set(sstatus, SSTATUS_SUM);
+        debug_print_memory("Sum Attribut has been set correctly sstatus = %ld\n", csr_read(sstatus));
+    #endif
+
     // Le passage au niveau mit dans le registre sera fait automatiquement avec l'instruction
     // mret qui changera le niveau suivant ce qui existe dans mpp
     mret();
 }
+
 
 
 /*
@@ -148,39 +162,30 @@ __attribute__((noreturn)) void boot_riscv()
 
     // Délégations des interruptions et des exceptions
     delegate_traps();
-
-    //On désactive pour le moment la mémoire virtuel,
-    //éventuellement il faut revenir sur cela
-    //et changer la valeur stockée dans le registre
-    csr_write(satp, 0);
-
+    
     //We disable machine mode interrupts
     csr_clear(mstatus, MSTATUS_MIE);
 
     //enables timer interrupts for the Supervisor mode
     csr_set(sie, SIE_STIE);
 
+    //init timer to 0
+
     init_frames();
 
-  /*Création du directory (table des pages de premier niveau) 
-  qui sera utilisé par l'ensemble des processus kernel.*/
-  page_table *ppn = init_directory();
 
-  //printf("%d",check_validity(ppn->pte_list +0));
-  //printf("%d",is_leaf(ppn->pte_list + 0));
-  //prints 11 =>OK
+    // if (init_kernel_memory() <0){
+    //     printf("Panicked when allocating space for the kernel");
+    //     exit(-1);
+    // }
 
-  //on active et configure satp
-  csr_write(satp, 0x8000000000000000 | (long unsigned int) ppn); //ppn is 24b0000
-
-  //validation
-  set_gigapage(ppn->pte_list + 1, 0x100000000, true, true, false);
-
-  csr_write(satp, 0); 
-  /**
-   * This function will enter in the supervisor mode and it will enable
-   * supervisor mode intterupts
-   */
-  enter_supervisor_mode();
-  __builtin_unreachable();
+    /**
+     * This function will enter in the supervisor mode and it will enable
+     * supervisor mode intterupts
+     */
+    enter_supervisor_mode();
+    __builtin_unreachable();
 }
+
+
+
