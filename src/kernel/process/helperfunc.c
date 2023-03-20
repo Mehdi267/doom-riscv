@@ -21,13 +21,16 @@ void* cast_int_to_pointer(int int_to_cast){
     return (void*)((long) int_to_cast);
 }
 
+
 void* cast_char_star_into_pointer(char* char_star){
     return (void*) char_star;
 }
 
+
 long cast_pointer_into_a_long(void * pointer){
     return (long) pointer;
 }
+
 
 int cast_pointer_into_a_int(void * pointer){
     return (int)((long) pointer);
@@ -42,6 +45,81 @@ void set_supervisor_interrupts(bool val){
         csr_clear(sstatus, 2);
     }
 }
+
+
+process* get_process_struct_of_pid(int pid){
+    process* process_pid = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(pid), NULL));
+    return process_pid;
+}
+
+
+semaphore_t* get_semaphore_struct(int sem){
+    semaphore_t* sem_val = ((semaphore_t*) hash_get(get_semaphore_table(), cast_int_to_pointer(sem), NULL));
+    return sem_val;
+}
+
+
+char* getname(void){
+    process* currently_running_process = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(getpid()), NULL));
+    if (currently_running_process == NULL){
+        return NULL;
+    }
+    return currently_running_process->process_name;
+}
+
+
+char* get_pid_name(int pid){
+    process* process_pid = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(pid), NULL));
+    if (process_pid == NULL){
+        return NULL;
+    }
+    return process_pid->process_name;
+}
+
+
+int increment_pid_and_get_new_pid(){
+    pid_iterator++;
+    return pid_iterator;
+}
+
+
+int increment_shared_page_counter(){
+    page_id_counter++;
+    return page_id_counter;
+}
+
+
+int increment_semaphore_id(){
+    semaphore_id_counter++;
+    return semaphore_id_counter;
+}
+
+
+hash_t* get_shared_pages_hash_table(void){
+    return shared_memory_hash_table;
+}
+
+
+hash_t* get_process_hash_table(void){
+    return pid_process_hash_table;
+}
+
+
+hash_t* get_semaphore_table(void){
+    return semaphore_table;
+}
+
+
+int validate_action_process_valid(process* process_pid){
+    if (process_pid == NULL){
+        return -1;
+    }
+    if (process_pid->state == ZOMBIE){
+        return -1;
+    }
+    return 0;
+}
+
 
 void print_pte(page_table_entry *pte)
 {
@@ -83,64 +161,5 @@ void print_shared_page_node(char* text_print ,shared_pages_proc_t* node){
     if (text_print!=NULL){
         debug_print_memory_api("---------%s---------\n",text_print);
     }
-}
-
-
-process* get_process_struct_of_pid(int pid){
-    process* process_pid = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(pid), NULL));
-    if (process_pid == NULL){
-        return NULL;
-    }
-    return process_pid;
-}
-
-
-char* getname(void){
-    process* currently_running_process = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(getpid()), NULL));
-    if (currently_running_process == NULL){
-        return NULL;
-    }
-    return currently_running_process->process_name;
-}
-
-
-char* get_pid_name(int pid){
-    process* process_pid = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(pid), NULL));
-    if (process_pid == NULL){
-        return NULL;
-    }
-    return process_pid->process_name;
-
-}
-
-int increment_pid_and_get_new_pid(){
-    pid_iterator++;
-    return pid_iterator;
-}
-
-
-int increment_shared_page_counter(){
-    page_id_counter++;
-    return page_id_counter;
-}
-
-hash_t* get_shared_pages_hash_table(void){
-    return shared_memory_hash_table;
-}
-
-
-hash_t* get_process_hash_table(void){
-    return pid_process_hash_table;
-}
-
-
-int validate_action_process_valid(process* process_pid){
-    if (process_pid == NULL){
-        return -1;
-    }
-    if (process_pid->state == ZOMBIE){
-        return -1;
-    }
-    return 0;
 }
 
