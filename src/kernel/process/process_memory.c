@@ -234,7 +234,8 @@ int add_frame_to_process(process* proc_conf, page_t page_type){
         proc_conf->shared_pages->tail_shared_page->lvl1_index = node_lvl1->tail_page->index;
         proc_conf->shared_pages->tail_shared_page->lvl2_index = 1; //This value is constant but we might make depend on which source dictetory we choose 
         proc_conf->shared_pages->tail_shared_page->page_table = node_lvl1->tail_page->table;
-        print_shared_page_node("Add frame level values",proc_conf->shared_pages->tail_shared_page);
+        // print_shared_page_node("Add frame level values",proc_conf->shared_pages->tail_shared_page);
+        
         //We only link sahred pages this way due to their dynamic nature, the other pages are linked using memory allocator
         if (link_lvl1_table_shared_page(proc_conf, USERSPACE, node_lvl1->tail_page->index, node_lvl1->tail_page->table)<0){
             return -1;
