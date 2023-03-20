@@ -64,6 +64,27 @@ void print_pte(page_table_entry *pte)
     print_memory_no_arg("----------------Pte values end----------------\n");
 }
 
+/**
+ * @brief Prints the details of a shared proc
+ * 
+ * @param node 
+ */
+void print_shared_page_node(char* text_print ,shared_pages_proc_t* node){
+    if (node==NULL)
+        return;
+
+    if (text_print!=NULL){
+        debug_print_memory_api("---------printing shared proc %s---------\n",text_print);
+    }
+    debug_print_memory_api("lvl0_index = %d \n",node->lvl0_index);
+    debug_print_memory_api("lvl1_index = %d \n",node->lvl1_index);
+    debug_print_memory_api("lvl2_index = %d \n",node->lvl2_index);
+    debug_print_memory_api("page_table = %p \n",node->page_table);
+    if (text_print!=NULL){
+        debug_print_memory_api("---------printed shared proc %s---------\n",text_print);
+    }
+}
+
 
 process* get_process_struct_of_pid(int pid){
     process* process_pid = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(pid), NULL));

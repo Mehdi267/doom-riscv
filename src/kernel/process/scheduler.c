@@ -95,12 +95,20 @@ void scheduler(){
 
     // awake process and insert the in activable queue;
     uint64_t sleep_time = get_smallest_sleep_time();
+    // printf("sleep time = %ld\n", sleep_time);
+    // printf("current_clock() = %ld\n", current_clock());
+    // process* peek_sleep = get_process_struct_of_pid(21);
+    // if (peek_sleep != NULL){
+    //     printf("peek sleep %d\n", peek_sleep->state);
+    // }
     while (sleep_time != 0 && current_clock() > sleep_time) { // several process can be awaken
       process* awake = pop_element_queue_wrapper(ASLEEP_QUEUE);
       add_process_to_queue_wrapper(awake, ACTIVATABLE_QUEUE);
       sleep_time = get_smallest_sleep_time();
     }
-    //Process has been called before any execution has started
+    //Scheduler has been called before any execution has started
+    //the scheduler_main is configured when we start the kernel if its value is null 
+    //then we found an error
     if (scheduler_main == NULL){
         return ;
     }
@@ -126,7 +134,7 @@ void scheduler(){
         set_supervisor_interrupts(true);
         //In this case no process is running and we have called the scheduler for the first time
         // yet in this case, we want to start with a custom process/ that has been set by the user
-        // in the pid field and the user has also eliminated the process from the queue
+        // in the pid field and we also assume that user has also eliminated the process from the queue
         process* top_process = get_process_struct_of_pid(getpid());
         if (top_process == NULL){
             return;

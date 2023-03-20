@@ -71,15 +71,15 @@ static int configure_page_table_linked_list_entry(page_table_link_list_t** link_
     if (parent_page != NULL){
         switch (page_type){
             case STACK_CODE_PAGE:
-                node_conf->index = parent_page->stack_usage;
+                node_conf->index = STACK_CODE_SPACE_START + parent_page->stack_usage;
                 parent_page->stack_usage++;
                 break;
             case HEAP_PAGE:
-                node_conf->index = parent_page->heap_usage;
+                node_conf->index = HEAP_SPACE_START + parent_page->heap_usage;
                 parent_page->heap_usage++;
                 break;
             case SHARED_PAGE:
-                node_conf->index = parent_page->shared_memory_usage;
+                node_conf->index = SHARED_MEMORY_START + parent_page->shared_memory_usage;
                 parent_page->shared_memory_usage++;
                 break;
             default:
@@ -88,7 +88,7 @@ static int configure_page_table_linked_list_entry(page_table_link_list_t** link_
         parent_page->usage++;
     }
     else {
-        
+        node_conf->index = custom_index;
     }
     return 0;
 }
@@ -100,7 +100,7 @@ static int configure_page_table_linked_list_entry(page_table_link_list_t** link_
  * @return a negative int if the operation was not succefully and a postive value other wise 
  */
 static int add_child_node_page_table(page_table_link_list_t * parent_page_w, page_t page_type){
-    //We could go back to the parent and add an other gigabytes pages but we will work with only one gigabytes pages in here
+    //We could go back to the parent and add an other gigabyte pages but we will work with only one gigabyte page in here
     if (parent_page_w->usage >= PT_SIZE ||
         parent_page_w->stack_usage >= STACK_FRAME_SIZE ||
         parent_page_w->heap_usage >= HEAP_FRAME_SIZE ||
@@ -161,6 +161,7 @@ static int link_lvl1_table_shared_page(process* proc_conf, int lvl2_index, int l
         }
         lvl_1_node = lvl_1_node->next_page;
     }
+    
     page_table_entry* mega_table_entry;
     //We add a link from the level 1 page table to level 0 page table
     //
@@ -210,9 +211,9 @@ int add_frame_to_process(process* proc_conf, page_t page_type){
                     if ( proc_conf == NULL || proc_conf->shared_pages == NULL || proc_conf->shared_pages->tail_shared_page== NULL){
                         return -1;
                     }
-                    proc_conf->shared_pages->tail_shared_page->lvl1_index = lvl0_iterator->index;
                     proc_conf->shared_pages->tail_shared_page->lvl0_index = lvl0_iterator->usage;
-                    proc_conf->shared_pages->tail_shared_page->lvl2_index = 1; //This value is constant but we might make depend on which source dictetory we choose 
+                    proc_conf->shared_pages->tail_shared_page->lvl1_index = lvl0_iterator->index;
+                    proc_conf->shared_pages->tail_shared_page->lvl2_index = USERSPACE; //This value is constant but we might make depend on which source dictetory we choose 
                     proc_conf->shared_pages->tail_shared_page->page_table = lvl0_iterator->table;
                 }
                 lvl0_iterator->usage++;
@@ -227,12 +228,13 @@ int add_frame_to_process(process* proc_conf, page_t page_type){
     }
     if (page_type == SHARED_PAGE){
         if ( proc_conf == NULL || proc_conf->shared_pages == NULL || proc_conf->shared_pages->tail_shared_page== NULL){
-                        return -1;
+            return -1;
         }
         proc_conf->shared_pages->tail_shared_page->lvl0_index = node_lvl1->tail_page->usage;
         proc_conf->shared_pages->tail_shared_page->lvl1_index = node_lvl1->tail_page->index;
         proc_conf->shared_pages->tail_shared_page->lvl2_index = 1; //This value is constant but we might make depend on which source dictetory we choose 
         proc_conf->shared_pages->tail_shared_page->page_table = node_lvl1->tail_page->table;
+        print_shared_page_node("Add frame level values",proc_conf->shared_pages->tail_shared_page);
         //We only link sahred pages this way due to their dynamic nature, the other pages are linked using memory allocator
         if (link_lvl1_table_shared_page(proc_conf, USERSPACE, node_lvl1->tail_page->index, node_lvl1->tail_page->table)<0){
             return -1;
@@ -279,8 +281,14 @@ static int allocate_memory_final(process* proc_conf, int start_index, int end_in
         if (kilo_page_table == NULL){
             return -1;
         }
+        //Making the lvl1 table point to the lvl0 table
         configure_page_entry(mega_table_entry,
-                            (long unsigned int) kilo_page_table, false, false, false, false, KILO);
+                            (long unsigned int) kilo_page_table, 
+                            false,
+                            false,
+                            false, 
+                            false,
+                            KILO);
         #ifdef PTE_PAGES_DEBUG
             print_memory_no_arg("-- Mega page pte --\n");
             print_pte(mega_table_entry);

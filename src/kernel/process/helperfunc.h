@@ -89,7 +89,7 @@ extern hash_t* get_shared_pages_hash_table(void);
 /**
  * @brief Validate that the process is an state on which we can call system calls
  * we will mostly check that the process is not a ZOMBIE but the function can be extended to 
- * other processes
+ * other states
 */
 extern int validate_action_process_valid(process* process_pid);
 
@@ -100,7 +100,13 @@ extern int validate_action_process_valid(process* process_pid);
 */
 extern void set_supervisor_interrupts(bool val);
 
-
+/**
+ * @brief Outputs the details of a shared page
+ * 
+ * @param text_print 
+ * @param node 
+ */
+extern void print_shared_page_node(char* text_print ,shared_pages_proc_t* node);
 
 
 

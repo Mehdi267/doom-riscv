@@ -28,6 +28,8 @@ shared_page_t* get_shared_page(char* page_string){
     return page_struct;
 }
 
+
+
 /**
  * @brief Get a shared page that is mapped in the process given as function argument.
  * if the process is null then we return null, and if the process table is null we return null
@@ -76,6 +78,7 @@ int initialize_process_shared_hash_table(process* proc_conf){
     return 0;
 }
 
+
 static shared_page_t* create_shared_page(char* key){
     void* page_frame = get_frame();
     shared_page_t* page_info = (shared_page_t*)malloc(sizeof(shared_page_t));
@@ -101,6 +104,7 @@ static int link_shared_page_to_process(process* proc_conf, shared_page_t* page_i
     }
     strcpy(shared_page_proc->key, page_name);
     shared_page_proc->next_shared_page = NULL;
+    printf("------\n string is equal to %s \n", shared_page_proc->key);
     if (shared_page_proc==NULL){
         return -1;
     }
@@ -134,12 +138,18 @@ static int link_shared_page_to_process(process* proc_conf, shared_page_t* page_i
             return -1;
         }
     }
-
+    //We link the shared page to the hash table that maps keys to shared pages
+     
+    hash_set(proc_conf->proc_shared_hash_table,
+         cast_char_star_into_pointer(page_name),
+         proc_conf->shared_pages->tail_shared_page->page_table);
+    
     //At this point we only need to map the page
     //We increase the usage of the shared page
     //(this method will be called when we create the page of when we acquire it)
     page_info->usage++;
     //The level 1 to level 0 linking get done automatically
+    print_shared_page_node("shm_create",proc_conf->shared_pages->tail_shared_page);
     uint16_t lvl0_index = proc_conf->shared_pages->tail_shared_page->lvl0_index;
     page_table_entry* shared_page_entry =  proc_conf->shared_pages->tail_shared_page->page_table->pte_list+lvl0_index;
     configure_page_entry(shared_page_entry,
@@ -195,11 +205,14 @@ void shm_release(const char *key){
     }
     //----------------We now free shared_pages_proc_t from the current process---------------
     //We free the string first
-    free(proc_page_shared->key);//TODO CHECK IF THIS LEAKS MEMORY
+    // free(proc_page_shared->key);//TODO CHECK IF THIS LEAKS MEMORY
     //We handle the linking of the process
     if (current_proc->shared_pages ==NULL){
         return;
     }
+    printf("I am no longer in the free method \n");
+    printf("%p\n",current_proc->shared_pages->tail_shared_page);
+    printf("%p\n",current_proc->shared_pages->head_shared_page);
     //In this case the shared page is head and tail of the link wrapper
     if (proc_page_shared == current_proc->shared_pages->head_shared_page &&
         proc_page_shared == current_proc->shared_pages->tail_shared_page){
@@ -255,7 +268,7 @@ void shm_release(const char *key){
         hash_del(get_shared_pages_hash_table(), cast_char_star_into_pointer(key_no_c));
         free(page_info);
     }
-    print_memory_api_no_arg("Frame has been releasAquired shared frame successfully\n");
+    print_memory_api_no_arg("Shared page has been released successfully\n");
     return;
 }
 
@@ -279,6 +292,8 @@ static int create_hash_table_and_shared_pages_wrapper(process* current_proc){
         if (current_proc->shared_pages == NULL){
             return -1;
         }
+        current_proc->shared_pages->head_shared_page = NULL;
+        current_proc->shared_pages->tail_shared_page = NULL;
     }
     return 0;
 }
@@ -347,7 +362,7 @@ void *shm_create(const char *key){
     if (link_shared_page_to_process(current_proc, page_info, key_no_c)<0){
         return NULL;
     }
-    print_memory_api_no_arg("Created shared pagAquired shared frame successfully \n");
+    print_memory_api_no_arg("Created shared page successfully \n");
     //The address returned must correspand to the address mapped to the process
     //The node taht was created is the tail_sahred page which holds the page that we are trying to 
     //allocate memory to

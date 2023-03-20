@@ -472,8 +472,12 @@ int waitpid(int pid, int *retvalp) {
         temp_process_before = temp_process;
         temp_process = temp_process->next_sibling;
       }
-      get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
-      scheduler();
+      if (temp_process == NULL){
+        get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
+      }
+      else{
+        break;
+      }
     }
   }
   // positive pid, we verify pid is a child and then we take its return value
@@ -500,7 +504,7 @@ int waitpid(int pid, int *retvalp) {
         break;
       }
       get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
-      scheduler();
+      
     }
   }
   // We take the return value of the process and then we kill it

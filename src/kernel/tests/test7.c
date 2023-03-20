@@ -39,6 +39,7 @@ int timer1(void *arg)
                 wait_clock(current_clock() + dur);
                 printf(" %d", i);
         }
+        printf("Managed to leave process");
         return 0;
 }
 

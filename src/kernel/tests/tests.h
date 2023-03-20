@@ -51,14 +51,19 @@ int test4(void* arg);
 int test5(void* arg);
 
 /*
- * Robustness of the scheduler
+ * timer tests
  */
 int test6(void* arg);
 
 /*
- * Robustness of the scheduler
+ * Timer and shared memory
  */
 int test7(void* arg);
+
+/*
+ * Test the process memory api
+ */
+int test_memory(void* arg);
 
 
 /*
