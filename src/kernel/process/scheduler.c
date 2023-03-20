@@ -36,20 +36,20 @@ int init_scheduling_process_queue(){
 
 void add_process_to_queue_wrapper(process* process_to_add, queue_process_type type){
     if (type == ACTIVATABLE_QUEUE){
-        queue_add(process_to_add, &activatable_process_queue, process, link_queue_activable, prio);
+        queue_add(process_to_add, &activatable_process_queue, process, next_prev, prio);
     }
     else if (type == ASLEEP_QUEUE){
-        queue_add(process_to_add, &asleep_process_queue, process, link_queue_asleep, sleep_time);
+        queue_add(process_to_add, &asleep_process_queue, process, next_prev, sleep_time);
     }
 }
 
 
 void delete_process_from_queue_wrapper(process* process_to_delete, queue_process_type type){
     if (type == ACTIVATABLE_QUEUE){
-        queue_del(process_to_delete,link_queue_activable);
+        queue_del(process_to_delete, next_prev);
     }
     else if (type == ASLEEP_QUEUE){
-        queue_del(process_to_delete, link_queue_asleep);
+        queue_del(process_to_delete, next_prev);
     }
 
 }
@@ -57,10 +57,10 @@ void delete_process_from_queue_wrapper(process* process_to_delete, queue_process
 
 process* pop_element_queue_wrapper(queue_process_type type){
     if (type == ACTIVATABLE_QUEUE){
-        return queue_out(&activatable_process_queue, process, link_queue_activable);
+        return queue_out(&activatable_process_queue, process, next_prev);
     }
     else if (type == ASLEEP_QUEUE){
-        return queue_out(&asleep_process_queue, process, link_queue_asleep);
+        return queue_out(&asleep_process_queue, process, next_prev);
     }
     return NULL;
 
@@ -68,10 +68,10 @@ process* pop_element_queue_wrapper(queue_process_type type){
 
 process* get_peek_element_queue_wrapper(queue_process_type type){
     if (type == ACTIVATABLE_QUEUE){
-        return queue_top(&activatable_process_queue, process, link_queue_activable);
+        return queue_top(&activatable_process_queue, process, next_prev);
     }
     else if (type == ASLEEP_QUEUE){
-        return queue_top(&asleep_process_queue, process, link_queue_asleep);
+        return queue_top(&asleep_process_queue, process, next_prev);
     }
     return NULL;
 }
@@ -133,7 +133,7 @@ void scheduler(){
         started_user_process = true;
         debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, custom launch of the process with id = %d\n", getpid(),  getpid());
         debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
-        debug_print_scheduler("[scheduler -> %d] function adress of the process = %ld\n", getpid(), (long) get_process_struct_of_pid(getpid())->context_process->s1);
+        debug_print_scheduler("[scheduler -> %d] function adress of the process = %ld\n", getpid(), (long) get_process_struct_of_pid(getpid())->context_process->s[1]);
         debug_print_scheduler("[scheduler -> %d] idle adress = %ld\n", getpid(), (long) idle);
         context_switch(scheduler_main->main_context, get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
     }

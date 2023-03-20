@@ -145,10 +145,9 @@ typedef struct process_t{
    struct process_t* children_head; // the head of the children process
    struct process_t* children_tail; // the tail of the children_process
    struct process_t* next_sibling; // next sibling of the current process, this parameter is used to link the children of a process
-   link link_queue_activable; //used to link the activatable processes 
-   link link_queue_asleep; //used to link the asleep process
+   link next_prev; //used to link the processes link is a struct containing a next and prev pointer
    int return_value; // return value of the process, used in waitpid
-   int64_t sleep_time;
+   int sleep_time;
 } process;
 
 
