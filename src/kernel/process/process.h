@@ -518,7 +518,7 @@ extern int idle(void *arg);
 /**
  * @brief the following macro are used to debug the memory management
  */
-#define DEBUG_MEMORY_LEVEL 1 //Indicates if debug type is active
+#define DEBUG_MEMORY_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_memory(fmt, ...) \
         do {if (DEBUG_MEMORY_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -532,7 +532,7 @@ extern int idle(void *arg);
 /**
  * @brief the following macro are used to debug the memory api 
  */
-#define DEBUG_MEMORY_API_LEVEL 1 //Indicates if debug type is active
+#define DEBUG_MEMORY_API_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_memory_api(fmt, ...) \
         do {if (DEBUG_MEMORY_API_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \

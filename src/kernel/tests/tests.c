@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "tests.h"
 
-#define NUMBEROFTESTS 9
+#define NUMBEROFTESTS 8 
 
 void generate_test_report(test_apps_t* test_table){
 	print_test_no_arg("--------------TESTS REPORT START--------------\n");	
@@ -43,11 +43,11 @@ int kernel_tests(void *arg) {
 		{test1, "test1", 1, 0},
 		{test2, "test2", 2, 0},
 		{test3, "test3", 3, 0},
-		// {test4, "test4", 4, 0},
+		{test4, "test4", 4, 0},
 		{test5, "test5", 5, 0},
-		// {test6, "test6", 6, 0},//Test is slow
-		// {test7, "test7", 7, 0},
-        // {test_memory, "test_memory", 8, 0},
+		// {test6, "test6", 6, 0},//Test is so  slow
+		{test7, "test7", 7, 0},//Test is slow too
+        {test_memory, "test_memory", 8, 0},
     };
 
 	print_test_no_arg("\n---------------------kernel_tests executing---------------------\n");

@@ -37,5 +37,6 @@ int test_memory(void *arg)
         assert(waitpid(pid1, NULL) == pid1);
         assert(*page == 0xdeadbeef);
         shm_release("test_memory");
+        assert(shm_acquire("test_memory")==NULL);
         return 0;
 }
