@@ -37,6 +37,7 @@ int kernel_start() {
   // sprintf(str,"%li",csr_read(mstatus));
   // puts(str);
 
+  assert(start(test10,4000, 192, "test10", (void *)0) != -1);
   set_supervisor_timer_interrupt(50); // setting the 1st interrupt
   while(1) wfi();
 

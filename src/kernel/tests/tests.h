@@ -51,7 +51,7 @@ int test5(void* arg);
 // todo add comment
 int test6(void *arg);
 /*
- * Semaphores or message queues test
+ *  Message queues test
  */
 int test10(void* arg);
 

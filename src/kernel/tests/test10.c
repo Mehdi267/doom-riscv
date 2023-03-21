@@ -28,7 +28,7 @@ static void read(int fid, char *buf, unsigned long len) {
   }
 }
 
-int main(void *arg) {
+int test10(void *arg) {
   int fid;
   const char *str = "abcde";
   unsigned long len = strlen(str);
