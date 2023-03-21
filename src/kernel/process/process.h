@@ -15,6 +15,7 @@
 #include "stdint.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "msgqueue.h" // for message_t
 
 /**
  * @brief global function constants
@@ -162,6 +163,9 @@ typedef struct process_t {
                   // next and prev pointer
   int return_value; // return value of the process, used in waitpid
   int sleep_time;
+  message_t message;
+
+
 } process;
 
 /**
