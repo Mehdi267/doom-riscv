@@ -77,34 +77,16 @@ int pcreate(int count) {
   return index;
 }
 
-int preceive(int fid, int *message) {
-  // check valid fid
+int pdelete(int fid) {
   if (fid < 0 || fid >= NBQUEUE)
     return FAILURE;
-
-  msg_queue_t * msg_queue = all_queues[fid];
-  link * blocked_consumers = &(msg_queue->blocked_cons);
-  if (is_empty(msg_queue)) {
-    // the msg_queue is empty
-    process * p = get_current_process();
-    p->state = BLOCKEDQUEUE;
-    queue_add(p, blocked_consumers, process, next_prev, prio);
-    scheduler();
-    if (p->message.status != RECEIVED) {
-      return FAILURE;
-    }
-    *message = p->message.value;
-  } else if (is_full(msg_queue) && !queue_empty(&msg_queue->blocked_cons)) {
-    *message = pop_oldest_msg(msg_queue);
-    process * blocked = queue_out(blocked_consumers, process, next_prev);
-    add_message(msg_queue, blocked->message.value);
-    queue_add(blocked, &activatable_process_queue, process, next_prev, prio);
-  } else {
-    // the queue is not empty and there arent blocked consumers
-    *message = pop_oldest_msg(msg_queue);
-  }
+  // destruction of the msg queue
+  free(all_queues[fid]->msg_arr);
+  // for each blocked consummer process make it activatable
+  free_blocked_queue(&all_queues[fid]->blocked_cons);
+  // for each blocked producer process make it activatable
+  free_blocked_queue(&all_queues[fid]->blocked_prod);
   return SUCCES;
-
 }
 
 int psend(int fid, int message) {
@@ -135,17 +117,40 @@ int psend(int fid, int message) {
   return SUCCES;
 }
 
-int pdelete(int fid) {
+int preceive(int fid, int *message) {
+  // check valid fid
   if (fid < 0 || fid >= NBQUEUE)
     return FAILURE;
-  // destruction of the msg queue
-  free(all_queues[fid]->msg_arr);
-  // for each blocked consummer process make it activatable
-  free_blocked_queue(&all_queues[fid]->blocked_cons);
-  // for each blocked producer process make it activatable
-  free_blocked_queue(&all_queues[fid]->blocked_prod);
+
+  msg_queue_t * msg_queue = all_queues[fid];
+  link * blocked_consumers = &(msg_queue->blocked_cons);
+  if (is_empty(msg_queue)) {
+    // the msg_queue is empty
+    process * p = get_current_process();
+    p->state = BLOCKEDQUEUE;
+    queue_add(p, blocked_consumers, process, next_prev, prio);
+    scheduler();
+    if (p->message.status != RECEIVED) {
+      return FAILURE;
+    }
+    if (message != NULL)
+      *message = p->message.value;
+  } else if (is_full(msg_queue) && !queue_empty(&msg_queue->blocked_cons)) {
+    if (message != NULL)
+      *message = pop_oldest_msg(msg_queue);
+    process * blocked = queue_out(blocked_consumers, process, next_prev);
+    add_message(msg_queue, blocked->message.value);
+    queue_add(blocked, &activatable_process_queue, process, next_prev, prio);
+  } else {
+    // the queue is not empty and there arent blocked consumers
+    if (message != NULL)
+      *message = pop_oldest_msg(msg_queue);
+  }
   return SUCCES;
+
 }
+
+
 
 
 /*
