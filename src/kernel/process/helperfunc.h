@@ -71,7 +71,10 @@ extern int validate_action_process_valid(process* process_pid);
 extern void set_supervisor_interrupts(bool val);
 
 
-
+/**
+ * @brief returns the process struct of the current process
+*/
+process* get_current_process();
 
 
 

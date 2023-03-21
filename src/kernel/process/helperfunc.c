@@ -47,6 +47,9 @@ process* get_process_struct_of_pid(int pid){
     return process_pid;
 }
 
+process* get_current_process() {
+  return ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(getpid()), NULL));
+}
 
 char* getname(void){
     process* currently_running_process = ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(getpid()), NULL));
