@@ -26,6 +26,7 @@ typedef enum _awake_signal {
   SIGNAL_CALL = 0,
   SDETETE_CALL = -3,
   SRESET_CALL = -4,
+  KILL_CALL,
 } awake_signal_t;
 
 //This table will link a semaphore with its information
@@ -47,7 +48,7 @@ extern int init_semaphore_table();
 */
 typedef struct blocked_process_semaphore{
    process* blocked_process;
-   struct blocked_process_semaphore* next_shared_page;
+   struct blocked_process_semaphore* next_block_struct;
 } blocked_process_semaphore_t;
 
 /**
@@ -162,4 +163,13 @@ int signal(int sem);
  */
 int signaln(int sem, short int count);
 
+/**
+ * @brief This method is called to launch a when we kill a aprocess and we want to remove from the semaphore queue 
+ * and we also in this case enumerate the semaphore counter to make sure that the new process cab get called  
+ * @param sem semaphore id 
+ * @param signal_enum the signal that we want exploit we want remove the association between the process and the semaphore
+ * @param pid the process id that we want to remove from the queue
+ * @return int 
+ */
+int proc_kill_diag(int sem, awake_signal_t signal_enum, int pid);
 #endif

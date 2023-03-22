@@ -1,6 +1,7 @@
 #include "../memory/frame_dist.h"
 #include "hash.h"
 #include "helperfunc.h"
+#include "process.h"
 #include "stdio.h"
 #include "stdbool.h"
 #include "scheduler.h"
@@ -24,6 +25,7 @@
 #include "../memory/virtual_memory.h"
 #include "timer.h"
 #include "traps/trap.h"
+#include "semaphore_api.h"
 
 #define secmalloc(p, n)                                                        \
   p = malloc(n);                                                               \
@@ -68,6 +70,11 @@ int leave_queue_process_if_needed(process *process_to_leave) {
     break;
   case ASLEEP:
     delete_process_from_queue_wrapper(process_to_leave, ASLEEP_QUEUE);
+    break;
+  case BLOCKEDSEMAPHORE:
+    if (proc_kill_diag(process_to_leave->semaphore_id, KILL_CALL, process_to_leave->pid) <0){
+        return -1;
+    }
     break;
   default:
     break;

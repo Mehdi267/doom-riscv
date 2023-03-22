@@ -220,6 +220,7 @@ typedef struct process_t{
    int64_t sleep_time;
    //----------------Semaphore signal-------------------
    int sem_signal;
+   int semaphore_id;
 } process;
 
 /**

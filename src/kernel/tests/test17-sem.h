@@ -21,7 +21,7 @@ static void atomic_incr(int *atomic)
 	__asm__ __volatile__ ("addi %0,x0,1 " : :"rK" (reg1) );
     puts("testing after add ..");
     printf("adress = %p \n",atomic);
-    __asm__ __volatile__("amoadd.d t0,%1,%0" : "+m" (*atomic) : "rK"(reg1) : "cc");
+    __asm__ __volatile__("amoadd.w t0,%1,%0" : "+m" (*atomic) : "rK"(reg1) : "cc");
     puts("testing end ..");
 }
 

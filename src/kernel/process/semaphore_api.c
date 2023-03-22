@@ -17,6 +17,68 @@ hash_t* semaphore_table = NULL;
 int semaphore_id_counter = 0;
 int currently_running_semaphores = 0;
 
+int remove_proc_queue(semaphore_t* sem_struct, awake_signal_t signal_enum, int pid){
+    if (sem_struct->list_header_process == NULL){
+        return 1;//Wait was never called
+    }
+    if (sem_struct->list_header_process->head_blocked == NULL){
+        return 1;//List is empty
+    }
+    blocked_process_semaphore_t* blocked_proc = NULL; 
+    //Classic linked list ...
+    if (sem_struct->list_header_process->head_blocked == sem_struct->list_header_process->tail_blocked){
+        if (sem_struct->list_header_process->head_blocked->blocked_process->pid == pid){
+            blocked_proc = sem_struct->list_header_process->head_blocked;
+            sem_struct->list_header_process->head_blocked = NULL;
+            sem_struct->list_header_process->tail_blocked = NULL;
+        }
+        else{
+            return -1;
+        }
+    }
+    else if (sem_struct->list_header_process->head_blocked->blocked_process->pid == pid){
+        blocked_proc = sem_struct->list_header_process->head_blocked;
+        sem_struct->list_header_process->head_blocked = blocked_proc->next_block_struct;
+    }
+    else if (sem_struct->list_header_process->tail_blocked->blocked_process->pid == pid){
+        blocked_proc = sem_struct->list_header_process->tail_blocked;
+        blocked_process_semaphore_t* iter = sem_struct->list_header_process->head_blocked;
+        while (iter->next_block_struct != sem_struct->list_header_process->tail_blocked){
+            iter = iter->next_block_struct;
+        }
+        iter->next_block_struct = NULL;
+        sem_struct->list_header_process->tail_blocked = iter;
+    }
+    else {
+        blocked_process_semaphore_t* iter = sem_struct->list_header_process->head_blocked;
+        blocked_process_semaphore_t* iter_prev = sem_struct->list_header_process->head_blocked;
+        while (iter!=NULL){
+            if (iter->blocked_process->pid != pid){
+                //We found our tag in this case 
+                iter_prev->next_block_struct = iter->next_block_struct;
+                blocked_proc = iter;   
+                break;
+            }
+            iter_prev=iter;
+            iter = iter->next_block_struct;
+        }
+        if (iter == NULL){
+            //Bad call
+            return -1;
+        }
+    
+    }
+    blocked_proc->blocked_process->state = ACTIVATABLE;
+    if (signal_enum != KILL_CALL){
+        //In this case the process does need to be executed again since it will be killed, thus we don't add to 
+        //activatable queue
+        add_process_to_queue_wrapper(blocked_proc->blocked_process, ACTIVATABLE_QUEUE);
+    }
+    blocked_proc->blocked_process->sem_signal = signal_enum;
+    free(blocked_proc);
+    return 0;
+}
+
 int unblock_process_sem(semaphore_t* sem_struct, awake_signal_t signal_enum){
     if (sem_struct->list_header_process == NULL){
         return 1;//Wait was never called
@@ -30,11 +92,15 @@ int unblock_process_sem(semaphore_t* sem_struct, awake_signal_t signal_enum){
         sem_struct->list_header_process->tail_blocked = NULL;
     }
     else {
-        sem_struct->list_header_process->head_blocked = sem_struct->list_header_process->head_blocked->next_shared_page;   
+        sem_struct->list_header_process->head_blocked = sem_struct->list_header_process->head_blocked->next_block_struct;   
     }
     blocked_proc->blocked_process->state = ACTIVATABLE;
-    blocked_proc->blocked_process->sem_signal = signal_enum;
+    if (signal_enum != KILL_CALL){
+        //In this case the process does need to be executed again since it will be killed, thus we don't add to 
+        //activatable queue
+    }
     add_process_to_queue_wrapper(blocked_proc->blocked_process, ACTIVATABLE_QUEUE);
+    blocked_proc->blocked_process->sem_signal = signal_enum;
     free(blocked_proc);
     return 0;
 }
@@ -135,17 +201,17 @@ int wait(int sem){
                 sem_struct->atomic_block = false;
         }
         blocked_proc_sem->blocked_process = proc_sem;
-        blocked_proc_sem->next_shared_page = NULL;
+        blocked_proc_sem->next_block_struct = NULL;
 
         if (sem_struct->list_header_process->head_blocked == NULL && sem_struct->list_header_process->tail_blocked == NULL){
             sem_struct->list_header_process->head_blocked = blocked_proc_sem;
             sem_struct->list_header_process->tail_blocked = blocked_proc_sem;
         }
         else {
-            sem_struct->list_header_process->tail_blocked->next_shared_page = blocked_proc_sem;
+            sem_struct->list_header_process->tail_blocked->next_block_struct = blocked_proc_sem;
             sem_struct->list_header_process->tail_blocked = blocked_proc_sem;
         }
-        sem_struct->atomic_block = false; 
+        proc_sem->semaphore_id = sem; 
         proc_sem->state = BLOCKEDSEMAPHORE;
     }
     sem_struct->atomic_block = false; 
@@ -154,6 +220,33 @@ int wait(int sem){
     return proc_sem->sem_signal;
 }
 
+
+
+int proc_kill_diag(int sem, awake_signal_t signal_enum, int pid){
+    semaphore_t* sem_struct = get_semaphore_struct(sem);
+    if (sem_struct == NULL){
+        return -1;
+    }
+    //If the value of the sem_struct is true then the semaphore is 
+    //being used this in this case 
+    while (sem_struct->atomic_block == true); //TODO ADD PATERSON'S SOLUTION
+    //We acquire the semaphore, making any ch
+    sem_struct->atomic_block = true; //Does not work
+    //This should be impossible because this method wil only be called hwen we kill a process that is wait phase thus 
+    //the semaphore is negatif at this point 
+    if (sem_struct->count == MAX_COUNT){
+        sem_struct->atomic_block = false; 
+        return -2;
+    }
+    sem_struct->count++;
+    if (sem_struct->count<=0){
+        //we remove the process from list 
+        //of processes that are bloqued by this semaphore
+        remove_proc_queue(sem_struct, KILL_CALL, pid);
+    }
+    sem_struct->atomic_block = false; 
+    return NULL;
+}
 
 int signal(int sem){
     semaphore_t* sem_struct = get_semaphore_struct(sem);

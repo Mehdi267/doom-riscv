@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "tests.h"
 
-#define NUMBEROFTESTS 9
+#define NUMBEROFTESTS 11
 
 void generate_test_report(test_apps_t* test_table){
 	print_test_no_arg("--------------TESTS REPORT START--------------\n");	
@@ -51,9 +51,10 @@ int kernel_tests(void *arg) {
 	    {test12_sem, "test12_sem", 10, 0},
 		{test13_sem, "test13_sem", 11, 0},
 		{test15_sem, "test15_sem", 12, 0},
-		// //{test16_sem, "test16_sem", 12, 0},//TO MUCH MEMORY USAGE (fix memory leaks before runningthis test again)
-		// {test17_sem, "test17_sem", 12, 0},
-
+		// //{test16_sem, "test16_sem", 13, 0},//TO MUCH MEMORY USAGE (fix memory leaks before runningthis test again)
+		{test17_sem, "test17_sem", 14, 0},
+		{test21, "test21", 15, 0},
+		// {test22, "test22", 16, 0},
 	};
 
 	print_test_no_arg("\n---------------------kernel_tests executing---------------------\n");

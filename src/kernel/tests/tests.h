@@ -107,6 +107,16 @@ int test16_sem(void *arg);
 int test17_sem(void *arg);
 
 
+/*
+ *  
+ */
+int test21(void *arg);
+
+/*
+ * 
+ */
+int test22(void *arg);
+
 
 typedef struct test_apps {
     process_function_t test_func;

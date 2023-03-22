@@ -9,6 +9,7 @@
 
 #include "test17-sem.h"
 #include "tests.h"
+#include <stdint.h>
 #include <stdio.h>
 
 static void buf_send(char x, struct test17_buf_st *st)
@@ -32,7 +33,7 @@ int proc17_1(void *arg)
         printf("address st =%p \n", st);
         // __asm__ __volatile__("rdtsc":"=A"(tsc));
         tsc = get_stime(); 
-        tsc2 = tsc + 100;
+        tsc2 = tsc + 10000;
         assert(tsc < tsc2);
         do {
                 int j;
@@ -70,6 +71,7 @@ int proc17_2(void *arg)
 
         while(1) {
                 int x = buf_receive(st);
+                // (st->received[x])++;
                 atomic_incr(&st->received[x]);
         }
         shm_release("test17_shm");
@@ -129,6 +131,7 @@ int test17_sem(void *arg)
         puts("here 5 ");
         assert(scount(st->mutex) == 1);
         assert(scount(st->wsem) == 100);
+        printf("scount(st->rsem) = %d \n", (int16_t) (scount(st->rsem)));
         assert(scount(st->rsem) == 0);
         assert(sdelete(st->mutex) == 0);
         assert(sdelete(st->wsem) == 0);
