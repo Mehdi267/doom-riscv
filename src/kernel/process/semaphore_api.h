@@ -9,14 +9,31 @@
 #define _SEMAPHORE_H_
 
 
-#define MAX_COUNT -32768
-#define MIN_COUNT 32767
+#define MAX_COUNT 32767
+#define MIN_COUNT -32768
 
+#define NB_MAX_SEMS 10000
+
+/**
+ * @brief This is enum is used to determine the type of signal that was used to 
+ * to make the process leave the wake up from the semaphore
+ * @param SIGNAL_CALL the signal type that results from the call of th signal method
+ * @param SDETETE_CALL the signal type that results from the call of th sdelete method
+ * @param SRESET_CALL the signal type that results from the call of th sreset method
+ * 
+ */
+typedef enum _awake_signal {
+  SIGNAL_CALL = 0,
+  SDETETE_CALL = -3,
+  SRESET_CALL = -4,
+} awake_signal_t;
 
 //This table will link a semaphore with its information
 extern hash_t* semaphore_table;
 //This value is used to set the id of the semaphore
 extern int semaphore_id_counter;
+//Indicates how many semaphores are currecly running
+extern int currently_running_semaphores;
 
 /**
  * @brief Initializes the semaphore hash table that link the 
@@ -51,6 +68,7 @@ typedef struct list_semaphore_header{
  */
 typedef struct semaphore{
     bool atomic_block;
+    bool parent_block;
     int16_t count;
     list_semaphore_header_t* list_header_process;
 }semaphore_t;

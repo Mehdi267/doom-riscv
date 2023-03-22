@@ -218,6 +218,8 @@ typedef struct process_t{
    released_pages_t* released_pages_list; //Linked list that hold the released shared pages' information
    //----------------Timer management-------------------
    int64_t sleep_time;
+   //----------------Semaphore signal-------------------
+   int sem_signal;
 } process;
 
 /**

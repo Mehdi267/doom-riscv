@@ -436,6 +436,8 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     new_process->shared_pages = NULL;
     new_process->released_pages_list = NULL;
     new_process->proc_shared_hash_table = NULL;
+    //--------------Semaphore signal-----------
+    new_process->sem_signal = 0; 
     //------------Add process to the activatable queue
     add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
 
@@ -533,7 +535,7 @@ int kill(int pid) {
     return -1;
   }
   if (process_pid->pid == getpid()) {
-    return -1; // We cannot kill the current process from the current process
+    exit_process(0);
   }
   if (leave_queue_process_if_needed(process_pid) < 0) {
     return -1;

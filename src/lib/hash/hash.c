@@ -126,7 +126,7 @@ static int hash_update(hash_t *map)
         }
 
         old_table = map->table;
-        if (hash_initialize(map, new_size) == -1)
+        if (hash_initialize(map, new_size) == -1) // bug
                 return -1;
 
         hash_copy(map, old_table, old_size);
