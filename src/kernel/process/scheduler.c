@@ -122,7 +122,7 @@ void scheduler(){
         if (setpid(top_process->pid)<0){
             return;
         }
-        set_supervisor_interrupts(true);
+        // set_supervisor_interrupts(true);
         debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, default launch of the peek process with id = %d\n", getpid(),  getpid());
         debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
         top_process->state = ACTIF;
@@ -131,7 +131,7 @@ void scheduler(){
     }
     //Custom process launch enable // the user must set a valid pid
     if (started_user_process == false){
-        set_supervisor_interrupts(true);
+        // set_supervisor_interrupts(true);
         //In this case no process is running and we have called the scheduler for the first time
         // yet in this case, we want to start with a custom process/ that has been set by the user
         // in the pid field and we also assume that user has also eliminated the process from the queue
@@ -170,7 +170,7 @@ void scheduler(){
                     return;
                 }
                 current_process->state = ACTIVATABLE;
-                set_supervisor_interrupts(true);
+                // set_supervisor_interrupts(true);
                 top_process->state = ACTIF;
                 add_process_to_queue_wrapper(current_process, ACTIVATABLE_QUEUE);  
                 debug_print_scheduler("[scheduler -> %d] Swapping process current pid = %d ->>>>>>>> peek pid = %d\n", top_process->pid , current_process->pid, top_process->pid);
@@ -189,7 +189,7 @@ void scheduler(){
             if (setpid(top_process->pid)<0){
                 return;
             }
-            set_supervisor_interrupts(true);
+            // set_supervisor_interrupts(true);
             top_process->state = ACTIF;
             if (hash_del(get_process_hash_table(), cast_int_to_pointer(current_process->pid))<0){
                 return ;
@@ -208,7 +208,7 @@ void scheduler(){
             if (setpid(top_process->pid)<0){
                 return;
             }
-            set_supervisor_interrupts(true);
+            // set_supervisor_interrupts(true);
             top_process->state = ACTIF;
             context_switch(current_process->context_process, top_process->context_process);
         }

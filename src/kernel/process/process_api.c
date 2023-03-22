@@ -28,7 +28,7 @@
 #define secmalloc(p, n)                                                        \
   p = malloc(n);                                                               \
   if (p == NULL)                                                               \
-  return -1
+    return -1
 
 // Hash table that associates to every pid the process struct associated to it
 hash_t *pid_process_hash_table = NULL;
@@ -311,7 +311,7 @@ void exit_process(int retval) {
     exit(-1);
   }
   get_process_struct_of_pid(getpid())->return_value = retval;
-  while (1) {}
+  scheduler();
 }
 
 
@@ -476,6 +476,7 @@ int waitpid(int pid, int *retvalp) {
       }
       if (temp_process == NULL){
         get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
+        scheduler();
       }
       else{
         break;
@@ -506,7 +507,7 @@ int waitpid(int pid, int *retvalp) {
         break;
       }
       get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
-      
+      scheduler();
     }
   }
   // We take the return value of the process and then we kill it

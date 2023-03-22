@@ -106,8 +106,8 @@ int wait(int sem){
     //the one called by the signal method, or if we just decrement inside this wait method 
     proc_sem->sem_signal = 0;
 
-    printf("\nsemaphore has been called from the process : %s and sem count is = %d\n",
-            proc_sem->process_name, sem_struct->count);
+    // printf("\nsemaphore has been called from the process : %s and sem count is = %d\n",
+    //         proc_sem->process_name, sem_struct->count);
     //If the value of the sem_struct is true then the semaphore is 
     //being used this in this case 
     while (sem_struct->atomic_block == true); //TODO ADD PATERSON'S SOLUTION

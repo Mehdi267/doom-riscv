@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "tests.h"
 
-#define NUMBEROFTESTS 1
+#define NUMBEROFTESTS 9
 
 void generate_test_report(test_apps_t* test_table){
 	print_test_no_arg("--------------TESTS REPORT START--------------\n");	
@@ -39,21 +39,20 @@ int kernel_tests(void *arg) {
 
 
 	test_apps_t test_table[NUMBEROFTESTS] = {
-		// {test0, "test0", 0, 0},
-		// {test1, "test1", 1, 0},
-		// {test2, "test2", 2, 0},
-		// {test3, "test3", 3, 0},
+		{test0, "test0", 0, 0},
+		{test1, "test1", 1, 0},
+		{test2, "test2", 2, 0},
+		{test3, "test3", 3, 0},
 		// // {test4, "test4", 4, 0}, Takes a lot of time
-		// {test5, "test5", 5, 0},
+		{test5, "test5", 5, 0},
 		// // {test6, "test6", 6, 0},//Test is so slow
 		// // {test7, "test7", 7, 0},//Test is slow too
-        // {test_memory, "test_memory", 8, 0},
-	    // {test_sem, "test_sem", 9, 0},
-	    // {test12_sem, "test12_sem", 10, 0},
-		// {test13_sem, "test13_sem", 11, 0},
-		// {test15_sem, "test15_sem", 12, 0},
+	    {test_sem, "test_sem", 9, 0},
+	    {test12_sem, "test12_sem", 10, 0},
+		{test13_sem, "test13_sem", 11, 0},
+		{test15_sem, "test15_sem", 12, 0},
 		// //{test16_sem, "test16_sem", 12, 0},//TO MUCH MEMORY USAGE (fix memory leaks before runningthis test again)
-		{test17_sem, "test17_sem", 12, 0},
+		// {test17_sem, "test17_sem", 12, 0},
 
 	};
 
