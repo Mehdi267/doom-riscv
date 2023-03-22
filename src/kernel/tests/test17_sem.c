@@ -48,43 +48,35 @@ int proc17_1(void *arg)
         return count;
 }
 
-
-static void buf_send_2(char x, struct test17_buf_st *st)
+static int buf_receive(struct test17_buf_st *st)
 {
+    int x;
     assert(wait(st->rsem) == 0);
     assert(wait(st->mutex) == 0);
-    st->buf[(st->wpos++) % sizeof(st->buf)] = x;
+    x = 0xff & (int)(st->buf[(st->rpos++) % sizeof(st->buf)]);
     assert(signal(st->mutex) == 0);
     assert(signal(st->wsem) == 0);
+    return x;
 }
 
 int proc17_2(void *arg)
 {
         struct test17_buf_st *st = NULL;
-        unsigned long long tsc, tsc2;
-        int count;
 
         (void)arg;
 
         st = (struct test17_buf_st*) shm_acquire("test17_shm");
-        printf("address st =%p \n", st);
+        assert(st != NULL);
 
-        // __asm__ __volatile__("rdtsc":"=A"(tsc));
-        tsc = get_stime(); 
-        tsc2 = tsc + 100;
-        assert(tsc < tsc2);
-        do {
-                int j;
-                for (j=0; j<256; j++) {
-                        buf_send_2((char)j, st);
-                }
-                count++;
-                // __asm__ __volatile__("rdtsc":"=A"(tsc));
-                tsc = get_stime(); 
-        } while (tsc < tsc2);
+        while(1) {
+                int x = buf_receive(st);
+                atomic_incr(&st->received[x]);
+        }
         shm_release("test17_shm");
-        return count;
+        return 0;
 }
+
+
 
 
 int test17_sem(void *arg)

@@ -124,6 +124,7 @@ int chprio(int pid, int newprio) {
   if (validate_action_process_valid(process_pid) < 0) {
     return -1;
   }
+  //TODO REVIEW THIS MEHTOD IN CASE WR HAVE P1 : 130 P2 129 P3 : 128 // IF WE SET P3 TO 131 WE SHOULD EXECUTE P3 INSTEAD P2
   int old_prio = process_pid->prio;
   process_pid->prio = newprio;
   process *head_of_queue = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
@@ -310,8 +311,7 @@ void exit_process(int retval) {
     exit(-1);
   }
   get_process_struct_of_pid(getpid())->return_value = retval;
-  while (1) {
-  }
+  while (1) {}
 }
 
 

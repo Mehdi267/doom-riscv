@@ -43,7 +43,7 @@ int kernel_start()
    	// char str[80];
 	// sprintf(str,"%li",csr_read(mstatus));
 	// puts(str);
-
+    
 
 	activate_and_launch_scheduler();
 
