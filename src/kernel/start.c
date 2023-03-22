@@ -24,6 +24,7 @@
 
 int kernel_start()
 {
+    puts("In kernel start\n");
     if (set_up_virtual_memory()<0){
 		puts("error while setting up virtual memory");
 		exit(-1);
@@ -43,7 +44,7 @@ int kernel_start()
    	// char str[80];
 	// sprintf(str,"%li",csr_read(mstatus));
 	// puts(str);
-
+    
 
 	activate_and_launch_scheduler();
 

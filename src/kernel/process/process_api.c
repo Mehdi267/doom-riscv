@@ -1,6 +1,7 @@
 #include "../memory/frame_dist.h"
 #include "hash.h"
 #include "helperfunc.h"
+#include "process.h"
 #include "stdio.h"
 #include "stdbool.h"
 #include "scheduler.h"
@@ -24,12 +25,13 @@
 #include "../memory/virtual_memory.h"
 #include "timer.h"
 #include "traps/trap.h"
+#include "semaphore_api.h"
 
 #define MAX_SIZE_NAME 256
 #define secmalloc(p, n)                                                        \
   p = malloc(n);                                                               \
   if (p == NULL)                                                               \
-  return -1
+    return -1
 
 // Hash table that associates to every pid the process struct associated to it
 hash_t *pid_process_hash_table = NULL;
@@ -69,6 +71,11 @@ int leave_queue_process_if_needed(process *process_to_leave) {
     break;
   case ASLEEP:
     delete_process_from_queue_wrapper(process_to_leave, ASLEEP_QUEUE);
+    break;
+  case BLOCKEDSEMAPHORE:
+    if (proc_kill_diag(process_to_leave->semaphore_id, KILL_CALL, process_to_leave->pid) <0){
+        return -1;
+    }
     break;
   default:
     break;
@@ -125,6 +132,7 @@ int chprio(int pid, int newprio) {
   if (validate_action_process_valid(process_pid) < 0) {
     return -1;
   }
+  //TODO REVIEW THIS MEHTOD IN CASE WR HAVE P1 : 130 P2 129 P3 : 128 // IF WE SET P3 TO 131 WE SHOULD EXECUTE P3 INSTEAD P2
   int old_prio = process_pid->prio;
   process_pid->prio = newprio;
   process *head_of_queue = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
@@ -311,8 +319,7 @@ void exit_process(int retval) {
     exit(-1);
   }
   get_process_struct_of_pid(getpid())->return_value = retval;
-  while (1) {
-  }
+  scheduler();
 }
 
 
@@ -437,6 +444,8 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     new_process->shared_pages = NULL;
     new_process->released_pages_list = NULL;
     new_process->proc_shared_hash_table = NULL;
+    //--------------Semaphore signal-----------
+    new_process->sem_signal = 0; 
     //------------Add process to the activatable queue
     add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
 
@@ -475,6 +484,7 @@ int waitpid(int pid, int *retvalp) {
       }
       if (temp_process == NULL){
         get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
+        scheduler();
       }
       else{
         break;
@@ -505,7 +515,7 @@ int waitpid(int pid, int *retvalp) {
         break;
       }
       get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
-      
+      scheduler();
     }
   }
   // We take the return value of the process and then we kill it
@@ -534,7 +544,7 @@ int kill(int pid) {
     return -1;
   }
   if (process_pid->pid == getpid()) {
-    return -1; // We cannot kill the current process from the current process
+    exit_process(0);
   }
   if (leave_queue_process_if_needed(process_pid) < 0) {
     return -1;

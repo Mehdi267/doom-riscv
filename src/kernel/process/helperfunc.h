@@ -10,6 +10,7 @@
 #include "stdint.h"
 #include "process.h"
 #include "../memory/pages.h"
+#include "semaphore_api.h"
 /**
  * @brief Casts an int to a void * pointer 
 */
@@ -75,6 +76,12 @@ extern int increment_pid_and_get_new_pid();
 extern int increment_shared_page_counter();
 
 /**
+ * @brief Increments the semaphore id counter, used when creating new semaphores  
+ * @return int 
+ */
+extern int increment_semaphore_id();
+
+/**
  * @brief Returns the hash table tha map id with process structs
 */
 extern hash_t* get_process_hash_table(void);
@@ -85,6 +92,21 @@ extern hash_t* get_process_hash_table(void);
  * @return hash_t*  
  */
 extern hash_t* get_shared_pages_hash_table(void);
+
+/**
+ * @brief Get the semaphore hash table
+ * @return hash_t* the semaphore hash table
+ */
+extern hash_t* get_semaphore_table(void);
+
+/**
+ * @brief Get the semaphore struct object from the hash table 
+ * of the semaphore
+ * 
+ * @param sem the id of the semaphore
+ * @return semaphore_t* semaphore information
+ */
+extern semaphore_t* get_semaphore_struct(int sem);
 
 /**
  * @brief Validate that the process is an state on which we can call system calls

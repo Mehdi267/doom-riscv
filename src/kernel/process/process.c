@@ -16,6 +16,8 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
+#include "semaphore_api.h"
+#include "riscv.h"
 
 int initialize_process_hash_table() {
   pid_process_hash_table = (hash_t *)malloc(sizeof(hash_t));
@@ -27,7 +29,7 @@ int initialize_process_hash_table() {
 
 void activate_and_launch_scheduler(void){
     set_supervisor_timer_interrupt(100); 
-    while(1){}
+    while(1){ wfi();}
     return;
 }
 
@@ -174,6 +176,12 @@ int initialize_process_workflow(){
         return -1;
     }
     if (hash_init_string(shared_memory_hash_table)){
+        return -1;
+    }
+    if (init_semaphore_table()<0){
+        return -1;
+    }
+    if (hash_init_direct(semaphore_table)<0){
         return -1;
     }
     if (setup_main_context() <0){;

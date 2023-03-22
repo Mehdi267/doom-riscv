@@ -82,6 +82,9 @@ int initialize_process_shared_hash_table(process* proc_conf){
 static shared_page_t* create_shared_page(char* key){
     void* page_frame = get_frame();
     shared_page_t* page_info = (shared_page_t*)malloc(sizeof(shared_page_t));
+    if (page_info ==NULL){
+        return NULL;
+    }
     page_info->page_address = page_frame;
     page_info->usage = 0;
     page_info->page_id = increment_shared_page_counter();

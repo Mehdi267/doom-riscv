@@ -6,6 +6,10 @@
 #include "../process/helperfunc.h"
 #include "../process/timer_api.h"
 #include "../process/memory_api.h"
+#include "../process/semaphore_api.h"
+#include "assert.h"
+#include "drivers/clint.h"
+
 
 /*
  * Run kernel test suite
@@ -65,11 +69,53 @@ int test7(void* arg);
  */
 int test_memory(void* arg);
 
+/**
+ * Test les semaphores 
+ */
+int test_sem(void *arg);
 
 /*
  * Semaphores or message queues test
  */
 int test10(void* arg);
+
+/**
+ * Semaphores test 
+ */
+int test12_sem(void *arg);
+
+/*
+ * Semaphores test 
+ */
+int test13_sem(void *arg);
+
+/**
+ * Semaphore test
+ */
+int test15_sem(void *arg);
+
+
+/**
+ * Semaphore test
+ */
+int test16_sem(void *arg);
+
+
+/**
+ * Semaphore test
+ */
+int test17_sem(void *arg);
+
+
+/*
+ *  
+ */
+int test21(void *arg);
+
+/*
+ * 
+ */
+int test22(void *arg);
 
 
 typedef struct test_apps {

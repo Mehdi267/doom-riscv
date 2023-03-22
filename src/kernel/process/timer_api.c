@@ -6,6 +6,7 @@
                                 // get_process_struct_of_pid
 #include "drivers/clint.h" // for clint_dev
 #include "process.h"
+
 void clock_settings(unsigned long *quartz, unsigned long *ticks) {
   *quartz = clint_dev->clk_freq;
   *ticks = clint_dev->clk_freq / 1000 * TIC_PER; // ticks number of oscillations between 2 interrupts
