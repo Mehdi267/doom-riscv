@@ -14,6 +14,7 @@
  */
 page_table *create_page_table(){
     page_table *ptr = (page_table *) get_frame(); //Allocates data for the page table
+    printf("---Table adress frame---= %p\n", ptr);
     if (ptr == NULL){
         return NULL;
     }

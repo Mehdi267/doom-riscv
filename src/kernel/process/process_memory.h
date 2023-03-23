@@ -42,9 +42,10 @@ typedef enum _page_type {
 * and it is only valid for a size that is less than then page size
 * @param size corresponds to the size that we want to allocate
 * @param process_conf the process at which the memory allocater will work on 
-* @return the address of the page that we allocated
+* @return a positve value if successful and negative value otherwise
 */
-extern void *process_memory_allocator(process* process_conf, unsigned long size);
+extern int process_memory_allocator(process* process_conf, unsigned long size);
+
 
 /**
  * @brief add a frame to the process given as function argument 

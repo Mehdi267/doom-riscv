@@ -191,11 +191,7 @@ void scheduler(){
             }
             // set_supervisor_interrupts(true);
             top_process->state = ACTIF;
-            if (hash_del(get_process_hash_table(), cast_int_to_pointer(current_process->pid))<0){
-                return ;
-            }
-            free(current_process);
-            current_process = 0;
+            free_process_memory(current_process);
             direct_context_swap(top_process->context_process);
         }
         //if the process was placed in an other state when this was called

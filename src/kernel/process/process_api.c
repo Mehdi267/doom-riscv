@@ -1,6 +1,7 @@
 #include "../memory/frame_dist.h"
 #include "hash.h"
 #include "helperfunc.h"
+#include "memory_api.h"
 #include "process.h"
 #include "stdio.h"
 #include "stdbool.h"
@@ -146,6 +147,7 @@ int chprio(int pid, int newprio) {
   return old_prio;
 }
 
+
 /**
  * @brief this function deletes the process from the hash table
  * and frees the data structure of the process
@@ -171,13 +173,7 @@ static int free_child_zombie_process(process *process_to_free) {
                        process_to_free->pid, process_to_free->process_name);
     // If we killed the process using the kill method then we can removea it
     // directly
-    if (hash_del(get_process_hash_table(),
-                 cast_int_to_pointer(process_to_free->pid)) < 0) {
-      // Something went wrong ....
-      return -1;
-    }
-    free(process_to_free);
-    process_to_free = 0;
+    return free_process_memory(process_to_free);
   }
   return 0;
 }
@@ -374,13 +370,11 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     new_process->ssize = ssize + PROCESS_SETUP_SIZE;
     new_process->page_table_level_2 = NULL;
     new_process->page_tables_lvl_1_list = NULL;
+    new_process->released_pages_list = NULL;
 
-    void* frame_pointer = process_memory_allocator(new_process, new_process->ssize);
-    frame_pointer = get_frame();
-    if (frame_pointer == NULL){
+    if (process_memory_allocator(new_process, new_process->ssize) < 0){
         return -1;
     }
-
     //--------------------Process function config-----------
     new_process->func = pt_func;
 
@@ -412,7 +406,8 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     if (interrupt_frame_pointer == NULL){
         return -1;
     }
-    new_process->context_process->sscratch = (uint64_t) interrupt_frame_pointer+FRAME_SIZE  ;
+    new_process->sscratch_frame = interrupt_frame_pointer;
+    new_process->context_process->sscratch = (uint64_t) interrupt_frame_pointer+FRAME_SIZE;
 
     //--------------Tree management----------------
     // The parent of the process is the process that called the start method
@@ -446,6 +441,8 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     //--------------Semaphore signal-----------
     new_process->sem_signal = 0; 
     //------------Add process to the activatable queue
+    new_process->link_queue_activable.prev = 0;
+    new_process->link_queue_activable.next = 0;
     add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
 
     debug_print("[%s] created process with pid = %d \n", new_process->process_name, new_process->pid);

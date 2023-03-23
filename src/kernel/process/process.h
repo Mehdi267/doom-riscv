@@ -171,7 +171,6 @@ typedef struct shared_pages_wrap{
    shared_pages_proc_t* tail_shared_page;
 } shared_pages_wrap_t;
 
-
 /**
   * @brief this structure is given to all processesn it will stored at the kernel level
   * @param pid  id of the process
@@ -216,6 +215,7 @@ typedef struct process_t{
    hash_t* proc_shared_hash_table; //Hash table associated to the process link shared pages to their shared_pages_proc_t
    shared_pages_wrap_t* shared_pages; //Wrapper to the linked list that holds process information 
    released_pages_t* released_pages_list; //Linked list that hold the released shared pages' information
+   void* sscratch_frame; //used to hold the sscratch frame so that we can delete it later
    //----------------Timer management-------------------
    int64_t sleep_time;
    //----------------Semaphore signal-------------------
@@ -332,6 +332,25 @@ int check_if_new_prio_is_higher_and_call_scheduler(int newprio,
                                                    int prio_to_compare_queue);
 
 /**
+ * @brief Complete frees all of the memory that the process is using within the kernel
+ * and the pages that the process has borrowed
+ * 
+ * @param proc the process that we want to free its memory
+ * @return int a positive value if the memory was successfully deleted
+ */
+int free_process_memory(process* proc);
+
+/**
+ * @brief Adds the frame pointer to the struct within the process that holds a linked list
+ * to the all of the frames that the process uses 
+ * @param proc the process that we want to attach the frame to;
+ * @param frame_pointer the frame pointer
+ * @return int a positive value if successfull and negative value otherwise
+ */
+int associated_frame_to_proc(process* proc, void* frame_pointer);
+
+
+/**
  * @brief Checks if the process is an queue and leaves that queue if needed \n
  * We only use the state of the process to make this assumption regarding the
  * process location.
@@ -431,7 +450,7 @@ extern int idle(void *arg);
  * code. Inspired from :
  * https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
  */
-#define DEBUG_LEVEL 0 //Indicates if debug type is active 
+#define DEBUG_LEVEL 2 //Indicates if debug type is active 
 
 #define debug_print(fmt, ...)                                                  \
   do {                                                                         \
@@ -448,7 +467,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the scheduler,
  *  meaning when we debug the scheduler we use the debug_print_scheduler
  */
-#define DEBUG_SCHEDULER_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_SCHEDULER_LEVEL 2 //Indicates if debug type is active
 
 #define debug_print_scheduler(fmt, ...) \
         do {if (DEBUG_SCHEDULER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -464,7 +483,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_PROCESS_LEVEL 0 // Indicates if debug type is active
+#define DEBUG_PROCESS_LEVEL 2 // Indicates if debug type is active
 
 #define debug_print_process(fmt, ...)                                          \
   do {                                                                         \
@@ -481,7 +500,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_EXIT_METHODS_LEVEL 0 // Indicates if debug type is active
+#define DEBUG_EXIT_METHODS_LEVEL 2 // Indicates if debug type is active
 
 #define debug_print_exit_m(fmt, ...)                                           \
   do {                                                                         \
@@ -521,7 +540,7 @@ extern int idle(void *arg);
 /**
  * @brief the following macro are used to debug the memory management
  */
-#define DEBUG_MEMORY_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_MEMORY_LEVEL 2 //Indicates if debug type is active
 
 #define debug_print_memory(fmt, ...) \
         do {if (DEBUG_MEMORY_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -535,7 +554,7 @@ extern int idle(void *arg);
 /**
  * @brief the following macro are used to debug the memory api 
  */
-#define DEBUG_MEMORY_API_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_MEMORY_API_LEVEL 2 //Indicates if debug type is active
 
 #define debug_print_memory_api(fmt, ...) \
         do {if (DEBUG_MEMORY_API_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \

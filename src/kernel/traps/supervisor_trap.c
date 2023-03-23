@@ -39,7 +39,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 		}
 	} else {
 		// TODO ADD SYSTEM CALLS TREATEMENT
-        printf("{exception scause} %ld\n", scause);
+        printf("Supervisor Exception scause id = %ld\n", scause);
 		switch (scause) {
 			// case CAUSE_FETCH_PAGE_FAULT:
             //     break;
