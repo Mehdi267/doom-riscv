@@ -172,4 +172,17 @@ int signaln(int sem, short int count);
  * @return int 
  */
 int proc_kill_diag(int sem, awake_signal_t signal_enum, int pid);
+
+//Sempahore wrappers that will be used 
+/* Wrapper sur les verrous basés sur les sémaphores ou les files de messages */
+union sem {
+   int fid;
+   int sem;
+};
+void xwait(union sem *s);
+void xsignal(union sem *s);
+void xsdelete(union sem *s);
+void xscreate(union sem *s);
+
+
 #endif

@@ -149,6 +149,8 @@
   int assert_failed(const char *cond, const char *file, int line);
 #endif
 
+#define NR_PHILO 5
+
 /* math.h */
 short randShort(void);
 void setSeed(unsigned long long _s);
