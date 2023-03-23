@@ -56,6 +56,9 @@ int test6(void *arg);
 int test10(void* arg);
 
 
+int test12(void *arg);
+
+
 typedef struct test_apps {
     process_function_t test_func;
     const char *test_name;
