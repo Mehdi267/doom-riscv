@@ -63,12 +63,13 @@ void add_message(msg_queue_t *msg_queue, int message);
 /*
 ** MAIN FUNCTIONS
 */
+
 int pcreate(int count) {
   int index;
   if ((index = get_first_free_index()) < 0)
     return -1;
-  all_queues[index] = malloc(sizeof(msg_queue_t));
-  all_queues[index]->msg_arr = malloc(sizeof(int) * count);
+  secmalloc(all_queues[index], sizeof(msg_queue_t));
+  secmalloc(all_queues[index]->msg_arr, sizeof(int) * count);
   all_queues[index]->size = count;
   all_queues[index]->iffc = 0;
   all_queues[index]->number_of_msgs = 0;
@@ -77,8 +78,16 @@ int pcreate(int count) {
   return index;
 }
 
+
+bool valid_fid(int fid) {
+  if (fid < 0 || fid >= NBQUEUE || all_queues[fid] == NULL)
+    return false;
+  return true;
+}
+
+
 int pdelete(int fid) {
-  if (fid < 0 || fid >= NBQUEUE)
+  if (!valid_fid(fid))
     return FAILURE;
   // destruction of the msg queue
   free(all_queues[fid]->msg_arr);
@@ -88,13 +97,8 @@ int pdelete(int fid) {
   free_blocked_queue(&all_queues[fid]->blocked_prod);
   free(all_queues[fid]);
   all_queues[fid] = NULL;
+  scheduler();
   return SUCCES;
-}
-
-bool valid_fid(int fid) {
-  if (fid < 0 || fid >= NBQUEUE || all_queues[fid] == NULL)
-    return false;
-  return true;
 }
 
 int psend(int fid, int message) {
@@ -118,6 +122,8 @@ int psend(int fid, int message) {
     p->state = BLOCKEDQUEUE;
     queue_add(p, blocked_producers, process, next_prev, prio);
     scheduler();
+    if (p->message.status != SENT)
+      return FAILURE;
   } else {
     // no process is blocked and there is space in the msgqueue
     add_message(msg_queue, message);
@@ -148,6 +154,7 @@ int preceive(int fid, int *message) {
       *message = pop_oldest_msg(msg_queue);
     process * blocked = queue_out(blocked_producers, process, next_prev);
     add_message(msg_queue, blocked->message.value);
+    blocked->message.status = SENT;
     queue_add(blocked, &activatable_process_queue, process, next_prev, prio);
     scheduler();
     /* assert(blocked->message.status == RECEIVED); */
@@ -184,6 +191,18 @@ int pcount(int fid, int *count) {
 
 }
 
+int preset(int fid) {
+  if (!valid_fid(fid))
+    return FAILURE;
+  msg_queue_t * msg_queue = all_queues[fid];
+  msg_queue->number_of_msgs = 0;
+  msg_queue->iffc = 0;
+  free_blocked_queue(&(msg_queue->blocked_cons));
+  free_blocked_queue(&(msg_queue->blocked_prod));
+  scheduler();
+  return SUCCES;
+}
+
 
 /*
 ** HELPER FUNCTIONS DEFINITION
@@ -192,13 +211,13 @@ void free_blocked_queue(link * queue) {
   // for each blocked process make it activatable
   while(!queue_empty(queue)) {
     process* curr = queue_out(queue, process, next_prev);
+    curr->message.status = ERROR;
     curr->state = ACTIVATABLE;
     // reset pointers
     curr->next_prev.next = 0;
     curr->next_prev.prev = 0;
     queue_add(curr, &activatable_process_queue, process, next_prev, prio);
   }
-
 }
 
 bool is_full(msg_queue_t * msg_queue) {

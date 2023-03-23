@@ -63,8 +63,18 @@ int preceive(int fid, int *message);
  * @brief if count is not NULL two different cases:
  * if the queue is empty count get -(number of blocked consumers)
  * ifnot count gets the value of (number of blocked produres + nb of msgs)
+ * @param fid: the id of the msg queue
+ * @param count: the pointer where to write
  * @return returns FAILURE if the value fid is invalid and SUCCES if not
 */
 int pcount(int fid, int *count);
 
+/**
+ * @brief all blocked process are pushed to the activable queue and scheduler is called
+ * those blocked process will get a negative return value for psend or preceive
+ * messages in the queue are abandoned
+ * @param fid: the id of the msg queue
+ * @return returns FAILURE if the value fid is invalid and SUCCES if not
+*/
+int preset(int fid);
 #endif // MSGQUEUE_H_
