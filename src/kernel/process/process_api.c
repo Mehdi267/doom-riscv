@@ -59,24 +59,15 @@ int setpid(int new_pid) {
 
 int getpid(void) { return current_running_process_pid; }
 
-int leave_queue_process_if_needed(process *process_to_leave) {
-  if (process_to_leave == NULL) {
+int leave_queue_process_if_needed(process *leaving_process) {
+  if (leaving_process == NULL) {
     return -1;
   }
   debug_print_exit_m(
       "\nTrying to remove %s from a queue id %d process state  = %d\n",
-      process_to_leave->process_name, process_to_leave->pid,
-      process_to_leave->state);
-  switch (process_to_leave->state) {
-  case ACTIVATABLE:
-    delete_process_from_queue_wrapper(process_to_leave, ACTIVATABLE_QUEUE);
-    break;
-  case ASLEEP:
-    delete_process_from_queue_wrapper(process_to_leave, ASLEEP_QUEUE);
-    break;
-  default:
-    break;
-  }
+      leaving_process->process_name, leaving_process->pid,
+      leaving_process->state);
+  queue_del(leaving_process, next_prev);
   return 0;
 }
 
