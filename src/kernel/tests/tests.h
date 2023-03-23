@@ -110,6 +110,17 @@ int test17_sem(void *arg);
 /*
  *  
  */
+int test11(void *arg);
+
+
+/*
+ *  
+ */
+int test20(void *arg);
+
+/*
+ *  
+ */
 int test21(void *arg);
 
 /*

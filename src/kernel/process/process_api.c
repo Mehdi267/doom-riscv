@@ -531,7 +531,7 @@ int waitpid(int pid, int *retvalp) {
 
 
 int kill(int pid) {
-  if (pid == idleId) {
+  if (pid == idleId || pid == kernelId) {
     // Idle process cannot be killed
     return -1;
   }
