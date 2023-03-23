@@ -319,8 +319,9 @@ void exit_process(int retval) {
     exit(-1);
   }
   get_process_struct_of_pid(getpid())->return_value = retval;
-  while (1) {
-  }
+  /* while (1) { */
+  /* } */
+  scheduler();
 }
 
 // sec malloc mean secure malloc it verifies if pointer returne by malloc is
