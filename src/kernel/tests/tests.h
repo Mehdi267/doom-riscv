@@ -54,9 +54,8 @@ int test6(void *arg);
  *  Message queues test
  */
 int test10(void* arg);
-
-
 int test12(void *arg);
+int test14(void *arg);
 
 
 typedef struct test_apps {

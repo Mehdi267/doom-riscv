@@ -39,8 +39,9 @@ int kernel_start() {
   // puts(str);
 
   /* set_supervisor_timer_interrupt(50); // setting the 1st interrupt */
-  /* assert(start(test10,4000, 192, "test10", (void *)0) != -1); */
+  assert(start(test10,4000, 192, "test10", (void *)0) != -1);
   assert(start(test12,4000, 128, "test12", (void *)0) != -1);
+  assert(start(test14,4000, 128, "test12", (void *)0) != -1);
   scheduler();
   while(1) wfi();
 
