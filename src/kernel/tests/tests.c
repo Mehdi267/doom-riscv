@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "tests.h"
 
-#define NUMBEROFTESTS 11
+#define NUMBEROFTESTS 12
 
 void generate_test_report(test_apps_t* test_table){
 	print_test_no_arg("--------------TESTS REPORT START--------------\n");	
@@ -44,7 +44,7 @@ int kernel_tests(void *arg) {
 		{test2, "test2", 2, 0},
 		{test3, "test3", 3, 0},
 		{test4, "test4", 4, 0},// Takes a lot of time
-		// {test5, "test5", 5, 0}, //causes problems when tst 12 is ran after investigate issue
+		{test5, "test5", 5, 0}, 
 		// // {test6, "test6", 6, 0},//Test is so slow
 		// {test7, "test7", 7, 0},//Test is slow too
 	    //{test11, "test11", 9, 0},//Does not run with a semaphore
