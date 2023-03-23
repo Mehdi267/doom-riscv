@@ -151,6 +151,27 @@ int preceive(int fid, int *message) {
 }
 
 
+size_t queue_length(link * queue) {
+  size_t len = 0;
+  process * it;
+  queue_for_each(it, queue, process, next_prev) {
+    len++;
+  }
+  return len;
+}
+
+
+int pcount(int fid, int *count) {
+  if (!valid_fid(fid))
+    return FAILURE;
+  msg_queue_t * msg_queue = all_queues[fid];
+  if (!queue_empty(&(msg_queue->blocked_cons)))
+    *count = -queue_length(&(msg_queue->blocked_cons));
+  else
+    *count = msg_queue->number_of_msgs + queue_length(&(msg_queue->blocked_prod));
+  return SUCCES;
+
+}
 
 
 /*

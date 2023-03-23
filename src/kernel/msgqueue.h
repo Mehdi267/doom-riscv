@@ -58,4 +58,13 @@ int psend(int fid, int message);
  * executed preset or pdelete, otherwise SUCCES
  */
 int preceive(int fid, int *message);
+
+/**
+ * @brief if count is not NULL two different cases:
+ * if the queue is empty count get -(number of blocked consumers)
+ * ifnot count gets the value of (number of blocked produres + nb of msgs)
+ * @return returns FAILURE if the value fid is invalid and SUCCES if not
+*/
+int pcount(int fid, int *count);
+
 #endif // MSGQUEUE_H_
