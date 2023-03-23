@@ -5,7 +5,7 @@
 typedef struct msg_queue_t {
   int * msg_arr;
   size_t size; // size of the array
-  int oldmi; // the index of the oldest message in the arr
+  size_t number_of_msgs;
   int iffc; // index of the first free case
   link blocked_cons;
   link blocked_prod;

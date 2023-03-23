@@ -1,10 +1,10 @@
 #include "msgqueue.h"
+#include "assert.h"
+#include "process/helperfunc.h"
 #include "process/process.h"
 #include "process/scheduler.h"
-#include "assert.h"
-#include <stdint.h>
-#include <stdio.h>
-#include "process/helperfunc.h"
+#include "stdint.h"
+#include "stdio.h"
 #define SUCCES 0
 #define FAILURE -1
 #define NBQUEUE 100
@@ -71,7 +71,7 @@ int pcreate(int count) {
   all_queues[index]->msg_arr = malloc(sizeof(int) * count);
   all_queues[index]->size = count;
   all_queues[index]->iffc = 0;
-  all_queues[index]->oldmi = -1;
+  all_queues[index]->number_of_msgs = 0;
   INIT_LIST_HEAD(&all_queues[index]->blocked_cons);
   INIT_LIST_HEAD(&all_queues[index]->blocked_prod);
   return index;
@@ -86,23 +86,31 @@ int pdelete(int fid) {
   free_blocked_queue(&all_queues[fid]->blocked_cons);
   // for each blocked producer process make it activatable
   free_blocked_queue(&all_queues[fid]->blocked_prod);
+  free(all_queues[fid]);
+  all_queues[fid] = NULL;
   return SUCCES;
 }
 
+bool valid_fid(int fid) {
+  if (fid < 0 || fid >= NBQUEUE || all_queues[fid] == NULL)
+    return false;
+  return true;
+}
+
 int psend(int fid, int message) {
-  // check valid fid
-  if (fid < 0 || fid >= NBQUEUE)
+  if (!valid_fid(fid))
     return FAILURE;
   msg_queue_t * msg_queue = all_queues[fid];
   link * blocked_consumers = &(msg_queue->blocked_cons);
   link * blocked_producers = &(msg_queue->blocked_prod);
   // the queue is empty and there are blocked consumers
   if (is_empty(msg_queue) && !queue_empty(blocked_consumers)) {
-    process * curr = queue_out(blocked_consumers, process, next_prev);
-    curr->state = ACTIVATABLE;
-    queue_add(curr, &activatable_process_queue, process, next_prev, prio);
-    curr->message.value = message;
-    curr->message.status = RECEIVED;
+    process * blocked = queue_out(blocked_consumers, process, next_prev);
+    blocked->state = ACTIVATABLE;
+    queue_add(blocked, &activatable_process_queue, process, next_prev, prio);
+    blocked->message.value = message;
+    blocked->message.status = RECEIVED;
+    scheduler();
   } else if (is_full(msg_queue)) {
     // the msg_queue is full
     process * p = get_current_process();
@@ -118,11 +126,11 @@ int psend(int fid, int message) {
 }
 
 int preceive(int fid, int *message) {
-  // check valid fid
-  if (fid < 0 || fid >= NBQUEUE)
+  if (!valid_fid(fid))
     return FAILURE;
 
   msg_queue_t * msg_queue = all_queues[fid];
+  link * blocked_producers = &(msg_queue->blocked_prod);
   link * blocked_consumers = &(msg_queue->blocked_cons);
   if (is_empty(msg_queue)) {
     // the msg_queue is empty
@@ -135,12 +143,15 @@ int preceive(int fid, int *message) {
     }
     if (message != NULL)
       *message = p->message.value;
-  } else if (is_full(msg_queue) && !queue_empty(&msg_queue->blocked_cons)) {
+  } else if (is_full(msg_queue) && !queue_empty(blocked_producers)) {
     if (message != NULL)
       *message = pop_oldest_msg(msg_queue);
-    process * blocked = queue_out(blocked_consumers, process, next_prev);
+    process * blocked = queue_out(blocked_producers, process, next_prev);
     add_message(msg_queue, blocked->message.value);
     queue_add(blocked, &activatable_process_queue, process, next_prev, prio);
+    scheduler();
+    /* assert(blocked->message.status == RECEIVED); */
+    /* *message = blocked->message.value; */
   } else {
     // the queue is not empty and there arent blocked consumers
     if (message != NULL)
@@ -191,24 +202,24 @@ void free_blocked_queue(link * queue) {
 }
 
 bool is_full(msg_queue_t * msg_queue) {
-  return msg_queue->iffc == msg_queue->oldmi;
+  return msg_queue->number_of_msgs == msg_queue->size;
 }
 
 bool is_empty(msg_queue_t * msg_queue) {
   assert(msg_queue->msg_arr != NULL);
-  return msg_queue->oldmi == -1;
+  return msg_queue->number_of_msgs == 0;
 }
+
+int mod(int a, int b) {
+    int r = a % b;
+    return r < 0 ? r + b : r;
+}
+
 // TODO: check if possible interrupts can make problems
 int pop_oldest_msg(msg_queue_t * msg_queue) {
-  int msg =  msg_queue->msg_arr[msg_queue->oldmi];
-  if (msg_queue->iffc != msg_queue->oldmi + 1) {
-    msg_queue->oldmi++;
-  } else {
-    assert(msg_queue->oldmi == 0 && msg_queue->iffc == 1);
-    msg_queue->oldmi--;
-    msg_queue->iffc--;
-  }
-  return msg;
+  int index = mod((msg_queue->iffc - (int)msg_queue->number_of_msgs), (int)msg_queue->size);
+  msg_queue->number_of_msgs--;
+  return msg_queue->msg_arr[index];
 }
 
 void init_msg_queues() {
@@ -226,10 +237,6 @@ int get_first_free_index() {
 
 void add_message(msg_queue_t *msg_queue, int message) {
   msg_queue->msg_arr[msg_queue->iffc] = message;
-  if (msg_queue->oldmi == -1) {
-    // (i.e) this message is the 1st
-    assert(msg_queue->iffc == 0);
-    msg_queue->oldmi = 0;
-  }
+  msg_queue->number_of_msgs++;
   msg_queue->iffc = (msg_queue->iffc + 1) % msg_queue->size;
 }
