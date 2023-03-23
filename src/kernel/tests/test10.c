@@ -2,14 +2,13 @@
  * Test 10
  * Test l'utilisation des semaphores ou des files de messages selon le sujet.
  *******************************************************************************/
-#include "queue.h"
-#include "string.h"
-#include "msgqueue.h"
 /* Test d'utilisation d'une file comme espace de stockage temporaire. */
 
 #include "../sync.h"
-#include "stdio.h"
 #include "assert.h"
+#include "msgqueue.h" // for p funcs
+#include "stdio.h"
+#include "string.h" // for strlen
 #include "tests.h"
 
 static void write(int fid, const char *buf, unsigned long len) {
