@@ -23,10 +23,6 @@
 #include "traps/trap.h"
 
 #define MAX_SIZE_NAME 256
-#define secmalloc(p, n)                                                        \
-  p = malloc(n);                                                               \
-  if (p == NULL)                                                               \
-  return -1
 
 // Hash table that associates to every pid the process struct associated to it
 hash_t *pid_process_hash_table = NULL;
