@@ -42,7 +42,7 @@ int kernel_start() {
   /* assert(start(test10,4000, 192, "test10", (void *)0) != -1); */
   /* assert(start(test12,4000, 128, "test12", (void *)0) != -1); */
   /* assert(start(test14,4000, 128, "test14", (void *)0) != -1); */
-  assert(start(test15,4000, 128, "test15", (void *)0) != -1);
+  assert(start(test17,4000, 128, "test17", (void *)0) != -1);
   scheduler();
   while(1) wfi();
 
