@@ -12,6 +12,7 @@
 #include "drivers/splash.h"
 #include "process/helperfunc.h"
 #include "process/process.h"
+#include "process/scheduler.h"
 #include "riscv.h"
 #include "stddef.h"
 #include "stdint.h"
@@ -37,8 +38,10 @@ int kernel_start() {
   // sprintf(str,"%li",csr_read(mstatus));
   // puts(str);
 
-  assert(start(test10,4000, 192, "test10", (void *)0) != -1);
-  set_supervisor_timer_interrupt(50); // setting the 1st interrupt
+  /* set_supervisor_timer_interrupt(50); // setting the 1st interrupt */
+  /* assert(start(test10,4000, 192, "test10", (void *)0) != -1); */
+  assert(start(test12,4000, 128, "test12", (void *)0) != -1);
+  scheduler();
   while(1) wfi();
 
   /* if (activate_and_launch_custom_process(get_process_struct_of_pid(1)) < 0) { */
