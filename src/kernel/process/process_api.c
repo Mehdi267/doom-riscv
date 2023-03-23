@@ -23,6 +23,7 @@
 #include "traps/trap.h"
 
 #define MAX_SIZE_NAME 256
+#define MAX_NB_PROCESS 400
 
 // Hash table that associates to every pid the process struct associated to it
 hash_t *pid_process_hash_table = NULL;
@@ -323,8 +324,13 @@ int process_name_copy(process *p, const char *name) {
   return 0;
 }
 
+int nb_process = 0;
 int start(int (*pt_func)(void *), unsigned long ssize, int prio,
           const char *name, void *arg) {
+  if (++nb_process > MAX_NB_PROCESS) {
+    nb_process--;
+    return -1;
+  }
   //-------------------------------Input check--------------
   // We verify that the process that made this call is a validprocess ie not a
   // zombie
@@ -344,6 +350,8 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio,
   //----------Process generation-----------
   process *new_process;
   secmalloc(new_process, sizeof(process));
+  new_process->next_prev.next = NULL;
+  new_process->next_prev.prev = NULL;
 
   //---------Create a new pid and and new process to hash table----------------
 
@@ -353,8 +361,7 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio,
 
   new_process->prio = prio;
 
-  if (process_name_copy(new_process, name) <
-      0) // this function fails if size of name its to big
+  if (process_name_copy(new_process, name) < 0) // this function fails if size
     return -1;
 
   //--------------State config---------------------
@@ -511,6 +518,7 @@ int kill(int pid) {
     // Idle process cannot be killed
     return -1;
   }
+  nb_process--;
   process *process_pid = get_process_struct_of_pid(pid);
   if (process_pid == NULL) {
     return -1;
