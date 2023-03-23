@@ -447,6 +447,8 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     //--------------Semaphore signal-----------
     new_process->sem_signal = 0; 
     //------------Add process to the activatable queue
+    new_process->link_queue_activable.prev = 0;
+    new_process->link_queue_activable.next = 0;
     add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
 
     debug_print("[%s] created process with pid = %d \n", new_process->process_name, new_process->pid);
@@ -532,7 +534,7 @@ int waitpid(int pid, int *retvalp) {
 
 
 int kill(int pid) {
-  if (pid == idleId) {
+  if (pid == idleId || pid == kernelId) {
     // Idle process cannot be killed
     return -1;
   }

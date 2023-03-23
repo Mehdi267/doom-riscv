@@ -30,7 +30,6 @@ int proc17_1(void *arg)
         (void)arg;
 
         st = (struct test17_buf_st*) shm_acquire("test17_shm");
-        printf("address st =%p \n", st);
         // __asm__ __volatile__("rdtsc":"=A"(tsc));
         tsc = get_stime(); 
         tsc2 = tsc + 10000;
@@ -43,7 +42,6 @@ int proc17_1(void *arg)
                 count++;
                 // __asm__ __volatile__("rdtsc":"=A"(tsc));
                 tsc = get_stime(); 
-                printf("tsc = %lld", tsc);
         } while (tsc < tsc2);
         shm_release("test17_shm");
         return count;
@@ -90,7 +88,6 @@ int test17_sem(void *arg)
 
         (void)arg;
         st = (struct test17_buf_st*) shm_create("test17_shm");
-        printf("address st =%p \n", st);
         assert(st != NULL);
 
         assert(getprio(getpid()) == 128);
@@ -102,7 +99,6 @@ int test17_sem(void *arg)
         st->rsem = screate(0);
         assert(st->rsem >= 0);
         st->rpos = 0;
-        puts("here 1 ");
         for (i=0; i<256; i++) {
                 st->received[i] = 0;
         }
@@ -110,25 +106,21 @@ int test17_sem(void *arg)
                 pid[i] = start(proc17_1, 4000, 129, "proc17_1", &st);
                 assert(pid[i] > 0);
         }
-        puts("here 2 ");
         for (i=3; i<6; i++) {
                 pid[i] = start(proc17_2, 4000, 129, "proc17_2", &st);
                 assert(pid[i] > 0);
         }
-        puts("here 3 ");
         for (i=0; i<3; i++) {
                 int ret;
                 assert(waitpid(pid[i], &ret) == pid[i]);
                 count += ret;
         }
-        puts("here 4");
         assert(scount(st->rsem) == 0xfffd);
         for (i=3; i<6; i++) {
                 int ret;
                 assert(kill(pid[i]) == 0);
                 assert(waitpid(pid[i], &ret) == pid[i]);
         }
-        puts("here 5 ");
         assert(scount(st->mutex) == 1);
         assert(scount(st->wsem) == 100);
         printf("scount(st->rsem) = %d \n", (int16_t) (scount(st->rsem)));
@@ -136,7 +128,6 @@ int test17_sem(void *arg)
         assert(sdelete(st->mutex) == 0);
         assert(sdelete(st->wsem) == 0);
         assert(sdelete(st->rsem) == 0);
-        puts("here 6 ");
         for (i=0; i<256; i++) {
                 int n = st->received[i];
                 if (n != count) {

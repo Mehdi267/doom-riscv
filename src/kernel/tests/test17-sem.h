@@ -16,13 +16,9 @@ struct test17_buf_st {
 // Increment a variable in a single atomic operation
 static void atomic_incr(int *atomic)
 {
-    puts("testing ..");
     register unsigned reg1 = 1;
 	__asm__ __volatile__ ("addi %0,x0,1 " : :"rK" (reg1) );
-    puts("testing after add ..");
-    printf("adress = %p \n",atomic);
     __asm__ __volatile__("amoadd.w t0,%1,%0" : "+m" (*atomic) : "rK"(reg1) : "cc");
-    puts("testing end ..");
 }
 
 #endif /* _TEST17_SEM_H_ */

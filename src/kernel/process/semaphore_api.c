@@ -359,3 +359,24 @@ int signaln(int sem, short int count){
     scheduler();
     return 0;
 }
+
+void xwait(union sem *s){
+    if (s != NULL){
+        wait(s->sem);
+    }
+}
+void xsignal(union sem *s){
+    if (s != NULL){
+        signal(s->sem);
+    }
+}
+void xsdelete(union sem *s){
+    if (s != NULL){
+        sdelete(s->sem);
+    }
+}
+void xscreate(union sem *s){
+    if (s != NULL){
+        s->sem = screate(0);
+    }
+}
