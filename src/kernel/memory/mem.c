@@ -8,6 +8,7 @@
 #include "mem.h"
 #include "stddef.h"
 #include "stdio.h"
+#include "../process/process.h"
 
 /* Heap boundaries */
 extern char _heap_start[];
@@ -17,7 +18,7 @@ static char *curptr = _heap_start;
 /* Trivial sbrk implementation */
 void *sbrk(ptrdiff_t diff)
 {
-    printf("[brk called ] curptr = %p \n", curptr);
+    debug_print_memory("[brk called ] curptr = %p \n", curptr);
 	char *s = curptr;
 	char *c = s + diff;
 	if ((c < curptr) || (c > _heap_end)) return ((void*)(-1));

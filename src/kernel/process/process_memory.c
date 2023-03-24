@@ -112,7 +112,7 @@ static int add_child_node_page_table(process* proc_conf, page_table_link_list_t 
     page_table* user_page_table_level_0 = create_page_table();
     if (page_type != SHARED_PAGE){
         //If the page is a shared page; the memory liberation is done using a different approch
-        puts("-------child page-----------");
+        print_memory_no_arg("-------child page creation-----------");
         // associated_frame_to_proc(proc_conf,user_page_table_level_0);
     }
     page_table_link_list_t* new_page_table_node = NULL;

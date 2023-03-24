@@ -202,23 +202,21 @@ static int free_process_arg_and_fix_tree_link(process *process_to_free,
   if (process_to_free == NULL || before_process == NULL) {
     return -1;
   }
+  //Linking ...
   if (process_to_free == process_to_free->parent->children_head &&
       process_to_free == process_to_free->parent->children_tail) {
     process_to_free->parent->children_tail = NULL;
     process_to_free->parent->children_head = NULL;
-    return free_child_zombie_process(process_to_free);
   } else if (process_to_free == process_to_free->parent->children_head) {
     process_to_free->parent->children_head =
         process_to_free->parent->children_head->next_sibling;
-    return free_child_zombie_process(process_to_free);
   } else if (process_to_free == process_to_free->parent->children_tail) {
     before_process->next_sibling = NULL;
     process_to_free->parent->children_tail = before_process;
-    return free_child_zombie_process(process_to_free);
   } else {
     before_process->next_sibling = process_to_free->next_sibling;
-    return free_child_zombie_process(process_to_free);
   }
+  return free_child_zombie_process(process_to_free);
 }
 
 /**
@@ -432,7 +430,7 @@ int start(int (*pt_func)(void*), unsigned long ssize, int prio, const char *name
     new_process->next_sibling = NULL;
 
     //--------------Return value----------------
-    new_process->return_value = NULL;
+    new_process->return_value = 0;
 
     //-------------Shared pages-------------------
     new_process->shared_pages = NULL;

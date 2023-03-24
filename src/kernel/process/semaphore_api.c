@@ -3,6 +3,7 @@
 #include "process.h"
 #include "semaphore_api.h"
 #include "helperfunc.h"
+#include <stdlib.h>
 
 
 /**
@@ -289,7 +290,8 @@ int sdelete(int sem){
         free(sem_struct->list_header_process);
     }
     free(sem_struct);
-    printf("malloc test %p\n", malloc(sizeof(int)));
+    debug_print_memory("malloc test %p\n", malloc(1));
+    debug_print_memory("malloc test %p\n", malloc(500));
     hash_del(get_semaphore_table(), cast_int_to_pointer(sem));
     // sem_struct->atomic_block = false;
     currently_running_semaphores--;

@@ -231,14 +231,12 @@ void shm_release(const char *key){
     if (proc_page_shared == current_proc->shared_pages->head_shared_page &&
         proc_page_shared == current_proc->shared_pages->tail_shared_page){
         //In this case we can free it directly
-        free(proc_page_shared);
         current_proc->shared_pages->head_shared_page = NULL;
         current_proc->shared_pages->tail_shared_page = NULL;
     }
     else if (proc_page_shared == current_proc->shared_pages->head_shared_page){
         //We now check if it only equal to head 
         current_proc->shared_pages->head_shared_page = proc_page_shared->next_shared_page;
-        free(proc_page_shared);
     }
     else if (proc_page_shared == current_proc->shared_pages->tail_shared_page){
         //We now check if it only equal to tail
@@ -251,7 +249,6 @@ void shm_release(const char *key){
         }
         current_proc->shared_pages->tail_shared_page = list_iter;
         list_iter->next_shared_page = NULL;
-        free(proc_page_shared);
     }
     else {
         //In this case the list node is in the middle 
@@ -261,7 +258,6 @@ void shm_release(const char *key){
             list_iter=list_iter->next_shared_page;
         }
         list_iter->next_shared_page = proc_page_shared->next_shared_page;
-        free(proc_page_shared);
     }
     //Now we just have to remove the memory mapping
     uint16_t lvl0_index = released_page_p->lvl0_index;
@@ -290,7 +286,9 @@ void shm_release(const char *key){
                     key,
                     page_info->usage);
     }
+    debug_print_memory("proc_page_shared address %p \n", proc_page_shared);
     print_memory_api_no_arg("Shared page has been released successfully\n");
+    free(proc_page_shared);
     return;
 }
 
