@@ -289,6 +289,7 @@ int sdelete(int sem){
         free(sem_struct->list_header_process);
     }
     free(sem_struct);
+    printf("malloc test %p\n", malloc(sizeof(int)));
     hash_del(get_semaphore_table(), cast_int_to_pointer(sem));
     // sem_struct->atomic_block = false;
     currently_running_semaphores--;

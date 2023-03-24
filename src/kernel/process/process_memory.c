@@ -458,23 +458,31 @@ int free_process_memory(process* proc)
     if (proc == NULL){
         return -1;
     }
+    debug_print_memory("--------Inside free_process_memory, current process: %s\n", getname());
+    debug_print_memory("--------Freeing memory for the process/ id -> %d -------- : %s\n", 
+                        proc->pid, proc->process_name);
     //We start by removing the shared pages
     if (proc->proc_shared_hash_table != NULL){
         shared_pages_proc_t* shared_iter = proc->shared_pages->head_shared_page;
         shared_pages_proc_t* shared_iter_prev = proc->shared_pages->head_shared_page;
         while (shared_iter!=NULL){
             shared_iter = shared_iter->next_shared_page;
+            set_custom_release_process(proc);
+            debug_print_memory("--------Custom shm release / id -> %d -------- : %s\n", proc->pid, shared_iter_prev->key); 
             shm_release(shared_iter_prev->key);
+            set_custom_release_process(NULL);
             free(shared_iter_prev);
         }
+        //We need to also the free the holes that were left by the previous releases
         released_pages_t* released_iter = proc->released_pages_list;
         released_pages_t* released_iter_prev = proc->released_pages_list;
         while (released_iter != NULL){
             released_iter = released_iter->next_released_page;
             free(released_iter_prev);
         }
-        hash_destroy(proc->proc_shared_hash_table);
+        //hash_destroy(proc->proc_shared_hash_table);
     }
+    return 0;
     //We remove static pages first
     if (proc->page_table_level_2 != NULL){
         //We start by clearing all the lvl0 frames and then we free 

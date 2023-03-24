@@ -19,8 +19,19 @@
 #include "process.h"
 #include <stdint.h>
 
+/**
+ * @brief Global shared pages parameters
+ * @param page_id_counter Counter of shared pages
+ * @param shared_memory_hash_table the hash table that will be used for the hsared pages
+ * @param custom_release_process This will be used when we need to release the shared page from 
+ * a custom process instead of the current process, the reason as to why this parameter was introduced is because we
+ * can not add any parameters to system call thus we have to add this global parameter
+ * when we are in the shm_release if this value is null we can use the current process and when it not null we use the 
+ * this global process. 
+ */
 extern uint64_t page_id_counter; 
 extern hash_t* shared_memory_hash_table;
+extern process* custom_release_process;
 
 typedef struct shared_page{
     void* page_address;

@@ -43,7 +43,7 @@ void *get_frame(){
 void release_frame(void *frame){
     //LIFO : frame est pointée par mem_ptr
     //frame pointe vers l'ancien mem_ptr
-
+    printf("frame adress %p \n", frame);
     //checks : la frame est comprise dans la memoire accessible
     if((char *)frame < _free_memory_start || (char *)frame > _memory_end){
         //the frame is not within bounds of physical mem

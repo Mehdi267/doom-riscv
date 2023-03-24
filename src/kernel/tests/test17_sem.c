@@ -128,6 +128,7 @@ int test17_sem(void *arg)
         assert(sdelete(st->mutex) == 0);
         assert(sdelete(st->wsem) == 0);
         assert(sdelete(st->rsem) == 0);
+        puts("hello what is going  on \n");
         for (i=0; i<256; i++) {
                 int n = st->received[i];
                 if (n != count) {
@@ -135,6 +136,7 @@ int test17_sem(void *arg)
                         assert(n == count);
                 }
         }
+        puts("Does this work\n");
         printf("ok (%d chars sent).\n", count * 256);
         return 0;
 }

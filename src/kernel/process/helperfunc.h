@@ -109,6 +109,20 @@ extern hash_t* get_semaphore_table(void);
 extern semaphore_t* get_semaphore_struct(int sem);
 
 /**
+ * @brief Get the custom release process
+ * 
+ * @return process* 
+ */
+extern process* get_custom_release_process(void);
+
+/**
+ * @brief Set the custom release process to a value given as 
+ * a function argument
+ * @param proc the new value tthat will assocaited to the custom_release_process 
+ */
+extern void set_custom_release_process(process* proc);
+
+/**
  * @brief Validate that the process is an state on which we can call system calls
  * we will mostly check that the process is not a ZOMBIE but the function can be extended to 
  * other states

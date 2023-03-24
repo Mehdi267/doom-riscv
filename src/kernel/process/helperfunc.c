@@ -109,6 +109,15 @@ hash_t* get_semaphore_table(void){
     return semaphore_table;
 }
 
+process* get_custom_release_process(void){
+    return custom_release_process;
+}
+
+void set_custom_release_process(process* proc){
+    custom_release_process = proc;
+    return;
+}
+
 
 int validate_action_process_valid(process* process_pid){
     if (process_pid == NULL){
