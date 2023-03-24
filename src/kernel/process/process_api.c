@@ -64,7 +64,9 @@ int leave_queue_process_if_needed(process *leaving_process) {
       "\nTrying to remove %s from a queue id %d process state  = %d\n",
       leaving_process->process_name, leaving_process->pid,
       leaving_process->state);
-  if (proc_kill_diag(leaving_process->semaphore_id, KILL_CALL, leaving_process->pid) <0){
+  if (leaving_process->state == BLOCKEDQUEUE) {
+    if (proc_kill_diag(leaving_process->semaphore_id, KILL_CALL,
+                       leaving_process->pid) < 0)
       return -1;
   } else {
     queue_del(leaving_process, next_prev);
