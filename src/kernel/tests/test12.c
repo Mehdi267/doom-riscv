@@ -46,7 +46,6 @@ int test12(void *arg) {
   assert((fid = pcreate(1)) >= 0);
   printf("1");
   pid = start(&rdv_proc, 4000, 130, "rdv_proc", (void *)fid);
-  /* test_it(); */
   assert(pid > 0);
   printf(" 4");
   assert((pcount(fid, &count) == 0) && (count == 2));
