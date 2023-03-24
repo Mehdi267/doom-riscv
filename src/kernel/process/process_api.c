@@ -311,6 +311,15 @@ void exit_process(int retval) {
   scheduler();
 }
 
+int process_name_copy(process *p, const char *name) {
+  size_t size = strlen(name);
+  if (size > MAX_SIZE_NAME)
+    return -1;
+  secmalloc(p->process_name, size);
+  strcpy(p->process_name, name);
+  return 0;
+}
+
 
 int nb_process = 0;
 int start(int (*pt_func)(void *), unsigned long ssize, int prio,
