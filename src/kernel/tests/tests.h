@@ -4,6 +4,12 @@
 #include "stdint.h"
 #include "../process/process.h"
 #include "../process/helperfunc.h"
+#include "../process/timer_api.h"
+#include "../process/memory_api.h"
+#include "../process/semaphore_api.h"
+#include "assert.h"
+#include "drivers/clint.h"
+
 
 /*
  * Run kernel test suite
@@ -48,8 +54,26 @@ int test4(void* arg);
  */
 int test5(void* arg);
 
-// todo add comment
-int test6(void *arg);
+/*
+ * timer tests
+ */
+int test6(void* arg);
+
+/*
+ * Timer and shared memory
+ */
+int test7(void* arg);
+
+/*
+ * Test the process memory api
+ */
+int test_memory(void* arg);
+
+/**
+ * Test les semaphores 
+ */
+int test_sem(void *arg);
+
 /*
  *  Message queues test
  */
@@ -58,6 +82,55 @@ int test12(void *arg);
 int test14(void *arg);
 int test15(void *arg);
 int test17(void *arg);
+
+/**
+ * Semaphores test 
+ */
+int test12_sem(void *arg);
+
+/*
+ * Semaphores test 
+ */
+int test13_sem(void *arg);
+
+/**
+ * Semaphore test
+ */
+int test15_sem(void *arg);
+
+
+/**
+ * Semaphore test
+ */
+int test16_sem(void *arg);
+
+
+/**
+ * Semaphore test
+ */
+int test17_sem(void *arg);
+
+
+/*
+ *  
+ */
+int test11(void *arg);
+
+
+/*
+ *  
+ */
+int test20(void *arg);
+
+/*
+ *  
+ */
+int test21(void *arg);
+
+/*
+ * 
+ */
+int test22(void *arg);
 
 
 typedef struct test_apps {

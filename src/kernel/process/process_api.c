@@ -1,12 +1,15 @@
-#include "frame_dist.h"
+#include "../memory/frame_dist.h"
 #include "hash.h"
 #include "helperfunc.h"
-#include "mem.h"
-/* #include "process.h" */
-#include "scheduler.h"
-#include "stdbool.h"
-#include "stddef.h"
+#include "process.h"
 #include "stdio.h"
+#include "stdbool.h"
+#include "scheduler.h"
+#include <assert.h>
+#include "process_memory.h"
+
+#define FLOAT_TO_INT(x) (int)((x)+0.5)
+
 #include "stdlib.h"
 #include "string.h" // for strcpy strlen
 
@@ -16,11 +19,13 @@
 
 #include "bios/info.h"
 #include "drivers/splash.h"
+#include "../memory/frame_dist.h"
+#include "../memory/pages.h"
 #include "encoding.h"
-#include "frame_dist.h"
-#include "pages.h"
+#include "../memory/virtual_memory.h"
 #include "timer.h"
 #include "traps/trap.h"
+#include "semaphore_api.h"
 
 #define MAX_SIZE_NAME 256
 #define MAX_NB_PROCESS 400
@@ -33,19 +38,8 @@ int current_running_process_pid = -1;
 // Pid iterator that will be used to associate to every process a unique pid
 int pid_iterator = 0;
 
-/**
- * @brief This function allocates memory for a process, it's current
- * form remains very basic and does not follow the project specifications
- * and it is only valid for a size that is less than then page size
- * @param size corresponds to the size that we want to allocate
- * @return the address of the page that we allocated
- */
-void *process_memory_allocator(unsigned long size) {
-  if (size <= FRAME_SIZE) {
-    return get_frame();
-  }
-  return NULL;
-}
+
+
 
 int setpid(int new_pid) {
   // We start by checking that the process exists
@@ -64,11 +58,17 @@ int leave_queue_process_if_needed(process *leaving_process) {
   if (leaving_process == NULL) {
     return -1;
   }
+
+
   debug_print_exit_m(
       "\nTrying to remove %s from a queue id %d process state  = %d\n",
       leaving_process->process_name, leaving_process->pid,
       leaving_process->state);
-  queue_del(leaving_process, next_prev);
+  if (proc_kill_diag(leaving_process->semaphore_id, KILL_CALL, leaving_process->pid) <0){
+      return -1;
+  } else {
+    queue_del(leaving_process, next_prev);
+  }
   return 0;
 }
 
@@ -121,6 +121,7 @@ int chprio(int pid, int newprio) {
   if (validate_action_process_valid(process_pid) < 0) {
     return -1;
   }
+  //TODO REVIEW THIS MEHTOD IN CASE WR HAVE P1 : 130 P2 129 P3 : 128 // IF WE SET P3 TO 131 WE SHOULD EXECUTE P3 INSTEAD P2
   int old_prio = process_pid->prio;
   process_pid->prio = newprio;
   process *head_of_queue = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
@@ -307,22 +308,9 @@ void exit_process(int retval) {
     exit(-1);
   }
   get_process_struct_of_pid(getpid())->return_value = retval;
-  /* while (1) { */
-  /* } */
   scheduler();
 }
 
-// sec malloc mean secure malloc it verifies if pointer returne by malloc is
-// null and if it's the case returns -1
-
-int process_name_copy(process *p, const char *name) {
-  size_t size = strlen(name);
-  if (size > MAX_SIZE_NAME)
-    return -1;
-  secmalloc(p->process_name, size);
-  strcpy(p->process_name, name);
-  return 0;
-}
 
 int nb_process = 0;
 int start(int (*pt_func)(void *), unsigned long ssize, int prio,
@@ -426,25 +414,26 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio,
       new_process->parent->children_head = new_process;
       new_process->parent->children_tail = new_process;
     }
-  }
-  new_process->children_head = NULL;
-  new_process->children_tail = NULL;
-  new_process->next_sibling = NULL;
 
-  //--------------Return value----------------
-  new_process->return_value = NULL;
+    // Naif check, we can do a thorough check of memory at this level
+    // or we can do that using memory api methods  
+    if (!(ssize > 0)){
+        return -1;
+    }
 
-  //------------Add process to the activatable queue
-  add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
+    //----------Process generation-----------
 
-  debug_print("[%s] created process with pid = %d \n",
-              new_process->process_name, new_process->pid);
+    process *new_process = (process*) malloc(sizeof(process));
+    if (new_process == NULL){
+        return -1;
+    }
 
   //We activate this new process if it has a higher priority
   // This function must be called a the very end
   check_if_new_prio_is_higher_and_call_scheduler(new_process->prio, true, 0);
   return new_process->pid;
 }
+
 
 int waitpid(int pid, int *retvalp) {
   debug_print_exit_m("[waitpid] Inside waitpid with pid  = %d\n", pid);
@@ -470,8 +459,13 @@ int waitpid(int pid, int *retvalp) {
         temp_process_before = temp_process;
         temp_process = temp_process->next_sibling;
       }
-      get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
-      scheduler();
+      if (temp_process == NULL){
+        get_process_struct_of_pid(getpid())->state = BLOCKEDWAITCHILD;
+        scheduler();
+      }
+      else{
+        break;
+      }
     }
   }
   // positive pid, we verify pid is a child and then we take its return value
@@ -513,8 +507,9 @@ int waitpid(int pid, int *retvalp) {
   return pid_to_return;
 }
 
+
 int kill(int pid) {
-  if (pid == idleId) {
+  if (pid == idleId || pid == kernelId) {
     // Idle process cannot be killed
     return -1;
   }
@@ -527,7 +522,7 @@ int kill(int pid) {
     return -1;
   }
   if (process_pid->pid == getpid()) {
-    return -1; // We cannot kill the current process from the current process
+    exit_process(0);
   }
   if (leave_queue_process_if_needed(process_pid) < 0) {
     return -1;

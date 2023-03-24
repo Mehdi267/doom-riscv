@@ -38,6 +38,10 @@ context_switch:
     csrr t0, sepc // sepc is the virtual adress of the instruction (pc) who encountered the exception
     // sepc is written automatically when a interruption is taken
     sd t0, 120(a0)
+    //satp holds a pointer to lvl 2 page table associated to the old process
+    //Each process has it own memory mapping that is special to it
+    csrr t0, satp 
+    sd t0, 128(a0)
 
     # Restauration du contexte
     ld sp,    0(a1)
@@ -59,6 +63,10 @@ context_switch:
     csrw sscratch, t0
     ld t0, 120(a1)
     csrw sepc, t0
+	ld t0, 128(a1) 
+    csrw satp, t0
+	
+    jr ra
 
     ret // is the same thing than jr ra, but clear
     // jr ra // jump to register ra

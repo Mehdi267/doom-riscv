@@ -71,7 +71,7 @@ int vsnprintf(char *, size_t, const char *, va_list);
 #define NR_PHILO 5
 // Prototype des appels systeme de la spec
 int chprio(int pid, int newprio);
- int cons_write(const char *str, unsigned long size);
+int cons_write(const char *str, unsigned long size);
 unsigned long cons_read(char *string, unsigned long length);
 void cons_echo(int on);
 void exit(int retval);
