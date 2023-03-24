@@ -101,28 +101,20 @@ void validation_process() {
 }
 
 int idle(void *arg) {
+  debug_print_process(
+      "[Current process = %s] pid = %d; argument given = %ld \n",
+      get_pid_name(getpid()), getpid(), cast_pointer_into_a_long(arg));
+
+  // we check for potential pending interrupts
   for (;;) {
-    debug_print_process(
-        "[Current process = %s] pid = %d; argument given = %ld \n",
-        get_pid_name(getpid()), getpid(), cast_pointer_into_a_long(arg));
-
-    // scheduler();
+    uint64_t tmp_status;
+    tmp_status = csr_read(sstatus);
+    csr_set(sstatus, MSTATUS_SIE);
+    __asm__ __volatile__("nop");
+    csr_write(sstatus, tmp_status);
   }
 }
 
-/**
- * @brief declares a process from which we will start our tests
- *
- */
-static int declares_a_test_process() {
-#ifdef TESTING
-  int p1 = start(kernel_tests, 4000, 2, "kernel_tests", cast_int_to_pointer(0));
-  if (p1 < 0) {
-    return -1;
-  }
-#endif
-  return 0;
-}
 
 int process_1(void *arg) {
   int i = 0;
@@ -192,10 +184,6 @@ int initialize_process_workflow(){
     }
     //Will only launch the process if the debug mode is set
     if (declares_debug_processes()<0){
-        return -1;
-    }
-    //Will only launch the process if the testing mode is set
-    if (declares_a_test_process()<0){
         return -1;
     }
     return 0;
