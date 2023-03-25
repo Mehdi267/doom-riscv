@@ -1,11 +1,11 @@
-image: barbem/risc-v_cep
+# image: barbem/risc-v_cep
 stages:
   - test
 
-make dk-go:
+make:
      stage: test
      script:
-     - cd src && make dk-go
+     - cd src && make go
 
 # lint-html:
 #   stage: lint
