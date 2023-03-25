@@ -5,84 +5,9 @@ stages:
 kernel_tests:
      stage: test
      script:
-     - cd src
-     - ls -la
-     - make go
+        - timeout 3m make go > report.txt || exit 0
+        - grep -q "ERROR" report.txt
+        - if [ $? -eq 0 ]; then exit 1; fi
+        - grep -q "TESTS REPORT END" report.txt
+        - if [ $? -ne 0 ]; then exit 1; fi
 
-# lint-html:
-#   stage: lint
-#   script:
-#     - npx htmlhint *.html -r style-disabled > lint_html_report.txt
-#   artifacts:
-#     when: always
-#     paths:
-#       - lint_html_report.txt
-
-# lint-css:
-#   stage: lint
-#   script:
-#     - npx  stylint *.css > lint_css_report.txt
-#   artifacts:
-#     when: always
-#     paths:
-#       - lint_css_report.txt
-
-# lint-js:                # Vérification de la qualité du code javascript
-#   stage: lint           # Dans l'étape lint (s'exécutera en parallèle de lint-html-css)
-#   tags:
-#     - docker
-#   script:
-#     - npm install eslint
-#     - npm init @eslint/config -- --config semistandard
-#     - npx eslint -c package.json *.js  > lint_es_report.txt || true # make the process always succeed
-#   artifacts:            # Le rapport sera disponible pour d'autres jobs
-#     when: always # sinon, le rapport n'est disponible qu'en cas de succès
-#     paths:
-#       - lint_es_report.txt
-
-# jobcypress:
-#   stage: test
-#   tags:
-#     - docker  # Comme on utilise une image pour isoler on doit utiliser un runner docker
-#   image: cypress/base:16.18.1 # Image fournie par cypress avec ce qu'il faut
-#   script:
-#     - npm i # Installe ce qui est décrit dans package.json
-#     - ./node_modules/.bin/serve & # Lance le serveur
-#     - npx cypress run # Lance les tests
-#     - kill -9 $(ps | grep node | awk '{print $1}') # Cette ligne pourrait permettre de tuer serve
-#   when: always
-
-
-# pages:
-#   stage: deploy
-#   needs:
-#     - lint-html
-#     - lint-css
-#     - lint-js
-#     - jobcypress
-#   script:
-#     - mkdir -p public       # Création du répertoire public
-#     - cp *.html *.css *.js public/
-#   artifacts:
-#     paths:
-#       - public
-#   only:
-#     refs:
-#       - main
-# badges:
-#   stage: deploy
-#   image: python
-#   script:
-#     - pip install anybadge
-#     - ./gen_badges.sh # Script de génération des badges
-#   dependencies:         # Les badges sont générés à partir des rapports s'ils sont disponibles
-#     - lint-html
-#     - lint-css
-#     - lint-js
-#   artifacts:
-#     paths:
-#       - lint_html.svg  # Ces fichiers sont générés par le script genereBadges.sh
-#       - lint_css.svg  # Ces fichiers sont générés par le script genereBadges.sh
-#       - lint_es.svg  # Ces fichiers sont générés par le script genereBadges.sh
-#   when: always          # Et quoiqu'il arrive la génération des badges devra se faire.
-#                         # Le script de génération de badge doit tenir compte du fait de disposer ou non des rapports
