@@ -108,13 +108,8 @@ int idle(void *arg) {
       get_pid_name(getpid()), getpid(), cast_pointer_into_a_long(arg));
 
   // we check for potential pending interrupts
-  for (;;) {
-    uint64_t tmp_status;
-    tmp_status = csr_read(sstatus);
-    csr_set(sstatus, MSTATUS_SIE);
-    __asm__ __volatile__("nop");
-    csr_write(sstatus, tmp_status);
-  }
+  csr_set(sstatus, MSTATUS_SIE); // active interrupts
+  while(true) wfi();
 }
 
 
