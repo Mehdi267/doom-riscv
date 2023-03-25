@@ -7,7 +7,6 @@ kernel_tests:
      script:
         - cd src
         - timeout 3m make go > report.txt || true
-        - cat report.txt
         - if grep -q "ERROR" report.txt || ! grep -q "TESTS REPORT END" report.txt; then
-            exit 1
-          fi
+            exit 1;
+        fi
