@@ -5,14 +5,9 @@ stages:
 kernel_tests:
      stage: test
      script:
-        - set +e
         - cd src
-        - timeout 3m make go > report.txt
+        - timeout 3m make go > report.txt || true
         - cat report.txt
-        - grep -q "ERROR" report.txt
-        - echo $?
-        # - if [ $? -eq 0 ]; then exit 1; fi
-        - grep -q "TESTS REPORT END" report.txt
-        - echo $?
-        # - if [ $? -ne 0 ]; then exit 1; fi
-        - set -e
+        - if grep -q "ERROR" report.txt || ! grep -q "TESTS REPORT END" report.txt; then
+            exit 1
+        fi
