@@ -132,7 +132,6 @@ int test17_sem(void *arg)
         puts("Reached thus far \n");
         for (i=0; i<256; i++) {
                 int n = st->received[i];
-                printf("st->received[%d] == %d, count == %d\n", i, n, count);
                 if (n != count) {
                         printf("st->received[%d] == %d, count == %d\n", i, n, count);
                         assert(n == count);
