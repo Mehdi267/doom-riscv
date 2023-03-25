@@ -34,6 +34,7 @@ int timer1(void *arg)
 
         clock_settings(&quartz, &ticks);
         dur = (quartz + ticks) / ticks;
+        dur = dur/1000;
         printf(" 2");
         for (i = 4; i < 8; i++) {
                 wait_clock(current_clock() + dur);

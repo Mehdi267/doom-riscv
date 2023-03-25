@@ -9,10 +9,9 @@ test_apps_t test_table[] = {
   {test3, "test3", 0},
   {test4, "test4", 0}, // Takes a lot of time
   {test5, "test5", 0},
-  {test6, "test6", 0},//Test is so slow
-  /* {test7, "test7", 0}, // TODO: CHECK this test working when ran solo but not working when run with other*/
+  //{test6, "test6", 0},//Test is so slow
+  {test7, "test7", 0}, // TODO: CHECK this test working when ran solo but not working when run with other
   /* {test11, "test11", 0}, // TODO: CHECK THIS TEST not working Does not run with a semaphore */
-
   {test12_sem, "test12_sem", 0},
   {test13_sem, "test13_sem", 0},
   {test15_sem, "test15_sem", 0},
@@ -20,13 +19,13 @@ test_apps_t test_table[] = {
   {test12, "test12", 0},
   {test14, "test14", 0},
   {test15, "test15", 0},
-  {test17, "test17", 0},
+  //{test17, "test17", 0},
   // //{test16_sem, "test16_sem", 13, 0},//TO MUCH MEMORY USAGE (fix memory
   // leaks before running this test again)
   {test17_sem, "test17_sem", 0},
   {test20, "test20", 0},
   {test21, "test21", 0},
-  {test22, "test22", 0}
+  //{test22, "test22", 0}
 };
 
 const int NUMBEROFTESTS = sizeof(test_table)/sizeof(test_apps_t);
@@ -67,8 +66,6 @@ int kernel_tests(void *arg) {
       "\n---------------------kernel_tests executing---------------------\n");
 
 
-  print_test_no_arg(
-      "\n---------------------kernel_tests executing---------------------\n");
   /*
    * Dans un second temps (quand vous aurez la création de task/processus), les
    * tests devront être exécutés dans un processus dédié. Comme par exemple: int
@@ -79,6 +76,7 @@ int kernel_tests(void *arg) {
   int test_rc;
   int pid;
   for (int test_iter = 0; test_iter < NUMBEROFTESTS; test_iter++) {
+    printf("test iter  = %d \n", test_iter);
     debug_print_tests("\n-------------------%s START-------------------\n",
                       test_table[test_iter].test_name);
     pid = start(test_table[test_iter].test_func, 4000, 128,

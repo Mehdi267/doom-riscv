@@ -434,7 +434,7 @@ extern int idle(void *arg);
  * code. Inspired from :
  * https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
  */
-#define DEBUG_LEVEL 0 //Indicates if debug type is active 
+#define DEBUG_LEVEL 2 //Indicates if debug type is active 
 
 #define debug_print(fmt, ...)                                                  \
   do {                                                                         \
@@ -467,7 +467,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_PROCESS_LEVEL 0 // Indicates if debug type is active
+#define DEBUG_PROCESS_LEVEL 2 // Indicates if debug type is active
 
 #define debug_print_process(fmt, ...)                                          \
   do {                                                                         \

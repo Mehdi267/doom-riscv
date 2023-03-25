@@ -42,6 +42,7 @@ int kernel_start() {
   /* assert(start(test17, 4000, 128, "test17", (void *)0) != -1); */
   // we start the process who launch all the tests;
   assert(start(kernel_tests, 4000, 2, "kernel_tests", NULL) != -1);
+  activate_and_launch_scheduler();
   scheduler();
   while (1)
     wfi();

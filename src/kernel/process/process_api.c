@@ -454,6 +454,8 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio,
   //--------------Semaphore signal-----------
   new_process->sem_signal = 0;
   //------------Add process to the activatable queue
+  new_process->next_prev.next = NULL;
+  new_process->next_prev.prev = NULL;
   add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
 
   debug_print("[%s] created process with pid = %d \n",

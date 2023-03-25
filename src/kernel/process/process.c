@@ -29,6 +29,7 @@ int initialize_process_hash_table() {
 
 void activate_and_launch_scheduler(void){
     set_supervisor_timer_interrupt(100); 
+    csr_set(sstatus, MSTATUS_SIE);
     while(1){ wfi();}
     return;
 }

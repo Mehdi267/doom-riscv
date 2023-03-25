@@ -65,6 +65,9 @@ void add_message(msg_queue_t *msg_queue, int message);
 */
 
 int pcreate(int count) {
+  if (count<0){
+    return -1;
+  }
   int index;
   if ((index = get_first_free_index()) < 0)
     return -1;
