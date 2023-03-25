@@ -7,7 +7,7 @@ kernel_tests:
      script:
      - cd src
      - ls -la
-     - make dk-go
+     - make go
 
 # lint-html:
 #   stage: lint
