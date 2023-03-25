@@ -82,6 +82,7 @@ int initialize_process_shared_hash_table(process* proc_conf){
 
 static shared_page_t* create_shared_page(char* key){
     void* page_frame = get_frame();
+    debug_print_memory("Shared memory page address %p name = %s\n", page_frame, key);
     shared_page_t* page_info = (shared_page_t*)malloc(sizeof(shared_page_t));
     if (page_info ==NULL){
         return NULL;

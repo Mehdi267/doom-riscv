@@ -13,6 +13,8 @@
  * This problem is not certain but it must be investigated in order to evaluate how the program runs exactly
  */
 
+//Boolean used to stop the child function from calling the scheduler
+static bool parent_block = false;
 
 hash_t* semaphore_table = NULL;
 int semaphore_id_counter = 0;
@@ -129,22 +131,21 @@ int scount(int sem){
 
 int screate(short int count){
     if (count<0){
-        puts("here 2");
+        printf("semcreate fail 1\n");
         return -1;
     }
     if (currently_running_semaphores == NB_MAX_SEMS){
-        puts("here 2");
+        printf("semcreate fail 2\n");
         return -1;
     }
     semaphore_t* sem = (semaphore_t*) malloc(sizeof(semaphore_t));
     if (sem == NULL){
-        puts("here 3");
+        printf("semcreate fail 3\n");
         return -1;
     }
-    sem->atomic_block = false;
     sem->count = (int16_t) count;
     sem->list_header_process = NULL;
-    sem->parent_block = false;
+    parent_block = false;
     int semaphore_id = increment_semaphore_id();
     if (semaphore_id < 0){
         //Overflow check
@@ -153,7 +154,7 @@ int screate(short int count){
     if (hash_set(get_semaphore_table(),
         cast_int_to_pointer(semaphore_id),
         sem)<0){
-        puts("here 4");
+        printf("semcreate fail 4\n");
         return -1;
     }
     currently_running_semaphores++;
@@ -177,11 +178,10 @@ int wait(int sem){
     //         proc_sem->process_name, sem_struct->count);
     //If the value of the sem_struct is true then the semaphore is 
     //being used this in this case 
-    while (sem_struct->atomic_block == true); //TODO ADD PATERSON'S SOLUTION
     //We acquire the semaphore, making any ch
-    sem_struct->atomic_block = true; //Does not work
+    
     if (sem_struct->count == MIN_COUNT){
-        sem_struct->atomic_block = false;
+
         return -2;
     }
     sem_struct->count--;
@@ -191,7 +191,7 @@ int wait(int sem){
         if (sem_struct->list_header_process == NULL){
             sem_struct->list_header_process = (list_semaphore_header_t*) malloc(sizeof(list_semaphore_header_t));
             if (sem_struct->list_header_process == NULL){
-                sem_struct->atomic_block = false;
+        
             }
             sem_struct->list_header_process->head_blocked = NULL;
             sem_struct->list_header_process->tail_blocked = NULL;
@@ -199,7 +199,7 @@ int wait(int sem){
         
         blocked_process_semaphore_t* blocked_proc_sem = (blocked_process_semaphore_t*) malloc(sizeof(blocked_process_semaphore_t));
         if (blocked_proc_sem == NULL){
-                sem_struct->atomic_block = false;
+        
         }
         blocked_proc_sem->blocked_process = proc_sem;
         blocked_proc_sem->next_block_struct = NULL;
@@ -214,8 +214,7 @@ int wait(int sem){
         }
         proc_sem->semaphore_id = sem; 
         proc_sem->state = BLOCKEDSEMAPHORE;
-    }
-    sem_struct->atomic_block = false; 
+    } 
     scheduler();
     //while(block) which is process/semaphore value that change by the scheduler
     return proc_sem->sem_signal;
@@ -230,13 +229,12 @@ int proc_kill_diag(int sem, awake_signal_t signal_enum, int pid){
     }
     //If the value of the sem_struct is true then the semaphore is 
     //being used this in this case 
-    while (sem_struct->atomic_block == true); //TODO ADD PATERSON'S SOLUTION
     //We acquire the semaphore, making any ch
-    sem_struct->atomic_block = true; //Does not work
+    
     //This should be impossible because this method wil only be called hwen we kill a process that is wait phase thus 
     //the semaphore is negatif at this point 
     if (sem_struct->count == MAX_COUNT){
-        sem_struct->atomic_block = false; 
+ 
         return -2;
     }
     sem_struct->count++;
@@ -244,8 +242,7 @@ int proc_kill_diag(int sem, awake_signal_t signal_enum, int pid){
         //we remove the process from list 
         //of processes that are bloqued by this semaphore
         remove_proc_queue(sem_struct, KILL_CALL, pid);
-    }
-    sem_struct->atomic_block = false; 
+    } 
     return NULL;
 }
 
@@ -256,11 +253,10 @@ int signal(int sem){
     }
     //If the value of the sem_struct is true then the semaphore is 
     //being used this in this case 
-    while (sem_struct->atomic_block == true); //TODO ADD PATERSON'S SOLUTION
     //We acquire the semaphore, making any ch
-    sem_struct->atomic_block = true; //Does not work
+    
     if (sem_struct->count == MAX_COUNT){
-        sem_struct->atomic_block = false; 
+ 
         return -2;
     }
     sem_struct->count++;
@@ -268,9 +264,8 @@ int signal(int sem){
         //we remove thethe process from list 
         //of processes that are bloqued by this semaphore
         unblock_process_sem(sem_struct, SIGNAL_CALL);
-    }
-    sem_struct->atomic_block = false; 
-    if(sem_struct->parent_block == false){
+    } 
+    if(parent_block == false){
         scheduler();
     }
     return NULL;
@@ -281,19 +276,17 @@ int sdelete(int sem){
     if (sem_struct == NULL){
         return -1;
     }
-    while (sem_struct->atomic_block == true); //TODO ADD PATERSON'S SOLUTION
     //We acquire the semaphore, making any ch
-    sem_struct->atomic_block = true; //Does not work
+    
     //We free everything related to the semaphore
     while(unblock_process_sem(sem_struct, SDETETE_CALL)!=1);
     if (sem_struct->list_header_process != NULL){
         free(sem_struct->list_header_process);
     }
-    free(sem_struct);
-    debug_print_memory("malloc test %p\n", malloc(1));
-    debug_print_memory("malloc test %p\n", malloc(500));
+    // debug_print_memory("malloc test %p\n", malloc(1));
+    // debug_print_memory("malloc test %p\n", malloc(500));
     hash_del(get_semaphore_table(), cast_int_to_pointer(sem));
-    // sem_struct->atomic_block = false;
+    free(sem_struct);
     currently_running_semaphores--;
     scheduler();
     return 0;
@@ -307,13 +300,10 @@ int sreset(int sem, int count){
     if (count<0){
         return -1;
     }
-    while (sem_struct->atomic_block == true); //TODO ADD PATERSON'S SOLUTION
     //We acquire the semaphore, making any ch
-    sem_struct->atomic_block = true; //Does not work
     //We free everything
     while(unblock_process_sem(sem_struct, SRESET_CALL)!=1);
     sem_struct->count = (int16_t) count;
-    sem_struct->atomic_block = false;
     scheduler();
     return 0;
 }
@@ -325,17 +315,14 @@ int try_wait(int sem){
     if (sem_struct == NULL){
         return -1;
     }
-    while (sem_struct->atomic_block == true); //TODO ADD PATERSON'S SOLUTION
     //We acquire the semaphore, making any changes to it impossible
-    sem_struct->atomic_block = true; //Does not work
     if (sem_struct->count > 0){
         sem_struct->count--;
     }
     else{
-        sem_struct->atomic_block = false; 
+ 
         return -3;
-    }
-    sem_struct->atomic_block = false; //Does not work
+    } //Does not work
     scheduler();
     return 0;
 }
@@ -351,14 +338,14 @@ int signaln(int sem, short int count){
     if (sem_struct->count + count > MAX_COUNT){
         return -2;
     }
-    sem_struct->parent_block = true;
+    parent_block = true;
     for (int i = 0; i<count; i++){
         int val = signal(sem);
         if (val != 0){
             return val;
         }
     }
-    sem_struct->parent_block = false;
+    parent_block = false;
     scheduler();
     return 0;
 }

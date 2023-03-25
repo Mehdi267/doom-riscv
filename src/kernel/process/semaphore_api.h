@@ -68,8 +68,6 @@ typedef struct list_semaphore_header{
  * @param list_header_process a pointer to the list of the processes that are asleep 
  */
 typedef struct semaphore{
-    bool atomic_block;
-    bool parent_block;
     int16_t count;
     list_semaphore_header_t* list_header_process;
 }semaphore_t;

@@ -25,6 +25,7 @@
 
 LIST_HEAD(activatable_process_queue);
 LIST_HEAD(asleep_process_queue);
+LIST_HEAD(dead_process_queue);
 
 // initially user process are not on, this will become true when we first visit the scheduler
 bool started_user_process = false; 
@@ -37,20 +38,26 @@ int init_scheduling_process_queue(){
 
 void add_process_to_queue_wrapper(process* process_to_add, queue_process_type type){
     if (type == ACTIVATABLE_QUEUE){
-        queue_add(process_to_add, &activatable_process_queue, process, link_queue_activable, prio);
+        queue_add(process_to_add, &activatable_process_queue, process, next_prev, prio);
     }
     else if (type == ASLEEP_QUEUE){
-        queue_add(process_to_add, &asleep_process_queue, process, link_queue_asleep, sleep_time);
+        queue_add(process_to_add, &asleep_process_queue, process, next_prev, sleep_time);
+    }
+    else if (type == DEAD_QUEUE){
+        queue_add(process_to_add, &dead_process_queue, process, next_prev, prio);
     }
 }
 
 
 void delete_process_from_queue_wrapper(process* process_to_delete, queue_process_type type){
     if (type == ACTIVATABLE_QUEUE){
-        queue_del(process_to_delete,link_queue_activable);
+        queue_del(process_to_delete, next_prev);
     }
     else if (type == ASLEEP_QUEUE){
-        queue_del(process_to_delete, link_queue_asleep);
+        queue_del(process_to_delete, next_prev);
+    }   
+    else if (type == DEAD_QUEUE){   
+        queue_del(process_to_delete, next_prev);
     }
 
 }
@@ -58,10 +65,13 @@ void delete_process_from_queue_wrapper(process* process_to_delete, queue_process
 
 process* pop_element_queue_wrapper(queue_process_type type){
     if (type == ACTIVATABLE_QUEUE){
-        return queue_out(&activatable_process_queue, process, link_queue_activable);
+        return queue_out(&activatable_process_queue, process, next_prev);
     }
     else if (type == ASLEEP_QUEUE){
-        return queue_out(&asleep_process_queue, process, link_queue_asleep);
+        return queue_out(&asleep_process_queue, process, next_prev);
+    }
+    else if (type == DEAD_QUEUE){
+        return queue_out(&dead_process_queue, process, next_prev);
     }
     return NULL;
 
@@ -69,10 +79,13 @@ process* pop_element_queue_wrapper(queue_process_type type){
 
 process* get_peek_element_queue_wrapper(queue_process_type type){
     if (type == ACTIVATABLE_QUEUE){
-        return queue_top(&activatable_process_queue, process, link_queue_activable);
+        return queue_top(&activatable_process_queue, process, next_prev);
     }
     else if (type == ASLEEP_QUEUE){
-        return queue_top(&asleep_process_queue, process, link_queue_asleep);
+        return queue_top(&asleep_process_queue, process, next_prev);
+    }
+    else if (type == DEAD_QUEUE){
+        queue_out(&dead_process_queue, process, next_prev);
     }
     return NULL;
 }
@@ -106,6 +119,13 @@ void scheduler(){
       add_process_to_queue_wrapper(awake, ACTIVATABLE_QUEUE);
       sleep_time = get_smallest_sleep_time();
     }
+    //We free the memory of the processes that were killed and they are orphans 
+    process* dead_proc = get_peek_element_queue_wrapper(DEAD_QUEUE);
+    if (dead_proc !=NULL){
+        pop_element_queue_wrapper(DEAD_QUEUE);
+        free_process_memory(dead_proc);
+        dead_proc = get_peek_element_queue_wrapper(DEAD_QUEUE);
+    }
     //Scheduler has been called before any execution has started
     //the scheduler_main is configured when we start the kernel if its value is null 
     //then we found an error
@@ -122,7 +142,7 @@ void scheduler(){
         if (setpid(top_process->pid)<0){
             return;
         }
-        // set_supervisor_interrupts(true);
+        /* set_supervisor_interrupts(true); */
         debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, default launch of the peek process with id = %d\n", getpid(),  getpid());
         debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
         top_process->state = ACTIF;
@@ -131,7 +151,7 @@ void scheduler(){
     }
     //Custom process launch enable // the user must set a valid pid
     if (started_user_process == false){
-        // set_supervisor_interrupts(true);
+        /* set_supervisor_interrupts(true); */
         //In this case no process is running and we have called the scheduler for the first time
         // yet in this case, we want to start with a custom process/ that has been set by the user
         // in the pid field and we also assume that user has also eliminated the process from the queue
@@ -142,7 +162,7 @@ void scheduler(){
         started_user_process = true;
         debug_print_scheduler("[scheduler -> %d] Inside the scheduler with no process running, custom launch of the process with id = %d\n", getpid(),  getpid());
         debug_print_scheduler("[scheduler -> %d] running process name = %s\n", getpid(), getname());
-        debug_print_scheduler("[scheduler -> %d] function adress of the process = %ld\n", getpid(), (long) get_process_struct_of_pid(getpid())->context_process->s1);
+        debug_print_scheduler("[scheduler -> %d] function adress of the process = %ld\n", getpid(), (long) get_process_struct_of_pid(getpid())->context_process->s[1]);
         debug_print_scheduler("[scheduler -> %d] idle adress = %ld\n", getpid(), (long) idle);
         context_switch(scheduler_main->main_context, get_process_struct_of_pid(getpid())->context_process); // pid is set by the activate method
     }
@@ -164,16 +184,16 @@ void scheduler(){
         if (current_process->state == ACTIF){
             if (top_process->prio >= current_process->prio){
                 //In this case we switch the process and 
-                debug_print_scheduler("[scheduler -> %d] Swapping process current pid = %d ->>>>>>>> peek pid = %d\n", getpid(), current_process->pid, top_process->pid);
+                debug_print_scheduler("[scheduler -> %d] Trying to swap from process current pid = %d ->>>>>>>> peek pid = %d\n", getpid(), current_process->pid, top_process->pid);
                 pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
                 if (setpid(top_process->pid)<0){ 
                     return;
                 }
                 current_process->state = ACTIVATABLE;
-                // set_supervisor_interrupts(true);
+                /* set_supervisor_interrupts(true); */
                 top_process->state = ACTIF;
                 add_process_to_queue_wrapper(current_process, ACTIVATABLE_QUEUE);  
-                debug_print_scheduler("[scheduler -> %d] Swapping process current pid = %d ->>>>>>>> peek pid = %d\n", top_process->pid , current_process->pid, top_process->pid);
+                debug_print_scheduler("[scheduler -> %d] Swapping processes;  current pid = %d ->>>>>>>> peek pid = %d\n", top_process->pid , current_process->pid, top_process->pid);
                 context_switch(current_process->context_process, top_process->context_process);
             }
             else{
@@ -182,16 +202,16 @@ void scheduler(){
         }
         //If the process was killed we free its data 
         //and jump directly into an other context
-        else if(current_process->state == KILLED){
+        else if(current_process->state == KILLED){ 
             debug_print_scheduler("[scheduler -> %d] I am in a killed process id = %d, moving to process = %d\n",
                                     getpid(), current_process->pid, top_process->pid);
             pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
             if (setpid(top_process->pid)<0){
                 return;
             }
-            // set_supervisor_interrupts(true);
+            /* set_supervisor_interrupts(true); */
             top_process->state = ACTIF;
-            free_process_memory(current_process);
+            add_process_to_queue_wrapper(current_process,  DEAD_QUEUE);
             direct_context_swap(top_process->context_process);
         }
         //if the process was placed in an other state when this was called
@@ -204,7 +224,7 @@ void scheduler(){
             if (setpid(top_process->pid)<0){
                 return;
             }
-            // set_supervisor_interrupts(true);
+            /* set_supervisor_interrupts(true); */
             top_process->state = ACTIF;
             context_switch(current_process->context_process, top_process->context_process);
         }

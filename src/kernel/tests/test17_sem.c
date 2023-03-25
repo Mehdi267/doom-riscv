@@ -39,10 +39,12 @@ int proc17_1(void *arg)
                 for (j=0; j<256; j++) {
                         buf_send((char)j, st);
                 }
+                printf("Incrementing count %d\n", count);
                 count++;
                 // __asm__ __volatile__("rdtsc":"=A"(tsc));
                 tsc = get_stime(); 
         } while (tsc < tsc2);
+        printf("return count %d\n", count);
         shm_release("test17_shm");
         return count;
 }
@@ -69,7 +71,6 @@ int proc17_2(void *arg)
 
         while(1) {
                 int x = buf_receive(st);
-                // (st->received[x])++;
                 atomic_incr(&st->received[x]);
         }
         shm_release("test17_shm");
@@ -128,15 +129,15 @@ int test17_sem(void *arg)
         assert(sdelete(st->mutex) == 0);
         assert(sdelete(st->wsem) == 0);
         assert(sdelete(st->rsem) == 0);
-        puts("hello what is going  on \n");
+        puts("Reached thus far \n");
         for (i=0; i<256; i++) {
                 int n = st->received[i];
+                printf("st->received[%d] == %d, count == %d\n", i, n, count);
                 if (n != count) {
                         printf("st->received[%d] == %d, count == %d\n", i, n, count);
                         assert(n == count);
                 }
         }
-        puts("Does this work\n");
         printf("ok (%d chars sent).\n", count * 256);
         return 0;
 }

@@ -75,35 +75,21 @@ int test_memory(void* arg);
 int test_sem(void *arg);
 
 /*
- * Semaphores or message queues test
+ *  Message queues test
  */
 int test10(void* arg);
+int test12(void *arg);
+int test14(void *arg);
+int test15(void *arg);
+int test17(void *arg);
 
 /**
  * Semaphores test 
  */
 int test12_sem(void *arg);
-
-/*
- * Semaphores test 
- */
 int test13_sem(void *arg);
-
-/**
- * Semaphore test
- */
 int test15_sem(void *arg);
-
-
-/**
- * Semaphore test
- */
 int test16_sem(void *arg);
-
-
-/**
- * Semaphore test
- */
 int test17_sem(void *arg);
 
 
@@ -132,7 +118,6 @@ int test22(void *arg);
 typedef struct test_apps {
     process_function_t test_func;
     const char *test_name;
-    const uint16_t test_id;
     int test_return_value;
 } test_apps_t ;
 
@@ -142,6 +127,7 @@ typedef struct test_apps {
  * the retutn value of every test from whichwe ill get a return value
 */
 void generate_test_report(test_apps_t* test_table);
+
 
 // /**
 //  * A table that holds the data structs for the tests

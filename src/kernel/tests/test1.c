@@ -13,7 +13,7 @@
 
 int dummy2(void *arg)
 {
-        printf("5");
+        printf("------------5------------");
         assert((long int) arg == DUMMY_VAL + 1);
         return 4;
 }

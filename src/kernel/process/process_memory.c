@@ -8,11 +8,7 @@
 #include "stdio.h"
 #include "stdbool.h"
 #include "scheduler.h"
-#include <assert.h>
 #include "process_memory.h"
-
-
-#define FLOAT_TO_INT(x) (int)((x)+0.5)
 
 #include "stdlib.h"
 #include "assert.h"
@@ -27,6 +23,7 @@
 #include "encoding.h"
 #include "../memory/virtual_memory.h"
 #include "memory_api.h"
+
 
 /**
  * @brief Configure a linked page table node using the parameters taken from the function's arguments
@@ -95,13 +92,14 @@ static int configure_page_table_linked_list_entry(page_table_link_list_t** link_
 }
 
 /**
- * @brief This functions take a parent linking node and appens a child to it
- * 
+ * @brief This functions take a parent linking node and appends a child to it
+ * @note will mostly be used to link lvl0 table to lvl1 table
  * @param parent_page_w the parent node that we will append a child to
  * @return a negative int if the operation was not succefully and a postive value other wise 
  */
 static int add_child_node_page_table(process* proc_conf, page_table_link_list_t * parent_page_w, page_t page_type){
     //We could go back to the parent and add an other gigabyte pages but we will work with only one gigabyte page in here
+    
     if (parent_page_w->usage >= PT_SIZE ||
         parent_page_w->stack_usage >= STACK_FRAME_SIZE ||
         parent_page_w->heap_usage >= HEAP_FRAME_SIZE ||
@@ -110,10 +108,8 @@ static int add_child_node_page_table(process* proc_conf, page_table_link_list_t 
         return -1;
     }
     page_table* user_page_table_level_0 = create_page_table();
-    if (page_type != SHARED_PAGE){
-        //If the page is a shared page; the memory liberation is done using a different approch
-        print_memory_no_arg("-------child page creation-----------");
-        // associated_frame_to_proc(proc_conf,user_page_table_level_0);
+    if (user_page_table_level_0 == NULL){
+        return -1;
     }
     page_table_link_list_t* new_page_table_node = NULL;
     if (configure_page_table_linked_list_entry(
@@ -128,13 +124,20 @@ static int add_child_node_page_table(process* proc_conf, page_table_link_list_t 
         )<0){
         return -1;
     }
+    debug_print_memory("Child page creation with index %d and page table address %p\n", 
+                        new_page_table_node->index, 
+                        user_page_table_level_0);
     //We need to link the new page that was created to the parent
     if (parent_page_w->head_page == NULL && parent_page_w->tail_page == NULL){
+        debug_print_memory("No children node index %d \n",
+             new_page_table_node->index);
         //No children
         parent_page_w->head_page = new_page_table_node;
         parent_page_w->tail_page = new_page_table_node;
     }
     else{
+        debug_print_memory("Children node index %d \n",
+             new_page_table_node->index);
         //Children exist
         parent_page_w->tail_page->next_page = new_page_table_node;
         parent_page_w->tail_page = new_page_table_node;
@@ -238,11 +241,11 @@ int add_frame_to_process(process* proc_conf, page_t page_type){
         }
         proc_conf->shared_pages->tail_shared_page->lvl0_index = node_lvl1->tail_page->usage;
         proc_conf->shared_pages->tail_shared_page->lvl1_index = node_lvl1->tail_page->index;
-        proc_conf->shared_pages->tail_shared_page->lvl2_index = 1; //This value is constant but we might make depend on which source dictetory we choose 
+        proc_conf->shared_pages->tail_shared_page->lvl2_index = USERSPACE; //This value is constant but we might make depend on which source dictetory we choose 
         proc_conf->shared_pages->tail_shared_page->page_table = node_lvl1->tail_page->table;
         // print_shared_page_node("Add frame level values",proc_conf->shared_pages->tail_shared_page);
         
-        //We only link sahred pages this way due to their dynamic nature, the other pages are linked using memory allocator
+        //We only link shared pages this way due to their dynamic nature, the other pages are linked using memory allocator
         if (link_lvl1_table_shared_page(proc_conf, USERSPACE, node_lvl1->tail_page->index, node_lvl1->tail_page->table)<0){
             return -1;
         }
@@ -254,6 +257,7 @@ int add_frame_to_process(process* proc_conf, page_t page_type){
 /**
  * @brief This method should be called only after all the usage values have been set properly 
  * and all of the tree like structures have set up
+ * @note this method should only be called when we allocated memory when we declare the process
  * @param proc_conf The process that we will configure its memory
  * @return int a negatif int value if the allocation was not successful and a positive value otherwise
  */
@@ -268,6 +272,11 @@ static int allocate_memory_final(process* proc_conf, int start_index, int end_in
     //----------Lvl0-------
     //We also need to iterate over the kilo page tables since they also vary in this loop
     page_table_link_list_t* lvl_0_node_iter = lvl_1_node->head_page;
+    while (lvl_0_node_iter!=NULL){
+        //We nned to work with page that has the desired start index
+        if (lvl_0_node_iter->index == start_index){break;}
+        lvl_0_node_iter = lvl_0_node_iter->next_page;
+    }
     if(lvl_0_node_iter == NULL){
         return -1;
     }
@@ -284,6 +293,7 @@ static int allocate_memory_final(process* proc_conf, int start_index, int end_in
         //      |       |   |       |       |       |
         //      |-------|   |-------|       |-------|
         mega_table_entry = lvl_1_node->table->pte_list+mega_usage_iter;
+        assert(lvl_0_node_iter->index == mega_usage_iter);
         kilo_page_table = lvl_0_node_iter->table;
         if (kilo_page_table == NULL){
             return -1;
@@ -305,8 +315,12 @@ static int allocate_memory_final(process* proc_conf, int start_index, int end_in
         for (unsigned int kilo_table_usage = 0; kilo_table_usage < kilo_page_usage; kilo_table_usage++){
             kilo_table_entry = lvl_0_node_iter->table->pte_list+kilo_table_usage;
             //Final page level page must in the read/write/exec mode
+            debug_print_memory("mega pte index = %d; kilo_table_usage = %d\n", 
+                                mega_usage_iter,kilo_table_usage);
             void* frame_pointer = get_frame();
-            // associated_frame_to_proc(proc_conf, frame_pointer);
+            memset(frame_pointer, 0, FRAME_SIZE);
+            if (frame_pointer == NULL){return -1;}
+            debug_print_memory("Creating frame to %p\n", frame_pointer);  
             configure_page_entry(kilo_table_entry,
                         (long unsigned int )frame_pointer, 
                         true,
@@ -319,6 +333,7 @@ static int allocate_memory_final(process* proc_conf, int start_index, int end_in
                 print_pte(kilo_table_entry);
             #endif
         }
+        lvl_0_node_iter = lvl_0_node_iter->next_page;
     }
     return 0;
 }
@@ -334,12 +349,23 @@ int process_memory_allocator(process* process_conf, unsigned long size){
     int heap_size = 1; 
     //----------------------LEVEL 2-------
     page_table* user_page_table_level_2 = create_page_table();
+    if (user_page_table_level_2 == NULL){
+        return -1;
+    }
+    print_memory_no_arg("--------------Memory allocation-------------\n");
+    debug_print_memory("Lvl2 address %p for  process %s // %d \n",
+             user_page_table_level_2, process_conf->process_name, process_conf->pid);
     // associated_frame_to_proc(process_conf, (void* ) user_page_table_level_2);
     process_conf->page_table_level_2 = user_page_table_level_2;
     //We copy the kernel page table
     memcpy((void*) user_page_table_level_2, (void *) kernel_base_page_table, FRAME_SIZE);
     //-----------------------LEVEL 1/LEVEL 2 LINK-------------------
     page_table* user_page_table_level_1 = create_page_table();
+    if (user_page_table_level_1 == NULL){
+        return -1;
+    }
+    debug_print_memory("Lvl1 address %p for  process %s // %d \n",
+            user_page_table_level_1, process_conf->process_name, process_conf->pid);
     // associated_frame_to_proc(process_conf, (void* ) user_page_table_level_1);
     //We create in here the only page table that will exist at first level since virtual space in this os
     //is limited to one gb
@@ -350,7 +376,7 @@ int process_memory_allocator(process* process_conf, unsigned long size){
         NULL,
         NULL,
         NULL,
-        STACK_CODE_PAGE,
+        STACK_CODE_PAGE,//This value is not relevant for this page table node
         USERSPACE //The user gigapage index is equal to one
         );
     //Make level 2 page table point to level 1 page table in the satp chain
@@ -368,13 +394,17 @@ int process_memory_allocator(process* process_conf, unsigned long size){
                     false,
                     KILO);
     #ifdef PTE_PAGES_DEBUG
-        debug_print_memory("-----Second level pte kernel/process directory when working with process : %d",process_conf->pid);
-        print_pte(user_page_table_level_2->pte_list+USERSPACE);
+        // debug_print_memory("-----Second level pte kernel/process directory when working with process : %d \n",process_conf->pid);
+        // print_pte(user_page_table_level_2->pte_list+USERSPACE);
     #endif
     //We associate the necessary frames and page tables for the stack 
+
+    debug_print_memory("Reserving space for the process %s // %d \n",
+             process_conf->process_name, process_conf->pid);
     do{
         if (add_frame_to_process(process_conf, STACK_CODE_PAGE)<0){
             print_memory_no_arg("problem with memory allocator :  frame allocator stack\n");
+            return -1;
         }
         process_conf->stack_shift++;
         size_left -= FRAME_SIZE;
@@ -385,21 +415,23 @@ int process_memory_allocator(process* process_conf, unsigned long size){
     do{
         if (add_frame_to_process(process_conf, HEAP_PAGE)<0){
             print_memory_no_arg("problem with memory allocator :  frame allocator heap \n");
+            return -1;
         }
         heap_size -= FRAME_SIZE;
     }
     while(heap_size > 0);
     
-    if (process_conf->page_tables_lvl_1_list->head_page->table == NULL){
-        print_memory_no_arg("TABLE IS NULL !!!!! \n");
-    }
+    debug_print_memory("Allocating space for the process %s // %d \n",
+             process_conf->process_name, process_conf->pid);
     //We allocate space for the stack and code 
     if (allocate_memory_final(process_conf, STACK_CODE_SPACE_START, STACK_CODE_SPACE_START +process_conf->page_tables_lvl_1_list->stack_usage) < 0){
         print_memory_no_arg("problem with final memory allocator -> stack\n");
+        return -1;
     }
     //We allocate space for the heap
     if (allocate_memory_final(process_conf, HEAP_SPACE_START, HEAP_SPACE_START +process_conf->page_tables_lvl_1_list->heap_usage) < 0){
         print_memory_no_arg("problem with final memory allocator -> heap\n");
+        return -1;
     }
     return 0;
 }
@@ -420,48 +452,61 @@ int free_frames_indexed(page_table* table, int start_index, int end_index){
     page_table_entry* pte_free;
     for (unsigned int pte_index = start_index; pte_index < end_index; pte_index++){
         pte_free = table->pte_list+pte_index;
+        // print_pte(pte_free);
         release_frame(find_pte_adress(pte_free));
     }
     return 0;
 }
 
-int free_frames_page_table(page_table_link_list_t* page_table){
+int free_frames_page_table(page_table_link_list_t* page_table_link){
     //We take pointer associated with the mega page
     //----------Lvl0-------
-    if(page_table == NULL){
+    if(page_table_link == NULL){
         return -1;
     }
     //We check the page type(different treatement between lvl1 and lvl0 pages)
     //If all of the below values are null then the page is a static(not a shared page) lvl0 page
-    if (page_table->stack_usage == 0 && page_table->heap_usage ==0 && page_table->shared_memory_usage == 0){
+    if (page_table_link->stack_usage == 0 && page_table_link->heap_usage ==0 && page_table_link->shared_memory_usage == 0){
+        debug_print_memory("Freeing lvl0 page table index = %d // usage = %d \n", page_table_link->index, page_table_link->usage);
+        //Shared pages are freed differently
+        if (page_table_link->index >= SHARED_MEMORY_START){
+            return 0;
+        }
+        print_memory_no_arg("-------------------freeing page-------------");
         //static lvl0 pages
-        free_frames_indexed(page_table->table, 0,page_table->usage);
+        free_frames_indexed(page_table_link->table, 0,page_table_link->usage);
     }else{
-        //lvl1 page
-        free_frames_indexed(page_table->table
+        debug_print_memory("Freeing lvl1 page table index %d \n", page_table_link->index);
+        //lvl1 pages
+        free_frames_indexed(page_table_link->table
         ,STACK_CODE_SPACE_START
-        ,STACK_CODE_SPACE_START+ page_table->stack_usage);
+        ,STACK_CODE_SPACE_START+ page_table_link->stack_usage);
 
-        free_frames_indexed(page_table->table
+        free_frames_indexed(page_table_link->table
         ,HEAP_SPACE_START
-        ,HEAP_SPACE_START+ page_table->heap_usage);
+        ,HEAP_SPACE_START+ page_table_link->heap_usage);
 
-        free_frames_indexed(page_table->table
+        free_frames_indexed(page_table_link->table
         ,SHARED_MEMORY_START
-        ,SHARED_MEMORY_START+ page_table->shared_memory_usage);
+        ,SHARED_MEMORY_START+ page_table_link->shared_memory_usage);
     }
     return 0;
 }
 
 int free_process_memory(process* proc)
 {
+    print_memory_no_arg("--------------Free process memory-------------");
     if (proc == NULL){
         return -1;
     }
+    nb_proc_running--;
     debug_print_memory("--------Inside free_process_memory, current process: %s\n", getname());
     debug_print_memory("--------Freeing memory for the process/ id -> %d -------- : %s\n", 
                         proc->pid, proc->process_name);
     //We start by removing the shared pages
+    debug_print_memory("--------Releasing shared frames for the process/ id -> %d -------- : %s\n",
+                            proc->pid, proc->process_name); 
+    
     if (proc->proc_shared_hash_table != NULL){
         shared_pages_proc_t* shared_iter = proc->shared_pages->head_shared_page;
         shared_pages_proc_t* shared_iter_prev = proc->shared_pages->head_shared_page;
@@ -471,37 +516,39 @@ int free_process_memory(process* proc)
             debug_print_memory("--------Custom shm release / id -> %d -------- : %s\n", proc->pid, shared_iter_prev->key); 
             shm_release(shared_iter_prev->key);
             set_custom_release_process(NULL);
-            free(shared_iter_prev);
+            shared_iter_prev = shared_iter;
         }
-        //We need to also the free the holes that were left by the previous releases
+        // //We need to also the free the holes that were left by the previous releases
         released_pages_t* released_iter = proc->released_pages_list;
         released_pages_t* released_iter_prev = proc->released_pages_list;
         while (released_iter != NULL){
             released_iter = released_iter->next_released_page;
             free(released_iter_prev);
         }
-        //hash_destroy(proc->proc_shared_hash_table);
+        hash_destroy(proc->proc_shared_hash_table);
     }
-    return 0;
+    debug_print_memory("--------Shared frames released for the process/ id -> %d -------- : %s\n",
+                        proc->pid, proc->process_name); 
     //We remove static pages first
     if (proc->page_table_level_2 != NULL){
         //We start by clearing all the lvl0 frames and then we free 
         //all of the level 0 tables and finaly we free the frame that holds the lvl1 table
         //and the level2 table
         page_table_link_list_t* lvl0_iter = proc->page_tables_lvl_1_list->head_page;
-        page_table_link_list_t* lvl0_iter_prev = lvl0_iter;
+        page_table_link_list_t* lvl0_iter_prev = proc->page_tables_lvl_1_list->head_page;
         while(lvl0_iter != NULL){
             lvl0_iter = lvl0_iter->next_page;
             free_frames_page_table(lvl0_iter_prev);
             free(lvl0_iter_prev);
+            lvl0_iter_prev = lvl0_iter; 
         }
-        free_frames_page_table(proc->page_tables_lvl_1_list); //We only one page
-        free(proc->page_tables_lvl_1_list);
+        free_frames_page_table(proc->page_tables_lvl_1_list); //We only free one page
+        release_frame(proc->page_tables_lvl_1_list->table);
         release_frame(proc->page_table_level_2);
+        release_frame(proc->sscratch_frame);
+        free(proc->page_tables_lvl_1_list);
     }
     //We remove share page and all the memory associated to them
-
-
     if (hash_del(get_process_hash_table(),
                  cast_int_to_pointer(proc->pid)) < 0) {
       return -1;
@@ -514,6 +561,7 @@ int free_process_memory(process* proc)
         free(proc->process_name);
         proc->process_name = 0;
     }
+    debug_print_memory("free_process_memory ENDED, current process: %s\n", getname());
     free(proc);
     proc = 0;
     return 0;

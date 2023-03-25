@@ -52,6 +52,9 @@ process* get_process_struct_of_pid(int pid){
     return process_pid;
 }
 
+process* get_current_process() {
+  return ((process*) hash_get(get_process_hash_table(), cast_int_to_pointer(getpid()), NULL));
+}
 
 semaphore_t* get_semaphore_struct(int sem){
     semaphore_t* sem_val = ((semaphore_t*) hash_get(get_semaphore_table(), cast_int_to_pointer(sem), NULL));

@@ -136,6 +136,12 @@ extern int validate_action_process_valid(process* process_pid);
 */
 extern void set_supervisor_interrupts(bool val);
 
+
+/**
+ * @brief returns the process struct of the current process
+*/
+process* get_current_process();
+
 /**
  * @brief Outputs the details of a shared page
  * 
@@ -143,8 +149,6 @@ extern void set_supervisor_interrupts(bool val);
  * @param node 
  */
 extern void print_shared_page_node(char* text_print ,shared_pages_proc_t* node);
-
-
 
 
 #endif
