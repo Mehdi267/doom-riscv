@@ -6,7 +6,7 @@ kernel_tests:
      stage: test
      script:
         - cd src
-        - timeout 3m make go > report.txt || exit 0
+        - timeout 3m make go > report.txt || true
         - grep -q "ERROR" report.txt
         - if [ $? -eq 0 ]; then exit 1; fi
         - grep -q "TESTS REPORT END" report.txt
