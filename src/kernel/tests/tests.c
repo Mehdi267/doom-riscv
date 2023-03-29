@@ -79,7 +79,7 @@ int kernel_tests(void *arg) {
                       test_table[test_iter].test_name);
     pid = start(test_table[test_iter].test_func, 4000, 128,
                 test_table[test_iter].test_name, 0);
-    if (waitpid(pid, &test_rc)){
+    if (waitpid(pid, &test_rc) < 0){
         exit(-1);
     }
     test_table[test_iter].test_return_value = test_rc;
