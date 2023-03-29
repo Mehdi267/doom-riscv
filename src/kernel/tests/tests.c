@@ -79,7 +79,9 @@ int kernel_tests(void *arg) {
                       test_table[test_iter].test_name);
     pid = start(test_table[test_iter].test_func, 4000, 128,
                 test_table[test_iter].test_name, 0);
-    waitpid(pid, &test_rc);
+    if (waitpid(pid, &test_rc)){
+        exit(-1);
+    }
     test_table[test_iter].test_return_value = test_rc;
     debug_print_tests("\n-------------------%s END-------------------\n",
                       test_table[test_iter].test_name);
@@ -88,5 +90,6 @@ int kernel_tests(void *arg) {
                     "executed---------------------\n");
 
   generate_test_report(test_table);
+  exit(rc);
   return rc;
 }
