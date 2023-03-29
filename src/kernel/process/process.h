@@ -93,7 +93,7 @@ typedef struct context {
   uint64_t sscratch;
   uint64_t sepc;
   uint64_t satp;
-} context_t;
+  } context_t;
 
 /**
  * @brief Enum _process_state is used to associate to every process a certain
@@ -108,7 +108,7 @@ typedef struct context {
  * of its child processes to complete.
  * @param ASLEEP: The process called wait_clock, the sleep primitive until a
  * given time.
- * @param BLOCKEDQUEUE :
+ * @param BLOCKEDQUEUE : blocked in a message queue
  * @param Zombie: The process has either terminated or been terminated by the
  * kill system call and its father is still alive and has not yet waitpided on
  * it.
