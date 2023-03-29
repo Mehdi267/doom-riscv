@@ -9,7 +9,8 @@
 
 void clock_settings(unsigned long *quartz, unsigned long *ticks) {
   *quartz = clint_dev->clk_freq;
-  *ticks = clint_dev->clk_freq / 1000 * TIC_PER; // ticks number of oscillations between 2 interrupts
+  // ticks number of oscillations between 2 interrupts
+  *ticks = clint_dev->clk_freq / 1000 * TIC_PER;
 }
 
 uint64_t counter = 0; // counter is incremented in timer.c
@@ -18,7 +19,7 @@ uint64_t current_clock() {
 }
 
 void wait_clock(uint64_t clock) {
-  process * current_process = get_process_struct_of_pid(getpid());
+  process * current_process = get_current_process();
   current_process->sleep_time = - (current_clock() + clock);
   current_process->state = ASLEEP;
   add_process_to_queue_wrapper(current_process, ASLEEP_QUEUE);

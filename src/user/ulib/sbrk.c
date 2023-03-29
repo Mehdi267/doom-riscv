@@ -4,7 +4,7 @@
  */
 
 #include "stddef.h"
-
+#include "stdio.h"
 /* NOTE:
 * The sbrk implementation provided below works on a fixed-size heap. This is
 * provided as a stub to allow you to work without sbrk in a first time. But to
@@ -36,6 +36,7 @@
 void *sbrk(ptrdiff_t increment)
 {
 	static char *current = (char *) HEAP;
+    // debug_print_memory("[brk user called ] curptr = %p \n", current);
 	char *s = current;
 	char *c = s + increment;
 

@@ -29,6 +29,7 @@ int initialize_process_hash_table() {
 
 void activate_and_launch_scheduler(void){
     set_supervisor_timer_interrupt(100); 
+    csr_set(sstatus, MSTATUS_SIE);
     while(1){ wfi();}
     return;
 }
@@ -101,28 +102,16 @@ void validation_process() {
 }
 
 int idle(void *arg) {
-  for (;;) {
-    debug_print_process(
-        "[Current process = %s] pid = %d; argument given = %ld \n",
-        get_pid_name(getpid()), getpid(), cast_pointer_into_a_long(arg));
+  debug_print_no_arg("hello world");
+  debug_print_process(
+      "[Current process = %s] pid = %d; argument given = %ld \n",
+      get_pid_name(getpid()), getpid(), cast_pointer_into_a_long(arg));
 
-    // scheduler();
-  }
+  // we check for potential pending interrupts
+  csr_set(sstatus, MSTATUS_SIE); // active interrupts
+  while(true) wfi();
 }
 
-/**
- * @brief declares a process from which we will start our tests
- *
- */
-static int declares_a_test_process() {
-#ifdef TESTING
-  int p1 = start(kernel_tests, 4000, 2, "kernel_tests", cast_int_to_pointer(0));
-  if (p1 < 0) {
-    return -1;
-  }
-#endif
-  return 0;
-}
 
 int process_1(void *arg) {
   int i = 0;
@@ -192,10 +181,6 @@ int initialize_process_workflow(){
     }
     //Will only launch the process if the debug mode is set
     if (declares_debug_processes()<0){
-        return -1;
-    }
-    //Will only launch the process if the testing mode is set
-    if (declares_a_test_process()<0){
         return -1;
     }
     return 0;

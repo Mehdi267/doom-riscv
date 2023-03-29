@@ -66,7 +66,7 @@ int test21(void *arg)
                 default:
                         printf(" -> %s\n -> %s\n", "\"shm_checker\" returned inconsistent value. Check waitpid implementation.", "TEST FAILED");
         }
-
+        puts("do you work in here 1?");
         int shm_valid = 1;
         for (int i = 0; i < 4096; i++) {
                 if (shared_area[i] != 0) {
@@ -74,6 +74,7 @@ int test21(void *arg)
                 }
         }
 
+        puts("do you work in here 2?");
         if (shm_valid) {
                 printf(" -> %s\n -> %s\n", "shm area content is correct.", "TEST PASSED");
         } else {

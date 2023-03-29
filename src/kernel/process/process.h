@@ -17,6 +17,7 @@
 #include "stddef.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "msgqueue.h" // for message_t
 
 /**
  * @brief global function constants
@@ -27,6 +28,9 @@
  * process(still experimental)
  *
  */
+
+#define MAX_SIZE_NAME 256
+#define MAX_NB_PROCESS 1000
 #define MAXPRIO 256
 #define MINPRIO 1
 #define NBPROC 30
@@ -46,7 +50,7 @@
  * @param
  */
 // #define DEBUG
-#define TESTING
+/* #define TESTING */
 // #define RELEASE
 // #define DEBUG_SCHEDULER
 #define TESTING_MEMORY
@@ -64,6 +68,7 @@
 extern hash_t *pid_process_hash_table;
 extern int current_running_process_pid;
 extern int pid_iterator;
+extern int nb_proc_running;
 
 /**
  * @brief Allocated space for the hash table that we will use and
@@ -82,23 +87,12 @@ extern int initialize_process_hash_table();
  * supervisor/user processes.
  */
 typedef struct context {
-   uint64_t sp;
-   uint64_t ra;
-   uint64_t s0;
-   uint64_t s1;
-   uint64_t s2;
-   uint64_t s3;
-   uint64_t s4;
-   uint64_t s5;
-   uint64_t s6;
-   uint64_t s7;
-   uint64_t s8;
-   uint64_t s9;
-   uint64_t s10;
-   uint64_t s11;
-   uint64_t sscratch;
-   uint64_t sepc;
-   uint64_t satp;
+  uint64_t sp;
+  uint64_t ra;
+  uint64_t s[12]; // s0..s11 registers
+  uint64_t sscratch;
+  uint64_t sepc;
+  uint64_t satp;
 } context_t;
 
 /**
@@ -171,7 +165,6 @@ typedef struct shared_pages_wrap{
    shared_pages_proc_t* tail_shared_page;
 } shared_pages_wrap_t;
 
-
 /**
   * @brief this structure is given to all processesn it will stored at the kernel level
   * @param pid  id of the process
@@ -189,38 +182,54 @@ typedef struct shared_pages_wrap{
   * @param link_queue_asleep used to link the asleep process
   * @param return_value  return value of the process, used in waitpid
 */
-typedef struct process_t{
-   //-----------Process information--------
-   int pid; // id of the process
-   char *process_name; // process name
-   process_state state; // state of the process
-   uint32_t ssize; // total the size allocated to the process
-   uint16_t prio; // priority of the process
-   context_t* context_process; //we store here the current execution context of the process ie the important registers
-   process_function_t func; // the function that is associated to the process ; not very important and will be removed later
-   //-----------Process tree inforamtion--------
-   struct process_t* parent; // parent process
-   struct process_t* children_head; // the head of the children process
-   struct process_t* children_tail; // the tail of the children_process
-   struct process_t* next_sibling; // next sibling of the current process, this parameter is used to link the children of a process
-   //-----------Process chaining--------
-   link link_queue_activable; //used to link the activatable processes 
-   link link_queue_asleep; //used to link the asleep process
-   //-----------Process return value--------
-   int return_value; // return value of the process, used in waitpid
-   //-----------Process memory management --------
-   page_table* page_table_level_2; //Pointer to the level 2 page table associated with the process
-   page_table_link_list_t* page_tables_lvl_1_list;//pointer to the list that holds the lvl1 page table (limited to 1 atm)
-   uint16_t stack_shift; //indicates how many frames we need to shift to place the stack pointer 
-   //-----------Process shared memory management --------
-   hash_t* proc_shared_hash_table; //Hash table associated to the process link shared pages to their shared_pages_proc_t
-   shared_pages_wrap_t* shared_pages; //Wrapper to the linked list that holds process information 
-   released_pages_t* released_pages_list; //Linked list that hold the released shared pages' information
-   //----------------Timer management-------------------
-   int64_t sleep_time;
-   //----------------Semaphore signal-------------------
-   int sem_signal;
-   int semaphore_id;
+typedef struct process_t {
+  // Process information
+  int pid;                    // id of the process
+  char *process_name;         // process name
+  process_state state;        // state of the process
+  uint32_t ssize;             // total the size allocated to the process
+  uint16_t prio;              // priority of the process
+  context_t *context_process; // we store here the current execution context of
+                              // the process ie the important registers
+  process_function_t func; // the function that is associated to the process ;
+                           // not very important and will be removed later
+  // Process tree inforamtion
+  struct process_t *parent;        // parent process
+  struct process_t *children_head; // the head of the children process
+  struct process_t *children_tail; // the tail of the children_process
+  struct process_t
+      *next_sibling; // next sibling of the current process, this parameter is
+                     // used to link the children of a process
+                     //-----------Process chaining--------
+  link next_prev;    // used to link the processes link is a struct containing a
+                     // next and prev pointer
+  // Process return value
+  int return_value; // return value of the process, used in waitpid
+  // Process memory management
+  page_table *page_table_level_2; // Pointer to the level 0 page table
+                                  // associated with the process
+  page_table_link_list_t
+      *page_tables_lvl_1_list; // pointer to the list that holds the lvl1 page
+                               // table (limited to 1 atm)
+  uint16_t stack_shift; // indicates how many frames we need to shift to place
+                        // the stack pointer
+  // Process shared memory management
+  hash_t *proc_shared_hash_table; // Hash table associated to the process link
+                                  // shared pages to their shared_pages_proc_t
+  shared_pages_wrap_t *
+      shared_pages; // Wrapper to the linked list that holds process information
+  released_pages_t *released_pages_list; // Linked list that hold the released
+                                         // shared pages' information
+  void* sscratch_frame;//used to hold the sscratch frame 
+                       //so that we can delete it later
+
+  // Timer management
+  int64_t sleep_time;
+  // Queue managment
+  message_t message;
+  // Semaphore signal
+  int sem_signal;
+  int semaphore_id;
 } process;
 
 /**
@@ -330,6 +339,25 @@ extern int getpid(void);
 int check_if_new_prio_is_higher_and_call_scheduler(int newprio,
                                                    bool current_or_queue,
                                                    int prio_to_compare_queue);
+
+/**
+ * @brief Complete frees all of the memory that the process is using within the kernel
+ * and the pages that the process has borrowed
+ * 
+ * @param proc the process that we want to free its memory
+ * @return int a positive value if the memory was successfully deleted
+ */
+int free_process_memory(process* proc);
+
+/**
+ * @brief Adds the frame pointer to the struct within the process that holds a linked list
+ * to the all of the frames that the process uses 
+ * @param proc the process that we want to attach the frame to;
+ * @param frame_pointer the frame pointer
+ * @return int a positive value if successfull and negative value otherwise
+ */
+int associated_frame_to_proc(process* proc, void* frame_pointer);
+
 
 /**
  * @brief Checks if the process is an queue and leaves that queue if needed \n
@@ -443,6 +471,9 @@ extern int idle(void *arg);
              __func__, __VA_ARGS__);                                           \
     }                                                                          \
   } while (0)
+
+#define debug_print_no_arg(fmt, ...) \
+        do {if (DEBUG_LEVEL){ printf(fmt);} } while (0)
 
 /**
  * @brief the following macro are used to debug the scheduler,

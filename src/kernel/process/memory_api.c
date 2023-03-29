@@ -13,6 +13,7 @@
 
 uint64_t page_id_counter = 0; 
 hash_t *shared_memory_hash_table =  NULL;
+process* custom_release_process = NULL;
 
 /**
  * @brief Get the shared page using the global shared pages hash table
@@ -81,6 +82,7 @@ int initialize_process_shared_hash_table(process* proc_conf){
 
 static shared_page_t* create_shared_page(char* key){
     void* page_frame = get_frame();
+    debug_print_memory("Shared memory page address %p name = %s\n", page_frame, key);
     shared_page_t* page_info = (shared_page_t*)malloc(sizeof(shared_page_t));
     if (page_info ==NULL){
         return NULL;
@@ -163,6 +165,8 @@ static int link_shared_page_to_process(process* proc_conf, shared_page_t* page_i
     return 0;
 }
 
+
+
 void shm_release(const char *key){
     print_memory_api_no_arg("Inside Frame release function\n");
     if (key ==NULL){
@@ -174,7 +178,16 @@ void shm_release(const char *key){
     if (page_info ==NULL){
         return;
     }
-    process* current_proc = get_process_struct_of_pid(getpid());
+
+    //When we want to apply the custom release of a specific process
+    //we set the value of the current_proc to the process that we want to free  
+    process* current_proc = get_custom_release_process();
+    if (current_proc == NULL){
+        current_proc = get_process_struct_of_pid(getpid());
+    }else {
+        set_custom_release_process(NULL);//reset custom proc
+    }
+    
     if (current_proc ==NULL){
         return;
     }
@@ -188,10 +201,9 @@ void shm_release(const char *key){
     if (proc_page_shared == NULL){
         return;
     }
-    //If we are here that mean the process is being shared by the process that we are dealing this
-    //We must in this case remove the shared process, inform the process that there will be a hole in the shared pages
+    //If we are here that mean that the page is being shared by the process that we are dealing this
+    //We must in this case remove the shared process, inform the process that there will be a gaps in the shared pages index's
     //by exploiting the releasead pages struct
-
     //-----------------We start by creating a released page struct and we save related the hole---------
     released_pages_t* released_page_p = (released_pages_t*) malloc(sizeof(released_pages_t));
     released_page_p->lvl0_index = proc_page_shared->lvl0_index;
@@ -208,7 +220,7 @@ void shm_release(const char *key){
     }
     //----------------We now free shared_pages_proc_t from the current process---------------
     //We free the string first
-    free(proc_page_shared->key);//TODO CHECK IF THIS LEAKS MEMORY
+    char* key_free = proc_page_shared->key;
     //We handle the linking of the process
     if (current_proc->shared_pages ==NULL){
         return;
@@ -220,14 +232,12 @@ void shm_release(const char *key){
     if (proc_page_shared == current_proc->shared_pages->head_shared_page &&
         proc_page_shared == current_proc->shared_pages->tail_shared_page){
         //In this case we can free it directly
-        free(proc_page_shared);
         current_proc->shared_pages->head_shared_page = NULL;
         current_proc->shared_pages->tail_shared_page = NULL;
     }
     else if (proc_page_shared == current_proc->shared_pages->head_shared_page){
         //We now check if it only equal to head 
         current_proc->shared_pages->head_shared_page = proc_page_shared->next_shared_page;
-        free(proc_page_shared);
     }
     else if (proc_page_shared == current_proc->shared_pages->tail_shared_page){
         //We now check if it only equal to tail
@@ -240,7 +250,6 @@ void shm_release(const char *key){
         }
         current_proc->shared_pages->tail_shared_page = list_iter;
         list_iter->next_shared_page = NULL;
-        free(proc_page_shared);
     }
     else {
         //In this case the list node is in the middle 
@@ -250,7 +259,6 @@ void shm_release(const char *key){
             list_iter=list_iter->next_shared_page;
         }
         list_iter->next_shared_page = proc_page_shared->next_shared_page;
-        free(proc_page_shared);
     }
     //Now we just have to remove the memory mapping
     uint16_t lvl0_index = released_page_p->lvl0_index;
@@ -263,15 +271,25 @@ void shm_release(const char *key){
     //We check if there any more users of the pages
     page_info->usage--;
     if (page_info->usage == 0){
+        debug_print_memory(" ************** Deleting process memory :  %s \n", current_proc->process_name);
         //If there are no more users we then:
         // -free the page information
         // -release the frame that was holding the process
         // -delete the process from the hash table
         release_frame(page_info->page_address);
         hash_del(get_shared_pages_hash_table(), cast_char_star_into_pointer(key_no_c));
+        free(key_free);
         free(page_info);
     }
+    else{
+        debug_print_memory("Process name = %s Shared page %s is still being used; usage = %d\n",
+                    current_proc->process_name,
+                    key,
+                    page_info->usage);
+    }
+    debug_print_memory("proc_page_shared address %p \n", proc_page_shared);
     print_memory_api_no_arg("Shared page has been released successfully\n");
+    free(proc_page_shared);
     return;
 }
 

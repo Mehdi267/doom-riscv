@@ -35,6 +35,7 @@ static unsigned long test16_1(void)
                         assert(sdelete(sem1) == 0);
                         assert(sdelete(sem2) == 0);
                 }
+                //puts("iter");
                 // __asm__ __volatile__("rdtsc":"=A"(tsc));
                         tsc = get_stime();
                 count += 2 * i;
@@ -53,7 +54,8 @@ int proc16_1(void *arg)
         (void)arg;
 
         c1 = test16_1();
-        printf("%lu ", c1);
+
+        printf("semaphores have been created and deleted succefully%lu \n", c1);
         // __asm__ __volatile__("rdtsc":"=A"(seed));
         seed = get_stime();
         setSeed(seed);
@@ -65,6 +67,7 @@ int proc16_1(void *arg)
         if (screate(0) >= 0) assert(!"*** Decrease the semaphore capacity of your system to NBSEMS to pass this test. ***");
         assert(sdelete(sems[NBSEMS/3]) == 0);
         assert(sdelete(sems[(NBSEMS/3)*2]) == 0);
+        printf("calling test 16 again ....\n");
         c2 = test16_1();
         printf("%lu ", c2);
         setSeed(seed);

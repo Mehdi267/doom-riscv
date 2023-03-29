@@ -7,7 +7,6 @@
 void test_it()
 {
 	uint64_t tmp_status;
-
 	tmp_status = csr_read(sstatus);
 	csr_set(sstatus, MSTATUS_SIE);
 	__asm__ __volatile__("nop");
