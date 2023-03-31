@@ -19,6 +19,7 @@
 #include "stdlib.h"
 #include "msgqueue.h" // for message_t
 #include "../userspace_apps.h" //Used for locating the app and adding its code
+#include "../keyboard/consread.h"
 
 /**
  * @brief global function constants
