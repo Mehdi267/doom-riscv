@@ -198,6 +198,9 @@ int initialize_process_workflow(){
         return -1;
       }
     #endif
+    #ifdef USER_PROCESSES_ON
+      csr_clear(sstatus, 0xa0);
+    #endif 
     //Will only launch the process if the debug mode is set
     if (declares_debug_processes()<0){
         return -1;

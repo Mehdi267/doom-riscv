@@ -127,14 +127,14 @@ static inline void enter_supervisor_mode() {
 
     //enables global Supervisor mode interrupts
     /*csr_set(sstatus, SSTATUS_SIE); // interruptions desactivated for now */
-    csr_set(mip, MIP_STIP);
+    //csr_set(mip, MIP_STIP);
 
     //set mxr to one to access executable pages
-    csr_set(sstatus, SSTATUS_MXR);
+    //csr_set(sstatus, SSTATUS_MXR);
     
     #ifdef USER_PROCESS_DEBUG
         //set sum value in sstatus to one to debug user processes
-        csr_set(sstatus, SSTATUS_SUM);
+        //csr_set(sstatus, SSTATUS_SUM);
         debug_print_memory("Sum Attribut has been set correctly sstatus = %ld\n", csr_read(sstatus));
     #endif
 

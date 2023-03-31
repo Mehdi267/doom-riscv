@@ -63,7 +63,7 @@ context_switch:
     csrw sscratch, t0
     ld t0, 120(a1)
     csrw sepc, t0
-	ld t0, 128(a1) 
+	  ld t0, 128(a1) 
     csrw satp, t0
 	
     jr ra
