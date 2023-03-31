@@ -17,7 +17,6 @@
 #include "../process/timer_api.h"
 #include "syscall_num.h"
 
-
 int syscall_handler(struct trap_frame *tf) {
   switch (tf->a7) {
     case SYSC_start:
@@ -26,6 +25,30 @@ int syscall_handler(struct trap_frame *tf) {
       break;
     case SYSC_getpid:
       getpid();
+      break;
+    case SYSC_getprio:
+      getprio(tf->a0);
+      break;
+    case SYSC_chprio:
+      chprio(tf->a0, tf->a1);
+      break;
+    case SYSC_kill:
+      kill(tf->a0);
+      break;
+    case SYSC_waitpid:
+      waitpid(tf->a0, (int *)tf->a1);
+      break;
+    case SYSC_exit:
+      exit_process(tf->a0);
+      break;
+    case SYSC_cons_write:
+      // TODO:
+      break;
+    case SYSC_cons_read:
+      // TODO:
+      break;
+    case SYSC_cons_echo:
+      // TODO:
       break;
     case SYSC_clock_settings:
       clock_settings((unsigned long *)tf->a0, (unsigned long *) tf->a1);
