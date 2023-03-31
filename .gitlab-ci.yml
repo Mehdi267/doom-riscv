@@ -1,12 +1,12 @@
 image: barbem/risc-v_cep
+
 stages:
   - test
 
 kernel_tests:
-     stage: test
-     script:
-        - cd src
-        - make go
-
-only:
-  - master
+  stage: test
+  script:
+    - cd src
+    - make go
+  only:
+    - master
