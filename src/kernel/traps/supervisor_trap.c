@@ -39,14 +39,14 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 		}
 	} else {
 		// TODO ADD SYSTEM CALLS TREATEMENT
+        printf("Supervisor Exception scause id = %ld\n", scause);
 		switch (scause) {
-			case CAUSE_LOAD_ACCESS:
-			case CAUSE_STORE_ACCESS:
-			case CAUSE_FETCH_PAGE_FAULT:
-			case CAUSE_STORE_PAGE_FAULT:
-				//allocate_new_page();
-				break;
-			//case intr_s_timer: 
+			// case CAUSE_FETCH_PAGE_FAULT:
+            //     break;
+			// case CAUSE_STORE_PAGE_FAULT:
+			// 	printf("found execption \n");
+			// 	break;
+			// // case intr_s_timer: 
 			default:
 				blue_screen(tf);
 				// no return

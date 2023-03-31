@@ -112,6 +112,10 @@
 
 #define MIE_MTIE            (1 << IRQ_M_TIMER)
 #define SIE_STIE            (1 << IRQ_S_TIMER)
+#define SIE_INST_PAGE_FAULT     (1 << 12)
+#define SIE_LOAD_PAGE_FAULT     (1 << 13)
+#define SIE_STORE_PAGE_FAULT    (1 << 15)
+
 
 #define SIP_SSIP MIP_SSIP
 #define SIP_STIP MIP_STIP

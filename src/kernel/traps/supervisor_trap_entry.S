@@ -44,8 +44,8 @@
 .text
     .align 4
 strap_entry:
-    # On bascule sur la stack supervisor interrupt
-    # Using this command we swap the sscratch register and the sp register  
+    # sscratch contains the secured stack of the process
+    # Using this command we swap the sscratch register and the sp register
     # meaning : sp<-sscratch //   sscratch<-sp
     csrrw sp, sscratch, sp 
     # On alloue la struct trap_frame sur la pile
