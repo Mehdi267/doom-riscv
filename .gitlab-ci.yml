@@ -3,7 +3,10 @@ stages:
   - test
 
 kernel_tests:
-     stage: test
-     script:
+    stage: test
+    script:
         - cd src
         - make go
+    only:
+      refs:
+        - master
