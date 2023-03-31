@@ -99,3 +99,12 @@ strap_entry:
     addi sp, sp, 37*8
     csrrw sp, sscratch, sp
     sret
+
+.globl inc_sepc
+.text
+    .align 4
+inc_sepc:
+    csrr t0, sepc            // Read the current value of mstatus into t0
+    addi t0, t0, 4          // Add 4 to the value in t0
+    csrw sepc, t0           // Write the new value of t0 back to sepc
+    ret
