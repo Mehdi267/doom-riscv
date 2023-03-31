@@ -87,8 +87,11 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 				csr_clear(sip, MIP_STIP);
 				break;
       case intr_u_software:
-        if (syscall_handler(tf) < 0)
-          blue_screen(tf);
+        int retval = syscall_handler(tf);
+        uint64_t * a0_stack_addr = ((uint64_t *)(tf->sp))+10;
+        *(a0_stack_addr) = retval; // WRITING a0 in the stack so when it will be restaured
+        inc_sepc();
+        break;
 
 			default:
 				die(
