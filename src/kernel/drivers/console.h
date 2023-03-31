@@ -2,6 +2,8 @@
 
 #pragma once
 
+#define EOL 13
+
 typedef struct console_device {
 	void (*init)();
 	int (*getchar)();
