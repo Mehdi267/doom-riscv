@@ -19,6 +19,7 @@
 #include "pages.h"
 #include "process/process.h"
 
+
 extern void _start();
 extern void test();
 extern int tic;
@@ -178,6 +179,8 @@ __attribute__((noreturn)) void boot_riscv()
   //prints 11 =>OK
 
   process_memory_allocator(3000);
+
+
 
   //on active et configure satp
   csr_write(satp, 0x8000000000000000 | ((long unsigned int) ppn >> 12)); //ppn is 24a0000, mode is sv39

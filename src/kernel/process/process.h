@@ -17,6 +17,7 @@
 #include "stddef.h"
 #include "stdarg.h"
 #include "stdbool.h"
+#include "../keyboard/consread.h"
 
 /**
  * @brief global function constants
@@ -249,6 +250,8 @@ extern int chprio(int pid, int newprio);
 * @param retval this value is passed as signal to the parent process
 */
 extern void exit_process(int retval);
+
+extern int cons_read(char *string, unsigned long length);
 
 
 /**
