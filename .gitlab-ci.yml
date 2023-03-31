@@ -7,3 +7,6 @@ kernel_tests:
      script:
         - cd src
         - make go
+
+only:
+  - master
