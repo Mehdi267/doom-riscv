@@ -8,6 +8,7 @@
 #include "helperfunc.h"
 #include "stdio.h"
 #include "memory_api.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 
@@ -161,7 +162,7 @@ static int link_shared_page_to_process(process* proc_conf, shared_page_t* page_i
                             true,
                             true,
                             true,
-                            false, KILO);
+                            true, KILO);
     return 0;
 }
 

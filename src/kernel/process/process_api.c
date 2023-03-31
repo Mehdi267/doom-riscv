@@ -394,12 +394,12 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio,
   // the call has to be made the right argument that is in s2 and it also has
   // to call the exit_process method at the end as this will be important in
   // the case the user uses a return call
-  new_process->context_process->ra = (uint64_t)process_call_wrapper;
+  new_process->context_process->ra = (uint64_t)process_call_wrapper_kernel;
   new_process->context_process->s[1] = (uint64_t)pt_func;
   // debug_print("[start -> %d] function adress funciton adress = %ld\n",
   // new_process->pid, (long) pt_func);
   new_process->context_process->s[2] = (uint64_t)arg;
-  new_process->context_process->sepc = (uint64_t)process_call_wrapper;
+  new_process->context_process->sepc = (uint64_t) process_call_wrapper_kernel;
   new_process->context_process->satp =
       0x8000000000000000 |
       ((long unsigned int)new_process->page_table_level_2 >> 12) |
@@ -460,6 +460,7 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio,
   return new_process->pid;
 }
 
+
 int start_virtual(const char *name, unsigned long ssize, int prio, void *arg){
   if (name==NULL){
     return -1; 
@@ -511,6 +512,13 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg){
   new_process->page_table_level_2 = NULL;
   new_process->page_tables_lvl_1_list = NULL;
   new_process->released_pages_list = NULL;
+  //We need to find the application related to the process, it is at that address where the 
+  //code will be stored
+  new_process->app_pointer = find_app(name);
+  if (new_process->app_pointer == NULL){
+    //Cannot locate app code 
+    return -1;
+  }
   if (process_memory_allocator(new_process, new_process->ssize) < 0){
       print_memory_no_arg("Memory is full");
       return -1;
@@ -528,7 +536,7 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg){
   // the call has to be made the right argument that is in s2 and it also has
   // to call the exit_process method at the end as this will be important in
   // the case the user uses a return call
-  new_process->context_process->ra = (uint64_t)process_call_wrapper;
+  new_process->context_process->ra = (uint64_t)process_call_wrapper_user;
   new_process->context_process->sepc = 0x40000000;
   new_process->context_process->s[2] = (uint64_t)arg;
   new_process->context_process->satp =

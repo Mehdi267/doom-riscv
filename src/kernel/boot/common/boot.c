@@ -15,11 +15,14 @@
 #include "traps/trap.h"
 #include "timer.h"
 #include "drivers/splash.h"
-#include "process/process.h"
-
+#include "memory/frame_dist.h" //used to call init_frames
+#include "process/process.h" // used for the debug method
 extern void _start();
 extern void test();
 extern int tic;
+
+//Indicates if sum will be activated or not(used to debug user mode )
+#define USER_PROCESS_DEBUG
 
 /*
  * Prototypes externes
@@ -168,16 +171,9 @@ __attribute__((noreturn)) void boot_riscv()
 
     //enables timer interrupts for the Supervisor mode
     csr_set(sie, SIE_STIE);
-
-    //init timer to 0
-
+    
+    //Initilisates frame division 
     init_frames();
-
-
-    // if (init_kernel_memory() <0){
-    //     printf("Panicked when allocating space for the kernel");
-    //     exit(-1);
-    // }
 
     /**
      * This function will enter in the supervisor mode and it will enable

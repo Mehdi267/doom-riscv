@@ -56,11 +56,25 @@ static int setup_main_context() {
 }
 
 static int create_idle_process() {
-  int pid_idle = start(idle, 1000, 1, "idle", cast_int_to_pointer(300));
-  // debug_print_process("[create_idle_process] idle pid = %d\n", pid_idle);
-  // debug_print_process("[create_idle_process] idle function adress = %ld\n",
-  // (long) idle);
+  int pid_idle;
+  #ifdef USER_PROCESSES_ON
+    pid_idle = start_virtual("idle", 4000, 1,cast_int_to_pointer(300));
+  #endif
+  #ifdef KERNEL_PROCESSES_ON
+    pid_idle = start(idle, 4000, 1, "idle",cast_int_to_pointer(300));
+  #endif
   return pid_idle;
+}
+
+static int create_testing_process() {
+  int pid_test;
+  #ifdef USER_PROCESSES_ON
+    pid_test = start_virtual("autotest", 4000, 1,cast_int_to_pointer(300));
+  #endif
+  #ifdef KERNEL_PROCESSES_ON
+    pid_test = start(kernel_tests, 4000, 1, "kernel_tests",cast_int_to_pointer(300));
+  #endif
+  return pid_test;
 }
 
 int activate_and_launch_custom_process(process *process_to_activate) {
@@ -179,6 +193,11 @@ int initialize_process_workflow(){
     if (create_idle_process()<0){
         return -1;
     }
+    #ifdef TESTING
+      if (create_testing_process()<0){
+        return -1;
+      }
+    #endif
     //Will only launch the process if the debug mode is set
     if (declares_debug_processes()<0){
         return -1;

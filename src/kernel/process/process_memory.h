@@ -25,6 +25,8 @@ typedef enum _page_type {
 #define SHARED_FRAME_SIZE 256 
 
 
+//These indicies will be used to index elements 
+//that are present in the lvl 1 page table
 #define STACK_CODE_SPACE_START 0
 #define STACK_CODE_SPACE_END 127 
 #define HEAP_SPACE_START 128

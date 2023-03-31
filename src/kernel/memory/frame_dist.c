@@ -55,9 +55,6 @@ void release_frame(void *frame){
         //the frame is not correctly aligned
         return ;
     }
-
-    //TODO : hash map containing allocated frames. Check if frame to release was allocated. Only check necessary
-
     char *temp = mem_ptr;
     mem_ptr = (char*)frame;
     *(char**)frame = temp;

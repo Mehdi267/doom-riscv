@@ -61,7 +61,7 @@ ULIB_CFLAGS = $(CFLAGS) $(addprefix -I, $(APP_INCLUDES))
 #
 # Apps
 #
-APPS_NAMES = hello
+APPS_NAMES = hello idle
 
 APP_CFLAGS = $(CFLAGS) $(addprefix -I, $(APP_INCLUDES))
 

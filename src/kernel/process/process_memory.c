@@ -129,7 +129,7 @@ static int add_child_node_page_table(process* proc_conf, page_table_link_list_t 
                         user_page_table_level_0);
     //We need to link the new page that was created to the parent
     if (parent_page_w->head_page == NULL && parent_page_w->tail_page == NULL){
-        debug_print_memory("No children node index %d \n",
+        debug_print_memory("No children node exist in the lvl 1 table thus linking index page table %d \n",
              new_page_table_node->index);
         //No children
         parent_page_w->head_page = new_page_table_node;
@@ -181,7 +181,7 @@ static int link_lvl1_table_shared_page(process* proc_conf, int lvl2_index, int l
     //      |-------|   |-------|       |-------|
     mega_table_entry = lvl_1_node->table->pte_list+lvl1_index;
     configure_page_entry(mega_table_entry,
-                        (long unsigned int) lvl0_table, false, false, false, false, KILO);
+                        (long unsigned int) lvl0_table, false, false, false, true, KILO);
     return 0;
 }
 
@@ -217,7 +217,11 @@ int add_frame_to_process(process* proc_conf, page_t page_type){
             lvl0_iterator->index<= index_end ){
             if (lvl0_iterator->usage < PT_SIZE){
                 if (page_type == SHARED_PAGE){
-                    if ( proc_conf == NULL || proc_conf->shared_pages == NULL || proc_conf->shared_pages->tail_shared_page== NULL){
+                    if ( 
+                        proc_conf == NULL || 
+                        proc_conf->shared_pages == NULL || 
+                        proc_conf->shared_pages->tail_shared_page== NULL
+                    ){
                         return -1;
                     }
                     proc_conf->shared_pages->tail_shared_page->lvl0_index = lvl0_iterator->usage;
@@ -259,11 +263,22 @@ int add_frame_to_process(process* proc_conf, page_t page_type){
  * and all of the tree like structures have set up
  * @note this method should only be called when we allocated memory when we declare the process
  * @param proc_conf The process that we will configure its memory
+ * @param start_index used to indicate which lvl0 page table we will use, this page table will be pointed at
+ * by the lvl1 page table
+ * @param end_index 
  * @return int a negatif int value if the allocation was not successful and a positive value otherwise
  */
-static int allocate_memory_final(process* proc_conf, int start_index, int end_index){
+static int allocate_memory_final(process* proc_conf, int start_index, int end_index, void* data, int data_size){
     if (proc_conf->page_tables_lvl_1_list == NULL){
         return -1;
+    }
+    bool writing_data = false;
+    void* data_pointer = NULL;
+    int data_left = 0 ;
+    if (data !=NULL && data_size != 0){
+        writing_data = true;
+        data_pointer = data;
+        data_left = data_size;
     }
     //We take pointer associated with the mega page
     //----------Lvl1------
@@ -304,7 +319,7 @@ static int allocate_memory_final(process* proc_conf, int start_index, int end_in
                             false,
                             false,
                             false, 
-                            false,
+                            true,
                             KILO);
         #ifdef PTE_PAGES_DEBUG
             print_memory_no_arg("-- Mega page pte --\n");
@@ -317,16 +332,30 @@ static int allocate_memory_final(process* proc_conf, int start_index, int end_in
             //Final page level page must in the read/write/exec mode
             debug_print_memory("mega pte index = %d; kilo_table_usage = %d\n", 
                                 mega_usage_iter,kilo_table_usage);
+
             void* frame_pointer = get_frame();
-            memset(frame_pointer, 0, FRAME_SIZE);
             if (frame_pointer == NULL){return -1;}
+            if (writing_data){
+                if (data_left<0){
+                    //We have written all of the data that we need to write and 
+                    //will go back to setting the data in the frame to zero using the memset 
+                    //method  
+                    writing_data = false;
+                }
+                memcpy(frame_pointer, data_pointer, FRAME_SIZE);
+                data_pointer = (void*)((long) data_pointer + FRAME_SIZE);
+                data_left-=FRAME_SIZE;
+            }
+            else{
+                memset(frame_pointer, 0, FRAME_SIZE);
+            }
             debug_print_memory("Creating frame to %p\n", frame_pointer);  
             configure_page_entry(kilo_table_entry,
                         (long unsigned int )frame_pointer, 
                         true,
                         true,
                         true,
-                        false, 
+                        true, 
                         KILO);
             #ifdef PTE_PAGES_DEBUG
                 print_memory_no_arg("-- Kilo page pte --\n");
@@ -338,16 +367,105 @@ static int allocate_memory_final(process* proc_conf, int start_index, int end_in
     return 0;
 }
 
+static int process_frames_alloc(process* process_conf){
+    //----------------------------Allocating space -------------------
+    debug_print_memory("Allocating space for the process %s // %d \n",
+             process_conf->process_name, process_conf->pid);
+    //We allocate space for the code
+    //At this point we need to copy the code into the frames that were allocated 
+    #ifdef USER_PROCESSES_ON
+        int code_size = (int) ((long) process_conf->app_pointer->end - (long) process_conf->app_pointer->end);
+        if (allocate_memory_final(process_conf,
+                            STACK_CODE_SPACE_START, 
+                            STACK_CODE_SPACE_START +process_conf->page_tables_lvl_1_list->stack_usage,
+                            process_conf->app_pointer->start,
+                            code_size) < 0){
+            print_memory_no_arg("problem with final memory allocator -> stack\n");
+            return -1;
+        }
+    #endif
+    #ifdef KERNEL_PROCESSES_ON
+            if (allocate_memory_final(process_conf,
+                            STACK_CODE_SPACE_START, 
+                            STACK_CODE_SPACE_START +process_conf->page_tables_lvl_1_list->stack_usage,
+                            NULL,
+                            0) < 0){
+            print_memory_no_arg("problem with final memory allocator -> stack\n");
+            return -1;
+        }
+    #endif
+    print_memory_no_arg("Stack and code memory has been allocated\n");
+    //We allocate space for the heap
+    if (allocate_memory_final(process_conf,
+        HEAP_SPACE_START,
+        HEAP_SPACE_START +process_conf->page_tables_lvl_1_list->heap_usage,
+        NULL , 
+        0) < 0){
+        print_memory_no_arg("problem with final memory allocator -> heap\n");
+        return -1;
+    }
+    print_memory_no_arg("Heap memory has been allocated\n");
+    return 0;
+}
+
+/**
+ * @brief This method will reserve the space for the process using the parameters given and functions arguments
+ * this fonction will not allocated the needed memory it will just change the indicies so that are well configured
+ * when we allocate memory 
+ * @param process_conf the process that we wish to configure
+ * @param temp_code_size the size of the code 
+ * @param heap_size the size of the heap
+ * @param size_stack the size of the stack
+ * @return 0 if successfull and -1 otherwise
+ */
+static int add_frames_process(process *process_conf, int temp_code_size, int heap_size, int size_stack){
+    debug_print_memory("Reserving space for process code size = %d heap size = %d stack size = %d \n",
+            temp_code_size, heap_size, size_stack);
+            
+    #ifdef USER_PROCESSES_ON
+    //We add process' code
+        do{
+            if (add_frame_to_process(process_conf, STACK_CODE_PAGE)<0){
+                print_memory_no_arg("problem with memory allocator :  code space allocator\n");
+                return -1;
+            }
+            process_conf->stack_shift++;
+            temp_code_size -= FRAME_SIZE;
+        }
+        while(temp_code_size > 0);
+    #endif 
+    //We add stack' memory
+    do{
+        if (add_frame_to_process(process_conf, STACK_CODE_PAGE)<0){
+            print_memory_no_arg("problem with memory allocator :  stack allocator\n");
+            return -1;
+        }
+        process_conf->stack_shift++;
+        size_stack -= FRAME_SIZE;
+    }
+    while(size_stack > 0);
+    //We associate the necessary frames and the page tables for the heap  
+    do{
+        if (add_frame_to_process(process_conf, HEAP_PAGE)<0){
+            print_memory_no_arg("problem with memory allocator :  frame allocator heap\n");
+            return -1;
+        }
+        heap_size -= FRAME_SIZE;
+    }
+    while(heap_size > 0);
+    return 0;
+}
 
 int process_memory_allocator(process* process_conf, unsigned long size){
     if (size>GIGAPAGE_SIZE){
         return -1;
     }
+    //This stack shift will help us determine the value of the stack pointer 
     process_conf->stack_shift = 0;
-    int size_left = size;
     //the current value of the heap size is set so that we can have at least one frame
     int heap_size = 1; 
-    //----------------------LEVEL 2-------
+    
+    //----------------------LEVEL 2 CONF-------------------
     page_table* user_page_table_level_2 = create_page_table();
     if (user_page_table_level_2 == NULL){
         return -1;
@@ -355,9 +473,9 @@ int process_memory_allocator(process* process_conf, unsigned long size){
     print_memory_no_arg("--------------Memory allocation-------------\n");
     debug_print_memory("Lvl2 address %p for  process %s // %d \n",
              user_page_table_level_2, process_conf->process_name, process_conf->pid);
-    // associated_frame_to_proc(process_conf, (void* ) user_page_table_level_2);
     process_conf->page_table_level_2 = user_page_table_level_2;
-    //We copy the kernel page table
+    //We copy the kernel page table in order to ahve the base directory that posses the links to the 
+    //kernel space and memory
     memcpy((void*) user_page_table_level_2, (void *) kernel_base_page_table, FRAME_SIZE);
     //-----------------------LEVEL 1/LEVEL 2 LINK-------------------
     page_table* user_page_table_level_1 = create_page_table();
@@ -366,9 +484,9 @@ int process_memory_allocator(process* process_conf, unsigned long size){
     }
     debug_print_memory("Lvl1 address %p for  process %s // %d \n",
             user_page_table_level_1, process_conf->process_name, process_conf->pid);
-    // associated_frame_to_proc(process_conf, (void* ) user_page_table_level_1);
+
     //We create in here the only page table that will exist at first level since virtual space in this os
-    //is limited to one gb
+    //is limited to one gb, this page table will be pointed at by the second pte in the lvl 2 page table
     configure_page_table_linked_list_entry(
         &process_conf->page_tables_lvl_1_list,
         user_page_table_level_1,
@@ -391,7 +509,7 @@ int process_memory_allocator(process* process_conf, unsigned long size){
                     false,
                     false, 
                     false,
-                    false,
+                    true,
                     KILO);
     #ifdef PTE_PAGES_DEBUG
         // debug_print_memory("-----Second level pte kernel/process directory when working with process : %d \n",process_conf->pid);
@@ -399,38 +517,25 @@ int process_memory_allocator(process* process_conf, unsigned long size){
     #endif
     //We associate the necessary frames and page tables for the stack 
 
+    //----------------------------Reserving space -------------------
     debug_print_memory("Reserving space for the process %s // %d \n",
              process_conf->process_name, process_conf->pid);
-    do{
-        if (add_frame_to_process(process_conf, STACK_CODE_PAGE)<0){
-            print_memory_no_arg("problem with memory allocator :  frame allocator stack\n");
+    #ifdef USER_PROCESSES_ON
+        if (process_conf->app_pointer == NULL){
             return -1;
         }
-        process_conf->stack_shift++;
-        size_left -= FRAME_SIZE;
-    }
-    while(size_left > 0);
-    
-    //We associate the necessary frames and the page tables for the heap  
-    do{
-        if (add_frame_to_process(process_conf, HEAP_PAGE)<0){
-            print_memory_no_arg("problem with memory allocator :  frame allocator heap \n");
+        int code_size = (int) ((long) process_conf->app_pointer->end - (long) process_conf->app_pointer->start);
+        debug_print_memory("Code needs to be added to the process ; code size =  %d \n", code_size);
+        if (add_frames_process(process_conf, code_size, heap_size, size)<0){
             return -1;
-        }
-        heap_size -= FRAME_SIZE;
-    }
-    while(heap_size > 0);
-    
-    debug_print_memory("Allocating space for the process %s // %d \n",
-             process_conf->process_name, process_conf->pid);
-    //We allocate space for the stack and code 
-    if (allocate_memory_final(process_conf, STACK_CODE_SPACE_START, STACK_CODE_SPACE_START +process_conf->page_tables_lvl_1_list->stack_usage) < 0){
-        print_memory_no_arg("problem with final memory allocator -> stack\n");
-        return -1;
-    }
-    //We allocate space for the heap
-    if (allocate_memory_final(process_conf, HEAP_SPACE_START, HEAP_SPACE_START +process_conf->page_tables_lvl_1_list->heap_usage) < 0){
-        print_memory_no_arg("problem with final memory allocator -> heap\n");
+        };
+    #endif
+    #ifdef KERNEL_PROCESSES_ON
+        if (add_frames_process(process_conf, 0, heap_size, size)<0){
+            return -1;
+        };
+    #endif
+    if (process_frames_alloc(process_conf)<0){
         return -1;
     }
     return 0;

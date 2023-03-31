@@ -18,6 +18,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "msgqueue.h" // for message_t
+#include "../userspace_apps.h" //Used for locating the app and adding its code
 
 /**
  * @brief global function constants
@@ -50,11 +51,14 @@
  * @param
  */
 // #define DEBUG
-/* #define TESTING */
+#define TESTING
+#define TESTING_KERNEL
+#define TESTING_USER
+#define USER_PROCESSES_ON
+// #define KERNEL_PROCESSES_ON
 // #define RELEASE
 // #define DEBUG_SCHEDULER
 #define TESTING_MEMORY
-#define USER_PROCESS_DEBUG
 
 /**
  * @brief Global variables
@@ -230,6 +234,8 @@ typedef struct process_t {
   // Semaphore signal
   int sem_signal;
   int semaphore_id;
+  //App struct pointer
+  const struct uapps* app_pointer;
 } process;
 
 /**
@@ -273,12 +279,20 @@ extern int activate_and_launch_custom_process(process *process_to_activate);
 void activate_and_launch_scheduler(void);
 
 /**
- * @brief this method is used to to process function calls, by using the
- * argument given by the user and it also adds a call to the exit method
+ * @brief this method is used to launch the process function in the kernel mode 
+ * by using the func pointer given by the user and it also adds a call to the exit method
  * @note s0 holds the process argument with will given to a0
  * and s1 holds the process function
  */
-extern void process_call_wrapper(void);
+extern void process_call_wrapper_kernel(void);
+
+/**
+ * @brief this method is used to launch in the user mode the process, by using the
+ * argument given by the user this method goes to the user mode by using the sret method
+ * @note sepc hold the adress that will go to launch the process and ra hold thes adress
+ * that will be used to go to this method
+ */
+extern void process_call_wrapper_user(void);
 
 /**
  * @brief Save the current context on the stack and restore a previously saved
@@ -459,7 +473,7 @@ extern int idle(void *arg);
  * code. Inspired from :
  * https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
  */
-#define DEBUG_LEVEL 0 //Indicates if debug type is active 
+#define DEBUG_LEVEL 2 //Indicates if debug type is active 
 
 #define debug_print(fmt, ...)                                                  \
   do {                                                                         \
@@ -479,7 +493,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the scheduler,
  *  meaning when we debug the scheduler we use the debug_print_scheduler
  */
-#define DEBUG_SCHEDULER_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_SCHEDULER_LEVEL 2 //Indicates if debug type is active
 
 #define debug_print_scheduler(fmt, ...) \
         do {if (DEBUG_SCHEDULER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -495,7 +509,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_PROCESS_LEVEL 0 // Indicates if debug type is active
+#define DEBUG_PROCESS_LEVEL 2 // Indicates if debug type is active
 
 #define debug_print_process(fmt, ...)                                          \
   do {                                                                         \
@@ -512,7 +526,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_EXIT_METHODS_LEVEL 0 // Indicates if debug type is active
+#define DEBUG_EXIT_METHODS_LEVEL 2 // Indicates if debug type is active
 
 #define debug_print_exit_m(fmt, ...)                                           \
   do {                                                                         \
@@ -552,7 +566,7 @@ extern int idle(void *arg);
 /**
  * @brief the following macro are used to debug the memory management
  */
-#define DEBUG_MEMORY_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_MEMORY_LEVEL 2 //Indicates if debug type is active
 
 #define debug_print_memory(fmt, ...) \
         do {if (DEBUG_MEMORY_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -566,7 +580,7 @@ extern int idle(void *arg);
 /**
  * @brief the following macro are used to debug the memory api 
  */
-#define DEBUG_MEMORY_API_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_MEMORY_API_LEVEL 2 //Indicates if debug type is active
 
 #define debug_print_memory_api(fmt, ...) \
         do {if (DEBUG_MEMORY_API_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
