@@ -51,10 +51,10 @@ void handle_mtimer_interrupt()
 
 void handle_stimer_interrupt()
 {
+	printf("In timer interreupt \n"); 
 	set_supervisor_interrupts(false);
 	counter++;
 	set_supervisor_timer_interrupt(TIC_PER); 
-	/* printf("current interrupts = %lu\n", counter); */
 	scheduler();
   return;
 }

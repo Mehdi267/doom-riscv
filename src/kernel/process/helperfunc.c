@@ -39,10 +39,10 @@ int cast_pointer_into_a_int(void * pointer){
 
 void set_supervisor_interrupts(bool val){
     if (val){
-        csr_set(sstatus, 2);
+        csr_set(sstatus, MSTATUS_SIE);
     }
     else{
-        csr_clear(sstatus, 2);
+        csr_clear(sstatus, MSTATUS_SIE);
     }
 }
 

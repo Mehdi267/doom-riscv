@@ -78,6 +78,7 @@ void exit(int retval);
 int getpid(void);
 int getprio(int pid);
 int kill(int pid);
+#define WITH_SEM
 #if defined WITH_SEM
 int scount(int sem);
 int screate(short count);

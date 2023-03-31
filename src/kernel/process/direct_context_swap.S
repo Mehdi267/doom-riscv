@@ -23,11 +23,13 @@ direct_context_swap:
 	ld s9,   88(a0)
 	ld s10,  96(a0)
 	ld s11, 104(a0)
-    //Sscratch
-    ld t0, 112(a0) 
-    csrw sscratch, t0
-    ld t0, 120(a0) 
-    csrw sepc, t0
-		
-    jr ra
+  //Sscratch
+  ld t0, 112(a0) 
+  csrw sscratch, t0
+  ld t0, 120(a0) 
+  csrw sepc, t0
+  ld t0, 128(a0) 
+  csrw satp, t0
+
+  jr ra
 

@@ -538,6 +538,7 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg){
   // the case the user uses a return call
   new_process->context_process->ra = (uint64_t)process_call_wrapper_user;
   new_process->context_process->sepc = 0x40000000;
+  // new_process->context_process->sepc = (uint64_t)idle;
   new_process->context_process->s[2] = (uint64_t)arg;
   new_process->context_process->satp =
       0x8000000000000000 |

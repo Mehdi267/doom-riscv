@@ -58,7 +58,7 @@ static int setup_main_context() {
 static int create_idle_process() {
   int pid_idle;
   #ifdef USER_PROCESSES_ON
-    pid_idle = start_virtual("idle", 4000, 1,cast_int_to_pointer(300));
+    pid_idle = start_virtual("test0", 4000, 1,cast_int_to_pointer(300));
   #endif
   #ifdef KERNEL_PROCESSES_ON
     pid_idle = start(idle, 4000, 1, "idle",cast_int_to_pointer(300));
@@ -116,6 +116,8 @@ void validation_process() {
 }
 
 int idle(void *arg) {
+  int x = 5;
+  printf("eaz %d",x);
   debug_print_no_arg("hello world");
   debug_print_process(
       "[Current process = %s] pid = %d; argument given = %ld \n",
@@ -199,7 +201,7 @@ int initialize_process_workflow(){
       }
     #endif
     #ifdef USER_PROCESSES_ON
-      csr_clear(sstatus, 0xa0);
+      csr_clear(sstatus, MSTATUS_SPP);
     #endif 
     //Will only launch the process if the debug mode is set
     if (declares_debug_processes()<0){

@@ -37,7 +37,8 @@ void configure_page_entry(page_table_entry *pte, long unsigned int address,
     set_read(pte, read);
     set_write(pte, write);
     set_exec(pte, exec);
-    set_user_mode(pte, user_mode);
+    //set_user_mode(pte, user_mode);
+    set_user_mode(pte, false);
     //in accordance to point 6 of 4.3.2, we have to set ppn[1] and ppn[0] to 0
     //The value of these ppn are not relevant since we only use pp2 
     //to get the adress of the giga byte page

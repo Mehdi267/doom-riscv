@@ -341,10 +341,13 @@ static int allocate_memory_final(process* proc_conf, int start_index, int end_in
                     //will go back to setting the data in the frame to zero using the memset 
                     //method  
                     writing_data = false;
+                }else{
+                  debug_print_memory("Writing data in the frame %d, first value in the data pointer %p\n",
+                                    data_left, data_pointer);
+                  memcpy(frame_pointer, data_pointer, FRAME_SIZE);
+                  data_pointer = (void*)((long) data_pointer + FRAME_SIZE);
+                  data_left-=FRAME_SIZE;
                 }
-                memcpy(frame_pointer, data_pointer, FRAME_SIZE);
-                data_pointer = (void*)((long) data_pointer + FRAME_SIZE);
-                data_left-=FRAME_SIZE;
             }
             else{
                 memset(frame_pointer, 0, FRAME_SIZE);
@@ -374,7 +377,7 @@ static int process_frames_alloc(process* process_conf){
     //We allocate space for the code
     //At this point we need to copy the code into the frames that were allocated 
     #ifdef USER_PROCESSES_ON
-        int code_size = (int) ((long) process_conf->app_pointer->end - (long) process_conf->app_pointer->end);
+        int code_size = (int) ((long) process_conf->app_pointer->end - (long) process_conf->app_pointer->start);
         if (allocate_memory_final(process_conf,
                             STACK_CODE_SPACE_START, 
                             STACK_CODE_SPACE_START +process_conf->page_tables_lvl_1_list->stack_usage,

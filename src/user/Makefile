@@ -37,7 +37,7 @@ include ../$(STDLIB_NAME)/Makefile
 include ../riscv_flags.config
 include ../toolchain.config
 
-CFLAGS = $(ARCH_CFLAGS)
+CFLAGS = $(ARCH_CFLAGS) -g -O0
 APP_INCLUDES = $(LIB_INCLUDES) $(ULIB_DIR)
 LDFLAGS = $(CFLAGS) $(ARCH_LDFLAGS)
 
