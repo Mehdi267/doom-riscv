@@ -78,6 +78,7 @@ int test_sem(void *arg);
  *  Message queues test
  */
 int test10(void* arg);
+int test13_msg(void* arg);
 int test12(void *arg);
 int test14(void *arg);
 int test15(void *arg);

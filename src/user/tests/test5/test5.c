@@ -32,6 +32,7 @@ int main(void *arg)
         pid2 = start("waiter", 4000, 65, (void *)pid1);
         assert(pid2 > 0);
         assert(waitpid(pid2, &r) == pid2);
+        // printf("value of r is equal to %lx adress of is %p \n", r, &r);
         assert(r == 1);
         assert(waitpid(pid1, &r) == pid1);
         assert(r == 0);

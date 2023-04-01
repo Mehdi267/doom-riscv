@@ -10,7 +10,7 @@
 #include "stddef.h"
 #include "string.h"
 #include "mem.h"
-
+#include "stdio.h"
 
 #define HASH_MINSIZE 8
 
@@ -265,6 +265,7 @@ static long hash_string_hfunc(char *key)
         for (i = 0; key[i]; ++i)
                 hash = ((hash << 5) + hash) ^ key[i];
 
+        // printf("key = %s , hash %ld \n", key, hash);
         return hash;
 }
 

@@ -603,7 +603,7 @@ int free_frames_page_table(page_table_link_list_t* page_table_link){
 
 int free_process_memory(process* proc)
 {
-    print_memory_no_arg("--------------Free process memory-------------");
+    print_memory_no_arg("--------------Free process memory-------------\n");
     if (proc == NULL){
         return -1;
     }

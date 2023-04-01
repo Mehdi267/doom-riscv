@@ -128,11 +128,21 @@ int chprio(int pid, int newprio) {
   process_pid->prio = newprio;
   process *head_of_queue = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
   if (head_of_queue == NULL) {
-    // No other activatable process we go back to executing this process
-    return old_prio;
+    // 0 processes in the queue !! absurd !!
+    return -1; 
   }
-  check_if_new_prio_is_higher_and_call_scheduler(newprio, false,
-                                                 head_of_queue->prio);
+  if (process_pid->state == ACTIVATABLE){
+    delete_process_from_queue_wrapper(process_pid, ACTIVATABLE_QUEUE);
+    add_process_to_queue_wrapper(process_pid, ACTIVATABLE_QUEUE);
+  }
+  if (process_pid->state == ACTIVATABLE){
+    delete_process_from_queue_wrapper(process_pid, ACTIVATABLE_QUEUE);
+    add_process_to_queue_wrapper(process_pid, ACTIVATABLE_QUEUE);
+  }
+  if (check_if_new_prio_is_higher_and_call_scheduler(newprio, false,
+                                              head_of_queue->prio)<0){
+    return 0;
+  };
   // If the process is placed in an execution queue, it must be replaced within
   // that queue
   return old_prio;
@@ -664,7 +674,15 @@ int waitpid(int pid, int *retvalp) {
   // We take the return value of the process and then we kill it
   pid_to_return = temp_process->pid;
   if (retvalp != NULL) {
+    #ifdef USER_PROCESSES_ON 
+      //The user mode function in 64 bits the problem is that when we have a int * pointer
+      //and we modify its value only, the value of the upper of upper 32 bits will not be affected 
+      //thus the returned value will be different from the returned value   
+      *((unsigned long * ) retvalp) = 0; 
+    #endif
     *retvalp = temp_process->return_value;
+    debug_print_exit_m("\nretvalp address : %p \nwait pid value : %d \n", retvalp, temp_process->return_value);
+    debug_print_exit_m("Value written in *retvalp %x\n", *retvalp);
   }
   if (free_process_arg_and_fix_tree_link(temp_process, temp_process_before) <
       0) {
@@ -684,7 +702,9 @@ int kill(int pid) {
   if (process_pid == NULL) {
     return -1;
   }
+  debug_print_exit_m("Kill method called current pid/name = %d/%s kill pid = %d ",getpid(), getname(), pid);
   if (validate_action_process_valid(process_pid) < 0) {
+    debug_print_exit_m("State of the process ot kill = %d \n",process_pid->state);
     return -1;
   }
   if (process_pid->pid == getpid()) {

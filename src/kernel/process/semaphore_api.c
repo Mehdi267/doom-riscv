@@ -4,8 +4,8 @@
 #include "semaphore_api.h"
 #include "helperfunc.h"
 #include <stdlib.h>
-
-
+#include "msgqueue.h"
+#include "assert.h"
 /**
  * ISSUES:
  * When we pass to used mode or when we excute this normally the scheduler call might not be 
@@ -15,6 +15,9 @@
 
 //Boolean used to stop the child function from calling the scheduler
 static bool parent_block = false;
+
+#define XMETHODS_SEMAPHORE
+// #define XMETHODS_MESSAGE_QUEUE
 
 hash_t* semaphore_table = NULL;
 int semaphore_id_counter = 0;
@@ -69,7 +72,6 @@ int remove_proc_queue(semaphore_t* sem_struct, awake_signal_t signal_enum, int p
             //Bad call
             return -1;
         }
-    
     }
     blocked_proc->blocked_process->state = ACTIVATABLE;
     if (signal_enum != KILL_CALL){
@@ -350,23 +352,51 @@ int signaln(int sem, short int count){
     return 0;
 }
 
-void xwait(union sem *s){
-    if (s != NULL){
-        wait(s->sem);
+#ifdef XMETHODS_SEMAPHORE
+    void xwait(union sem *s)
+    {
+            wait(s->sem);
     }
-}
-void xsignal(union sem *s){
-    if (s != NULL){
-        signal(s->sem);
+
+    void xsignal(union sem *s)
+    {
+            signal(s->sem);
     }
-}
-void xsdelete(union sem *s){
-    if (s != NULL){
-        sdelete(s->sem);
+
+    void xscreate(union sem *s)
+    {
+            (s->sem = screate(0));
     }
-}
-void xscreate(union sem *s){
-    if (s != NULL){
-        s->sem = screate(0);
+
+    void xsdelete(union sem *s)
+    {
+            sdelete(s->sem);
     }
-}
+#endif
+
+#ifdef XMETHODS_MESSAGE_QUEUE
+    void xwait(union sem *s)
+    {
+            assert(preceive(s->fid, 0) == 0);
+    }
+
+    void xsignal(union sem *s)
+    {
+            int count;
+            assert(psend(s->fid, 1) == 0);
+            assert(pcount(s->fid, &count) == 0);
+            //assert(count == 1); XXX
+            assert(count < 2);
+    }
+
+    void xscreate(union sem *s)
+    {
+            assert((s->fid = pcreate(2)) >= 0);
+    }
+
+    void xsdelete(union sem *s)
+    {
+            assert(pdelete(s->fid) == 0);
+    }
+#endif
+

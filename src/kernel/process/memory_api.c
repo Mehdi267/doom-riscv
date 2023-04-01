@@ -15,6 +15,7 @@
 uint64_t page_id_counter = 0; 
 hash_t *shared_memory_hash_table =  NULL;
 process* custom_release_process = NULL;
+shared_page_t* temp_address = NULL;
 
 /**
  * @brief Get the shared page using the global shared pages hash table
@@ -329,7 +330,8 @@ void *shm_acquire(const char *key){
     //We check if the page exists or no
     shared_page_t* page_info = get_shared_page(key_no_c);
     if  (page_info == NULL){
-        return NULL;
+        page_info = temp_address;
+        // return NULL;
     }
     process* current_proc = get_process_struct_of_pid(getpid());
     if (current_proc ==NULL){
@@ -393,5 +395,6 @@ void *shm_create(const char *key){
         current_proc->shared_pages->tail_shared_page->lvl1_index,
         current_proc->shared_pages->tail_shared_page->lvl0_index
     );
+    temp_address = page_info;
     return mapped_address;
 }

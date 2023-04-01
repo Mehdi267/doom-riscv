@@ -119,7 +119,9 @@ int test17_sem(void *arg)
         assert(scount(st->rsem) == 0xfffd);
         for (i=3; i<6; i++) {
                 int ret;
-                assert(kill(pid[i]) == 0);
+                int res = kill(pid[i]);
+                printf("res %d \n",res);
+                assert( res == 0);
                 assert(waitpid(pid[i], &ret) == pid[i]);
         }
         assert(scount(st->mutex) == 1);

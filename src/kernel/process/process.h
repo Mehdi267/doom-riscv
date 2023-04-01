@@ -54,8 +54,8 @@
 #define TESTING
 #define TESTING_KERNEL
 #define TESTING_USER
-#define USER_PROCESSES_ON
-// #define KERNEL_PROCESSES_ON
+//#define USER_PROCESSES_ON
+#define KERNEL_PROCESSES_ON
 // #define RELEASE
 // #define DEBUG_SCHEDULER
 #define TESTING_MEMORY
@@ -226,7 +226,6 @@ typedef struct process_t {
                                          // shared pages' information
   void* sscratch_frame;//used to hold the sscratch frame 
                        //so that we can delete it later
-
   // Timer management
   int64_t sleep_time;
   // Queue managment
@@ -473,7 +472,7 @@ extern int idle(void *arg);
  * code. Inspired from :
  * https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
  */
-#define DEBUG_LEVEL 2 //Indicates if debug type is active 
+#define DEBUG_LEVEL 0 //Indicates if debug type is active 
 
 #define debug_print(fmt, ...)                                                  \
   do {                                                                         \
@@ -493,7 +492,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the scheduler,
  *  meaning when we debug the scheduler we use the debug_print_scheduler
  */
-#define DEBUG_SCHEDULER_LEVEL 2 //Indicates if debug type is active
+#define DEBUG_SCHEDULER_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_scheduler(fmt, ...) \
         do {if (DEBUG_SCHEDULER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -509,7 +508,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_PROCESS_LEVEL 2 // Indicates if debug type is active
+#define DEBUG_PROCESS_LEVEL 0 // Indicates if debug type is active
 
 #define debug_print_process(fmt, ...)                                          \
   do {                                                                         \
@@ -526,7 +525,7 @@ extern int idle(void *arg);
  * @brief the following macro are used to debug the processes,
  *  meaning when we debug the scheduler we use the debug_print_process
  */
-#define DEBUG_EXIT_METHODS_LEVEL 2 // Indicates if debug type is active
+#define DEBUG_EXIT_METHODS_LEVEL 0 // Indicates if debug type is active
 
 #define debug_print_exit_m(fmt, ...)                                           \
   do {                                                                         \
@@ -566,7 +565,7 @@ extern int idle(void *arg);
 /**
  * @brief the following macro are used to debug the memory management
  */
-#define DEBUG_MEMORY_LEVEL 2 //Indicates if debug type is active
+#define DEBUG_MEMORY_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_memory(fmt, ...) \
         do {if (DEBUG_MEMORY_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -580,7 +579,7 @@ extern int idle(void *arg);
 /**
  * @brief the following macro are used to debug the memory api 
  */
-#define DEBUG_MEMORY_API_LEVEL 2 //Indicates if debug type is active
+#define DEBUG_MEMORY_API_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_memory_api(fmt, ...) \
         do {if (DEBUG_MEMORY_API_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \

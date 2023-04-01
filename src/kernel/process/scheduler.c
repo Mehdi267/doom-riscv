@@ -21,6 +21,7 @@
 #include "stddef.h"
 #include <stdint.h>
 #include "timer_api.h"
+#include "riscv.h"
 
 
 LIST_HEAD(activatable_process_queue);
@@ -102,6 +103,10 @@ uint64_t get_smallest_sleep_time() {
 
 
 void scheduler(){
+    #ifdef USER_PROCESSES_ON
+        //We need to go back to user mode when the scheduler is called
+        csr_clear(sstatus, MSTATUS_SPP);
+    #endif
     debug_print_scheduler_no_arg("\n-----------------Scheduler--------------------\n");
     debug_print_scheduler("[scheduler -> %d] Inside the scheduler with pid equal to %d \n",
                             getpid(), getpid());

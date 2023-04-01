@@ -2,6 +2,7 @@
 
 static unsigned long test16_1(void)
 {
+                printf("i should not be here");
         unsigned long long tsc, tsc1, tsc2;
         unsigned long count = 0;
 

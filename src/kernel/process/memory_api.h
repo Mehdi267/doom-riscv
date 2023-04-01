@@ -63,7 +63,8 @@ extern void *shm_create(const char *key);
  * that called this method
  * 
  * @param key the char related to the page that will be shared from this function
- * @return void* returns the adress of the page if it found it in the case it does not find the page it returns NULL
+ * @return void* returns the adress of the page if it is found 
+ * and in the case it does not find the page it returns NULL
  */
 void *shm_acquire(const char *key);
 

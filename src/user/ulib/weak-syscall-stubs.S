@@ -42,7 +42,7 @@
 #WEAK_STUB(shm_acquire)
 #WEAK_STUB(shm_release)
 
-.weak __do_a_fault
-__do_a_fault:
-    ecall
-    ret
+# .weak __do_a_fault
+# __do_a_fault:
+#     ecall
+#     ret

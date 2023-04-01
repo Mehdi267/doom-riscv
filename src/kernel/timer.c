@@ -1,12 +1,13 @@
+#include "process/process.h"
 #include "riscv.h"
 #include "stdio.h"
 
 #include "drivers/clint.h"
 #include "timer.h"
 #include "drivers/auxval.h"
-#include "process/scheduler.h"
-#include "process/helperfunc.h"
-#include "process/timer_api.h" // for counter
+#include "process/scheduler.h" // for scheduler car
+#include "process/helperfunc.h" //to use helper functions
+#include "process/timer_api.h" // to exploit the counter variable
 #include <stdint.h>
 /*
  * Set machine timer
@@ -51,7 +52,9 @@ void handle_mtimer_interrupt()
 
 void handle_stimer_interrupt()
 {
-	printf("In timer interreupt \n"); 
+	debug_print_no_arg("--Inside timer interreupt handler-- \n"); 
+	#ifdef KERNEL_PROCESSES_ON
+	#endif
 	set_supervisor_interrupts(false);
 	counter++;
 	set_supervisor_timer_interrupt(TIC_PER); 

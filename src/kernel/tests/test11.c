@@ -37,18 +37,20 @@ int proc_mutex(void *arg)
                 default:
                         msg = 15;
         }
-        printf(" \n pid -> %d \n", getpid());
-        printf(" %d", msg);
-        printf(" \n wait call %d \n", wait(shared->sem.sem));
+        printf("\nRunning proc child pid -> %d \n", getpid());
+        printf("\nvalue msg %d\n", msg);
+        printf("\nwait call %d \n", wait(shared->sem.sem));
         // xwait(&shared->sem);
-        printf(" \n pid -> %d \n", getpid());
-        printf ("\n count = %d \n", (int16_t) scount(shared->sem.sem));
-        printf(" %d", 139 - p);
+        printf("\nAfter wait : Running proc child pid -> %d \n", getpid());
+        printf ("count = %d \n", (int16_t) scount(shared->sem.sem));
+        printf("pid = %d // 139 -p %d \n",getpid(), 139 - p);
+        printf("pid = %d // value of p %d \n",getpid(), p);
         assert(!(shared->in_mutex++));
         chprio(getpid(), 16);
         chprio(getpid(), p);
         shared->in_mutex--;
         xsignal(&shared->sem);
+        printf("Process pid bedore death = %d \n",getpid());
         return 0;
 
 }
@@ -79,6 +81,7 @@ int test11(void *arg)
         assert(chprio(getpid(), 160) == 128);
         printf(" 6");
         xsignal(&shared->sem);
+        printf(" \n -------calling waitpids --------\n");
         assert(waitpid(-1, 0) == pid2);
         assert(waitpid(-1, 0) == pid3);
         assert(waitpid(-1, 0) == pid1);

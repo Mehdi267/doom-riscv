@@ -58,7 +58,7 @@ static int setup_main_context() {
 static int create_idle_process() {
   int pid_idle;
   #ifdef USER_PROCESSES_ON
-    pid_idle = start_virtual("test0", 4000, 1,cast_int_to_pointer(300));
+    pid_idle = start_virtual("idle", 4000, 1,cast_int_to_pointer(300));
   #endif
   #ifdef KERNEL_PROCESSES_ON
     pid_idle = start(idle, 4000, 1, "idle",cast_int_to_pointer(300));
@@ -72,7 +72,7 @@ static int create_testing_process() {
     pid_test = start_virtual("autotest", 4000, 1,cast_int_to_pointer(300));
   #endif
   #ifdef KERNEL_PROCESSES_ON
-    pid_test = start(kernel_tests, 4000, 1, "kernel_tests",cast_int_to_pointer(300));
+    pid_test = start(kernel_tests, 4000, 2, "kernel_tests",cast_int_to_pointer(300));
   #endif
   return pid_test;
 }
@@ -116,16 +116,18 @@ void validation_process() {
 }
 
 int idle(void *arg) {
-  int x = 5;
-  printf("eaz %d",x);
   debug_print_no_arg("hello world");
   debug_print_process(
       "[Current process = %s] pid = %d; argument given = %ld \n",
       get_pid_name(getpid()), getpid(), cast_pointer_into_a_long(arg));
-
   // we check for potential pending interrupts
-  csr_set(sstatus, MSTATUS_SIE); // active interrupts
-  while(true) wfi();
+  while(true) {
+    uint64_t tmp_status;
+    tmp_status = csr_read(sstatus);
+    csr_set(sstatus, MSTATUS_SIE);
+    __asm__ __volatile__("nop");
+    csr_write(sstatus, tmp_status);
+  };
 }
 
 

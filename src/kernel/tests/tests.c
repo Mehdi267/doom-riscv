@@ -10,9 +10,10 @@ test_apps_t test_table[] = {
   {test4, "test4", 0}, // Takes a lot of time
   {test5, "test5", 0},
   //{test6, "test6", 0},//Test is so slow
-  {test7, "test7", 0}, // TODO: CHECK this test working when ran solo but not working when run with other
-  //{test11, "test11", 0}, // TODO: CHECK THIS TEST not working Does not run with a semaphore 
+  //{test7, "test7", 0}, // TODO: CHECK this test working when ran solo but not working when run with other
+  //{test11, "test11", 0}, // TODO: use msgqueue not working Does not run with a semaphore 
   {test12_sem, "test12_sem", 0},
+  {test13_msg, "test13_msg", 0},
   {test13_sem, "test13_sem", 0},
   {test15_sem, "test15_sem", 0},
   {test10, "test10", 0},

@@ -127,13 +127,17 @@ int validate_action_process_valid(process* process_pid){
         return -1;
     }
     if (   process_pid->state == ZOMBIE
-        || process_pid->state == KILLED
-        || process_pid->state == ASLEEP
-        || process_pid->state == BLOCKEDSEMAPHORE
-        || process_pid->state == BLOCKEDIO
-        || process_pid->state == ASLEEP){
+        || process_pid->state == KILLED){
         return -1;
-    }
+    }    
+    // if (   process_pid->state == ZOMBIE
+    //     || process_pid->state == KILLED
+    //     || process_pid->state == ASLEEP
+    //     || process_pid->state == BLOCKEDSEMAPHORE
+    //     || process_pid->state == BLOCKEDIO
+    //     || process_pid->state == ASLEEP){
+    //     return -1;
+    // }
     return 0;
 }
 

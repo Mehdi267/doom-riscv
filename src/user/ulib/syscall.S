@@ -1,11 +1,14 @@
 #include "syscall_num.h"
 
 #define syscall(name) \
+    .text                       ;\
     .globl name                 ;\
+    .align 2                    ;\
     name:                       ;\
         li a7, SYSC_ ## name    ;\
         ecall                   ;\
         ret                     ;\
+
 
 syscall(start)
 syscall(getpid)
@@ -17,14 +20,14 @@ syscall(exit)
 syscall(cons_write)
 syscall(cons_read)
 syscall(cons_echo)
-# syscall(scount)
-# syscall(screate)
-# syscall(sdelete)
-# syscall(signal)
-# syscall(signaln)
-# syscall(sreset)
-# syscall(try_wait)
-# syscall(wait)
+syscall(scount)
+syscall(screate)
+syscall(sdelete)
+syscall(signal)
+syscall(signaln)
+syscall(sreset)
+syscall(try_wait)
+syscall(wait)
 syscall(pcount)
 syscall(pcreate)
 syscall(pdelete)

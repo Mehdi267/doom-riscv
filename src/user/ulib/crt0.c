@@ -20,8 +20,7 @@ void _start(void *arg)
 	* ignore the return value. This is the right place to handle this
 	* value and call standard library functions if needed.
 	*/
-
-	main(arg);
+	exit(main(arg));
 }
 
 

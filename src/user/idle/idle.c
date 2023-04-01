@@ -27,6 +27,7 @@ static const char *tests[500] = {
 
 int main(void *arg)
 {
+//   csr_clear(sstatus, 0x2);
   while(1){}
   return 0;
   register unsigned reg1 = 5;

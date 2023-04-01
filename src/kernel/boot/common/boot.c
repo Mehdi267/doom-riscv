@@ -62,8 +62,11 @@ static void delegate_traps()
      * in order to have more control over what we do for that reason we exploit the two registers :
      *  medeleg(exceptions) and mideleg(interrupts) for delegating the appropriate traps to the appropriate mode
     */
-    csr_set(medeleg, SIE_STIE);
-    csr_set(mideleg, SIE_STIE);
+    // csr_set(medeleg, SIE_STIE);
+    // csr_set(mideleg, SIE_STIE);
+    
+    csr_set(medeleg, 0xffff);
+    csr_set(mideleg, 0xffff);
     //page fault delegation 
     // csr_set(medeleg, SIE_INST_PAGE_FAULT);
     // csr_set(medeleg, SIE_INST_PAGE_FAULT);
@@ -134,7 +137,7 @@ static inline void enter_supervisor_mode() {
     
     #ifdef USER_PROCESS_DEBUG
         //set sum value in sstatus to one to debug user processes
-        //csr_set(sstatus, SSTATUS_SUM);
+        csr_set(sstatus, SSTATUS_SUM);
         debug_print_memory("Sum Attribut has been set correctly sstatus = %ld\n", csr_read(sstatus));
     #endif
 
