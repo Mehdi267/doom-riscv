@@ -262,3 +262,21 @@ void add_message(msg_queue_t *msg_queue, int message) {
   msg_queue->number_of_msgs++;
   msg_queue->iffc = (msg_queue->iffc + 1) % msg_queue->size;
 }
+
+void debug_queue(size_t n) {
+  process * curr;
+  printf("Blocked cons\n");
+  queue_for_each(curr, &(all_queues[n]->blocked_cons), process, next_prev) {
+    printf("%s -> ", curr->process_name);
+  }
+  printf("\nBlocked prods\n");
+  printf("\nhead: %p\n", &(all_queues[n]->blocked_prod));
+  queue_for_each(curr, &(all_queues[n]->blocked_prod), process, next_prev) {
+    printf("{%s, %d, %p} -> ", curr->process_name, curr->prio, &(curr->next_prev));
+  }
+  printf("\nMSG in the arr : [");
+  for (int i = 0; i < all_queues[n]->size; i++) {
+    printf("%c, ", all_queues[n]->msg_arr[i]);
+  }
+  printf("]\n");
+}

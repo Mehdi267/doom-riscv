@@ -77,4 +77,6 @@ int pcount(int fid, int *count);
  * @return returns FAILURE if the value fid is invalid and SUCCES if not
 */
 int preset(int fid);
+
+void debug_queue(size_t n);
 #endif // MSGQUEUE_H_
