@@ -20,6 +20,7 @@ typedef enum status {
 typedef struct message_t {
   int value;
   message_status status;
+  link * blocked_head; // the head of blocked cons or blocked prod
 } message_t;
 
 /**

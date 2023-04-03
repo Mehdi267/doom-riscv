@@ -123,6 +123,7 @@ int psend(int fid, int message) {
     process * p = get_current_process();
     p->message.value = message;
     p->state = BLOCKEDQUEUE;
+    p->message.blocked_head = blocked_producers;
     queue_add(p, blocked_producers, process, next_prev, prio);
     scheduler();
     if (p->message.status != SENT)
@@ -141,10 +142,21 @@ int preceive(int fid, int *message) {
   msg_queue_t * msg_queue = all_queues[fid];
   link * blocked_producers = &(msg_queue->blocked_prod);
   link * blocked_consumers = &(msg_queue->blocked_cons);
-  if (is_empty(msg_queue)) {
+  if (is_empty(msg_queue) && !queue_empty(blocked_producers)) {
+    // the queue can be empty but there are blocked producers who couldn't write
+    // bc they have minor prio.
+    process * blocked = queue_out(blocked_producers, process, next_prev);
+    blocked->message.status = SENT;
+    if (message != NULL)
+      *message = blocked->message.value;
+    printf("blocked: %s | _>>>> %c\n", blocked->process_name, *message);
+    queue_add(blocked, &activatable_process_queue, process, next_prev, prio);
+    scheduler();
+  } else if (is_empty(msg_queue) &&  queue_empty(blocked_producers)) {
     // the msg_queue is empty
     process * p = get_current_process();
     p->state = BLOCKEDQUEUE;
+    p->message.blocked_head = blocked_consumers;
     queue_add(p, blocked_consumers, process, next_prev, prio);
     scheduler();
     if (p->message.status != RECEIVED) {
@@ -158,6 +170,7 @@ int preceive(int fid, int *message) {
     process * blocked = queue_out(blocked_producers, process, next_prev);
     add_message(msg_queue, blocked->message.value);
     blocked->message.status = SENT;
+    blocked->state = ACTIVATABLE;
     queue_add(blocked, &activatable_process_queue, process, next_prev, prio);
     scheduler();
     /* assert(blocked->message.status == RECEIVED); */
