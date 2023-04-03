@@ -111,32 +111,44 @@ int check_if_new_prio_is_higher_and_call_scheduler(int newprio,
   return 0;
 }
 
+
 int chprio(int pid, int newprio) {
-  process *process_pid = ((process *)hash_get(get_process_hash_table(),
-                                              cast_int_to_pointer(pid), NULL));
-  if (process_pid == NULL) {
+  process * p = ((process *)hash_get(get_process_hash_table(),
+                                    cast_int_to_pointer(pid), NULL));
+  if (p == NULL) {
     return -1;
   }
-  if (!(newprio <= MAXPRIO && newprio >= MINPRIO)) {
+  if (newprio > MAXPRIO || newprio < MINPRIO) {
     return -1;
   }
-  if (validate_action_process_valid(process_pid) < 0) {
+  if (validate_action_process_valid(p) < 0) {
     return -1;
   }
-  //TODO REVIEW THIS MEHTOD IN CASE WR HAVE P1 : 130 P2 129 P3 : 128 // IF WE SET P3 TO 131 WE SHOULD EXECUTE P3 INSTEAD P2
-  int old_prio = process_pid->prio;
-  process_pid->prio = newprio;
-  process *head_of_queue = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
-  if (head_of_queue == NULL) {
-    // No other activatable process we go back to executing this process
-    return old_prio;
+  uint16_t old_prio = p->prio;
+  p->prio = newprio;
+  switch (p->state) {
+    case ACTIVATABLE:
+      queue_del(p, next_prev);
+      queue_add(p, &activatable_process_queue, process, next_prev, prio);
+    case ACTIF:
+      scheduler();
+      break;
+    case BLOCKEDQUEUE:
+      queue_del(p, next_prev);
+      queue_add(p, p->message.blocked_head, process, next_prev, prio);
+      break;
+    default:
+      /* BLOCKEDSEMAPHORE, */
+      /* BLOCKEDIO, */
+      /* BLOCKEDWAITCHILD, */
+      /* ASLEEP, */
+      /* ZOMBIE, */
+      /* KILLED */
+      break;
   }
-  check_if_new_prio_is_higher_and_call_scheduler(newprio, false,
-                                                 head_of_queue->prio);
-  // If the process is placed in an execution queue, it must be replaced within
-  // that queue
   return old_prio;
 }
+
 
 
 /**
