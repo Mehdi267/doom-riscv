@@ -47,7 +47,7 @@ int kernel_start() {
   // while(1){
   //   release_frame(get_frame());
   // }
-  assert(start(test13, 4000, 128, "kernel_tests", NULL) != -1);
+  assert(start(kernel_tests, 4000, 128, "kernel_tests", NULL) != -1);
   /* activate_and_launch_scheduler(); */
   scheduler();
   while (1)
