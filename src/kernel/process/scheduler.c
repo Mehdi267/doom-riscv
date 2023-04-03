@@ -100,6 +100,14 @@ uint64_t get_smallest_sleep_time() {
   return 0;
 }
 
+void awake_sleeping_process() {
+    uint64_t sleep_time = get_smallest_sleep_time();
+    while (sleep_time != 0 && current_clock() > sleep_time) { // several process can be awaken
+      process* awake = pop_element_queue_wrapper(ASLEEP_QUEUE);
+      add_process_to_queue_wrapper(awake, ACTIVATABLE_QUEUE);
+      sleep_time = get_smallest_sleep_time();
+    }
+}
 
 void scheduler(){
     debug_print_scheduler_no_arg("\n-----------------Scheduler--------------------\n");
@@ -107,19 +115,9 @@ void scheduler(){
                             getpid(), getpid());
 
     // awake process and insert the in activable queue;
-    uint64_t sleep_time = get_smallest_sleep_time();
-    // printf("sleep time = %ld\n", sleep_time);
-    // printf("current_clock() = %ld\n", current_clock());
-    // process* peek_sleep = get_process_struct_of_pid(21);
-    // if (peek_sleep != NULL){
-    //     printf("peek sleep %d\n", peek_sleep->state);
-    // }
-    while (sleep_time != 0 && current_clock() > sleep_time) { // several process can be awaken
-      process* awake = pop_element_queue_wrapper(ASLEEP_QUEUE);
-      add_process_to_queue_wrapper(awake, ACTIVATABLE_QUEUE);
-      sleep_time = get_smallest_sleep_time();
-    }
-    //We free the memory of the processes that were killed and they are orphans 
+    awake_sleeping_process();
+
+    //We free the memory of the processes that were killed and they are orphans
     process* dead_proc = get_peek_element_queue_wrapper(DEAD_QUEUE);
     if (dead_proc !=NULL){
         pop_element_queue_wrapper(DEAD_QUEUE);
