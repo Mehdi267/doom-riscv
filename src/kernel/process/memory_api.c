@@ -15,7 +15,6 @@
 uint64_t page_id_counter = 0; 
 hash_t *shared_memory_hash_table =  NULL;
 process* custom_release_process = NULL;
-shared_page_t* temp_address = NULL;
 
 /**
  * @brief Get the shared page using the global shared pages hash table
@@ -89,6 +88,7 @@ static shared_page_t* create_shared_page(char* key){
     if (page_info ==NULL){
         return NULL;
     }
+    page_info->page_key = key;
     page_info->page_address = page_frame;
     page_info->usage = 0;
     page_info->page_id = increment_shared_page_counter();
@@ -227,9 +227,9 @@ void shm_release(const char *key){
     if (current_proc->shared_pages ==NULL){
         return;
     }
-    // printf("I am no longer in the free method \n");
-    // printf("%p\n",current_proc->shared_pages->tail_shared_page);
-    // printf("%p\n",current_proc->shared_pages->head_shared_page);
+    print_memory_api_no_arg("I am no longer in the free method \n");
+    debug_print_memory_api("%p\n",current_proc->shared_pages->tail_shared_page);
+    debug_print_memory_api("%p\n",current_proc->shared_pages->head_shared_page);
     //In this case the shared page is head and tail of the link wrapper
     if (proc_page_shared == current_proc->shared_pages->head_shared_page &&
         proc_page_shared == current_proc->shared_pages->tail_shared_page){
@@ -273,7 +273,7 @@ void shm_release(const char *key){
     //We check if there any more users of the pages
     page_info->usage--;
     if (page_info->usage == 0){
-        debug_print_memory(" ************** Deleting process memory :  %s \n", current_proc->process_name);
+        debug_print_memory(" ************** Deleting process memory ************* :  %s \n", current_proc->process_name);
         //If there are no more users we then:
         // -free the page information
         // -release the frame that was holding the process
@@ -281,6 +281,9 @@ void shm_release(const char *key){
         release_frame(page_info->page_address);
         hash_del(get_shared_pages_hash_table(), cast_char_star_into_pointer(key_no_c));
         free(key_free);
+        if (page_info->page_key != NULL){
+          free(page_info->page_key);
+        }
         free(page_info);
     }
     else{
@@ -326,12 +329,12 @@ void *shm_acquire(const char *key){
     if (key ==NULL){
         return NULL;
     }
-    char* key_no_c = (char*) key;
+    char *key_no_c = (char*) key;
+    
     //We check if the page exists or no
     shared_page_t* page_info = get_shared_page(key_no_c);
     if  (page_info == NULL){
-        page_info = temp_address;
-        // return NULL;
+        return NULL;
     }
     process* current_proc = get_process_struct_of_pid(getpid());
     if (current_proc ==NULL){
@@ -363,8 +366,10 @@ void *shm_create(const char *key){
     if (key ==NULL){
         return NULL;
     }
-    char* key_no_c = (char*) key;
-    //We check if the page exists 
+    int char_length = strlen(key);
+    char *key_no_c = malloc(char_length);
+    strcpy(key_no_c, (const char*)key);
+    //We check if the page exists
     if (get_shared_page(key_no_c) !=NULL){
         //If the page exits we leave directly
         return NULL;
@@ -387,6 +392,7 @@ void *shm_create(const char *key){
         return NULL;
     }
     print_memory_api_no_arg("Created a shared page successfully \n");
+
     //The address returned must correspand to the address mapped to the process
     //The node taht was created is the tail_sahred page which holds the page that we are trying to 
     //allocate memory to
@@ -395,6 +401,5 @@ void *shm_create(const char *key){
         current_proc->shared_pages->tail_shared_page->lvl1_index,
         current_proc->shared_pages->tail_shared_page->lvl0_index
     );
-    temp_address = page_info;
     return mapped_address;
 }

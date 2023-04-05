@@ -17,7 +17,7 @@
 static bool parent_block = false;
 
 #define XMETHODS_SEMAPHORE
-// #define XMETHODS_MESSAGE_QUEUE
+//#define XMETHODS_MESSAGE_QUEUE
 
 hash_t* semaphore_table = NULL;
 int semaphore_id_counter = 0;

@@ -54,8 +54,8 @@
 #define TESTING
 #define TESTING_KERNEL
 #define TESTING_USER
-//#define USER_PROCESSES_ON
-#define KERNEL_PROCESSES_ON
+#define USER_PROCESSES_ON
+// #define KERNEL_PROCESSES_ON
 // #define RELEASE
 // #define DEBUG_SCHEDULER
 #define TESTING_MEMORY

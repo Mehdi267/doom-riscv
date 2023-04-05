@@ -34,6 +34,7 @@ extern hash_t* shared_memory_hash_table;
 extern process* custom_release_process;
 
 typedef struct shared_page{
+    char *page_key;
     void* page_address;
     int usage;
     uint64_t page_id;
