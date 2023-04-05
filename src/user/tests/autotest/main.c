@@ -8,18 +8,19 @@
 #define TESTS_NUMBER 20
 
 const char *tests[TESTS_NUMBER] = {
+    "test22",
 		"test0",
 		"test1",
 		"test2",
 		"test3",
 		"test4",
         "test5",
-        //"test7", // takes too long 
+        //"test7", 
         "test8",
         "test10",
-        //"test11", //Impossible using semaphores
+        "test11", 
         "test12",
-        // "test13", //Same problem as test 11 
+        "test13",  
         "test14",
         "test15",
         "test16",

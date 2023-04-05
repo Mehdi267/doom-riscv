@@ -9,6 +9,9 @@ __attribute__((noreturn)) void exit(int status);
 * @brief this macro is meant to be used in function witch returns -1 on failure
 */
 #define secmalloc(p, n)                                                        \
+  if (n >= 2147483647){                                                        \
+    return -1;                                                                 \
+  }                                                                            \
   p = malloc(n);                                                               \
   if (p == NULL)                                                               \
   return -1

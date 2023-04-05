@@ -79,14 +79,15 @@ int getpid(void);
 int getprio(int pid);
 int kill(int pid);
 
-int pcount(int fid, int *count);
-int pcreate(int count);
-int pdelete(int fid);
-int preceive(int fid,int *message);
-int preset(int fid);
-int psend(int fid, int message);
+// int pcount(int fid, int *count);
+// int pcreate(int count);
+// int pdelete(int fid);
+// int preceive(int fid,int *message);
+// int preset(int fid);
+// int psend(int fid, int message);
 
-#define WITH_SEM
+//#define WITH_SEM
+// #define WITH_MSG
 
 #if defined WITH_SEM
 int scount(int sem);

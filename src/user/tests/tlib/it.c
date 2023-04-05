@@ -18,9 +18,9 @@
 void test_it(void)
 {
 	#ifndef USER_SPACE
-		csr_set(sstatus, 2); // sstatus.SIE = 1
-		// Instruction wfi, Wait for interrupt
-		__asm__ __volatile__ ("wfi" ::: "memory");
-		csr_clear(sstatus, 2); // sstatus.SIE = 0
+      csr_set(sstatus, 2); // sstatus.SIE = 1
+      // Instruction wfi, Wait for interrupt
+      __asm__ __volatile__ ("wfi" ::: "memory");
+      csr_clear(sstatus, 2); // sstatus.SIE = 0
 	#endif
 }

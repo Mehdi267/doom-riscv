@@ -80,6 +80,7 @@ int test_sem(void *arg);
 int test10(void* arg);
 int test13_msg(void* arg);
 int test12(void *arg);
+int test13(void *arg);
 int test14(void *arg);
 int test15(void *arg);
 int test17(void *arg);

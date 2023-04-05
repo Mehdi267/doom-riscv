@@ -17,6 +17,7 @@
 #include "../process/timer_api.h"
 #include "../process/semaphore_api.h"
 #include "../process/memory_api.h"
+#include "../process/scheduler.h"
 #include "syscall_num.h"
 #include "../msgqueue.h"
 #include "cons_write.h"
@@ -55,6 +56,7 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
     case SYSC_pcount:
       return pcount(tf->a0, (int*) tf->a1);
     case SYSC_pcreate:
+      // printf("--------pcreate called =  -----------\n");
       return pcreate(tf->a0);
     case SYSC_pdelete:
       return pdelete(tf->a0);
@@ -78,6 +80,7 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
     case SYSC_scount:
       return scount(tf->a0);             
     case SYSC_screate:
+      printf("--------screate called =  -----------\n");
       return screate(tf->a0);            
     case SYSC_sdelete:
       return sdelete(tf->a0);            
@@ -131,7 +134,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 		}
 	} else {
 		// TODO ADD SYSTEM CALLS TREATEMENT
-    debug_print("Supervisor Exception scause id = %ld\n", scause);
+    //debug_print("Supervisor Exception scause id = %ld\n", scause);
 		if ( csr_read(sstatus)){
     
     }
@@ -155,6 +158,18 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
         //Makes sure that we do not jump in an ecall again 
         csr_write(sepc, csr_read(sepc) + 4);
         csr_clear(sstatus, MSTATUS_SPP);
+        break;
+      case 13:
+        kill(getpid());
+        scheduler();
+        break;
+      case 14:
+        kill(getpid());
+        scheduler();
+        break;
+      case 15:
+        kill(getpid());
+        scheduler();
         break;
 			default:
         //The cause is treated we exit immediately

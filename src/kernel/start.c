@@ -36,6 +36,10 @@ int kernel_start() {
     puts("error while setting up process");
     exit(-1);
   }
+  int *x = malloc(sizeof(int));
+  if (*x == 3){
+    printf(",ezak,ez");
+  } 
   /* set_supervisor_timer_interrupt(50); // setting the 1st interrupt */
   /* assert(start(test10,4000, 192, "test10", (void *)0) != -1); */
   /* assert(start(test12,4000, 128, "test12", (void *)0) != -1); */
