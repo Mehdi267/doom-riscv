@@ -133,16 +133,16 @@ int scount(int sem){
 
 int screate(short int count){
     if (count<0){
-        printf("semcreate fail 1\n");
+        print_sem_api_no_arg("semcreate count fail 1\n");
         return -1;
     }
     if (currently_running_semaphores == NB_MAX_SEMS){
-        printf("semcreate fail 2\n");
+        print_sem_api_no_arg("semcreate max sem fail 2\n");
         return -1;
     }
     semaphore_t* sem = (semaphore_t*) malloc(sizeof(semaphore_t));
     if (sem == NULL){
-        printf("semcreate fail 3\n");
+        print_sem_api_no_arg("semcreate memory is full fail 3\n");
         return -1;
     }
     sem->count = (int16_t) count;
