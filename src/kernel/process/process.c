@@ -56,25 +56,36 @@ static int setup_main_context() {
 }
 
 static int create_idle_process() {
-  int pid_idle;
-  #ifdef USER_PROCESSES_ON
+  #if defined USER_PROCESSES_ON
+    int pid_idle;
     pid_idle = start_virtual("idle", 4000, 1,cast_int_to_pointer(300));
-  #endif
-  #ifdef KERNEL_PROCESSES_ON
+    return pid_idle;
+  #elif defined KERNEL_PROCESSES_ON
+    int pid_idle;
     pid_idle = start(idle, 4000, 1, "idle",cast_int_to_pointer(300));
+    return pid_idle;
+  #else
+    # error either "USER_PROCESSES_ON" or "KERNEL_PROCESSES_ON" must be defined
+    return 0;
   #endif
-  return pid_idle;
 }
 
 static int create_testing_process() {
-  int pid_test;
-  #ifdef USER_PROCESSES_ON
-    pid_test = start_virtual("autotest", 4000, 1,cast_int_to_pointer(300));
+  #ifdef TESTING
+    #ifdef USER_PROCESSES_ON
+      int pid_test;
+      pid_test = start_virtual("autotest", 4000, 1,cast_int_to_pointer(300));
+      return pid_test;
+    #endif
+    #ifdef KERNEL_PROCESSES_ON
+      int pid_test;
+      pid_test = start(kernel_tests, 4000, 2, "kernel_tests",cast_int_to_pointer(300));
+      return pid_test;
+    #else
+      return 0;
+    #endif
   #endif
-  #ifdef KERNEL_PROCESSES_ON
-    pid_test = start(kernel_tests, 4000, 2, "kernel_tests",cast_int_to_pointer(300));
-  #endif
-  return pid_test;
+  return 0;
 }
 
 int activate_and_launch_custom_process(process *process_to_activate) {
