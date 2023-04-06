@@ -83,7 +83,7 @@ int main(void *arg)
         n = 0;
         while (1) {
                 int pid = start("no_run", 2000, 127, 0);
-                printf("n = %d l = %d \n", n, l);
+                // printf("n = %d l = %d \n", n, l);
                 if (pid < 0) break;
                 ids[n++] = pid;
                 if (n == l) {

@@ -10,8 +10,10 @@
 #include "assert.h"
 #include "riscv.h"
 
+#include "trap.h"
 #include "traps/trap.h"
 #include "timer.h"
+#include "../process/process.h"
 
 const char *interruption_names[16] = {
 		"u_software",
@@ -56,6 +58,7 @@ void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf)
 		}
 	} else {
 		// Exception cause
+		debug_print("Machine Exception scause id = %ld\n", mcause);
 		switch (mcause) {
 			default:
 				blue_screen(tf);

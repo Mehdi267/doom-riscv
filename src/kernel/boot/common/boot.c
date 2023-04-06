@@ -68,9 +68,9 @@ static void delegate_traps()
     csr_set(medeleg, 0xffff);
     csr_set(mideleg, 0xffff);
     //page fault delegation 
-    // csr_set(medeleg, SIE_INST_PAGE_FAULT);
-    // csr_set(medeleg, SIE_INST_PAGE_FAULT);
-    // csr_set(medeleg, SIE_STORE_PAGE_FAULT);
+    csr_set(medeleg, SIE_INST_PAGE_FAULT);
+    csr_set(medeleg, SIE_INST_PAGE_FAULT);
+    csr_set(medeleg, SIE_STORE_PAGE_FAULT);
 }
 
 

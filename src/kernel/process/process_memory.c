@@ -272,6 +272,7 @@ static int allocate_memory_final(process* proc_conf, int start_index, int end_in
     if (proc_conf->page_tables_lvl_1_list == NULL){
         return -1;
     }
+    //These variables are used when we are writing code into into frames
     bool writing_data = false;
     void* data_pointer = NULL;
     int data_left = 0 ;
@@ -357,7 +358,7 @@ static int allocate_memory_final(process* proc_conf, int start_index, int end_in
                         (long unsigned int )frame_pointer, 
                         true,
                         true,
-                        true,
+                        writing_data,
                         true, 
                         KILO);
             #ifdef PTE_PAGES_DEBUG

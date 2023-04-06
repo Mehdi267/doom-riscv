@@ -589,6 +589,18 @@ extern int idle(void *arg);
 #define print_memory_api_no_arg(fmt, ...) \
         do {if (DEBUG_MEMORY_API_LEVEL){ printf(fmt);} } while (0)
 
+/**
+ * @brief the following macro are used to debug the semaphore api 
+ */
+#define DEBUG_SEMAPHORE_API_LEVEL 0 //Indicates if debug type is active
+
+#define debug_print_sem(fmt, ...) \
+        do {if (DEBUG_SEMAPHORE_API_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_SEMAPHORE_API_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+#define print_sem_api_no_arg(fmt, ...) \
+        do {if (DEBUG_SEMAPHORE_API_LEVEL){ printf(fmt);} } while (0)
 
 
 #endif

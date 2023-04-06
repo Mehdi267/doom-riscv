@@ -162,7 +162,7 @@ static int link_shared_page_to_process(process* proc_conf, shared_page_t* page_i
                             (long unsigned int) page_info->page_address, 
                             true,
                             true,
-                            true,
+                            false,
                             true, KILO);
     return 0;
 }
@@ -266,6 +266,16 @@ void shm_release(const char *key){
     uint16_t lvl0_index = released_page_p->lvl0_index;
     page_table_entry* shared_page_entry =  released_page_p->page_table->pte_list+lvl0_index;
     set_invalid(shared_page_entry);
+    //Flush the tlb
+    __asm__ __volatile__("sfence.vma x0, x0" :  :  :);
+    configure_page_entry(shared_page_entry,
+                            0, 
+                            false,
+                            false,
+                            false,
+                            false,
+                            KILO);
+
     //We remove the page from the shared pages hash table related to the process
     if (hash_del(current_proc->proc_shared_hash_table, cast_char_star_into_pointer(key_no_c))<0){
         return;

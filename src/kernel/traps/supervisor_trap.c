@@ -80,7 +80,6 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
     case SYSC_scount:
       return scount(tf->a0);             
     case SYSC_screate:
-      printf("--------screate called =  -----------\n");
       return screate(tf->a0);            
     case SYSC_sdelete:
       return sdelete(tf->a0);            
@@ -103,6 +102,9 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
     case SYSC_shm_release:
       shm_release((const char*) tf->a0);
       break; 
+    case SYSC_power_off:
+      exit(tf->a0);
+      break;
     default:
       printf("Syscall code does not match any of the defined syscalls");
       blue_screen(tf);
@@ -134,9 +136,8 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 		}
 	} else {
 		// TODO ADD SYSTEM CALLS TREATEMENT
-    //debug_print("Supervisor Exception scause id = %ld\n", scause);
-		if ( csr_read(sstatus)){
-    
+    if (scause != 8){
+      debug_print("Supervisor Exception scause id = %ld\n", scause);
     }
     unsigned long retval;
     switch (scause) {

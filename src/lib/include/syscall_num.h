@@ -12,6 +12,7 @@
 #define SYSC_getprio            8
 #define SYSC_kill               9
 
+//message queue
 #define SYSC_pcount             10
 #define SYSC_pcreate            11
 #define SYSC_pdelete            12
@@ -19,6 +20,7 @@
 #define SYSC_preset             14
 #define SYSC_psend              15
 
+//process management
 #define SYSC_start              16
 #define SYSC_wait_clock         17
 #define SYSC_waitpid            18
@@ -33,10 +35,12 @@
 #define SYSC_cons_wait          26
 #define SYSC_reboot             27
 
+//memory api
 #define SYSC_shm_create         28
 #define SYSC_shm_acquire        29
 #define SYSC_shm_release        30
 
+//Sempahores
 #define SYSC_scount             31
 #define SYSC_screate            32
 #define SYSC_sdelete            33
@@ -46,6 +50,9 @@
 #define SYSC_try_wait           37
 #define SYSC_wait               38
 
-#define NB_SYSCALLS             31
+#define SYSC_power_off          39
+
+
+#define NB_SYSCALLS             40
 
 #endif

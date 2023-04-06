@@ -44,4 +44,7 @@ extern int waitpid(int pid, long int *retval);
 extern void *shm_create(const char*);
 extern void *shm_acquire(const char*);
 extern void shm_release(const char*);
+
+extern void power_off(int exit_value);
+
 #endif

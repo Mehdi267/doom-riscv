@@ -8,7 +8,6 @@
 #define TESTS_NUMBER 20
 
 const char *tests[TESTS_NUMBER] = {
-    "test22",
 		"test0",
 		"test1",
 		"test2",
@@ -61,5 +60,6 @@ int main(void)
 		assert(ret == 0);
 	}
 	printf("Auto test done.\n");
+        power_off(0);
 }
 

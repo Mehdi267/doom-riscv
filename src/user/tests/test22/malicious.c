@@ -35,6 +35,7 @@ int main(void *arg)
 
         /* Try a read */
         printf("%s", "  Try a read ... ");
+        printf("I can read of this address : %x, address equal to %p \n", *shared_area, shared_area);
         assert(*shared_area == MAGIC_COOKIE);
         printf("%s\n", " done, this is wrong, I should have been killed ! ");
 

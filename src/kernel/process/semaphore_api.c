@@ -211,8 +211,30 @@ int wait(int sem){
             sem_struct->list_header_process->tail_blocked = blocked_proc_sem;
         }
         else {
-            sem_struct->list_header_process->tail_blocked->next_block_struct = blocked_proc_sem;
-            sem_struct->list_header_process->tail_blocked = blocked_proc_sem;
+            blocked_process_semaphore_t* iter_blocked_proc = sem_struct->list_header_process->head_blocked;
+            blocked_process_semaphore_t* iter_blocked_proc_prev = sem_struct->list_header_process->head_blocked;
+            int current_prio = proc_sem->prio;
+            while(iter_blocked_proc != NULL){
+                if ( current_prio > iter_blocked_proc->blocked_process->prio){
+                    print_sem_api_no_arg("stuffing process into the semaphore queue\n");
+                    if (iter_blocked_proc == sem_struct->list_header_process->head_blocked){
+                        blocked_proc_sem->next_block_struct = sem_struct->list_header_process->head_blocked;
+                        sem_struct->list_header_process->head_blocked = blocked_proc_sem;
+                    }
+                    else {
+                        blocked_proc_sem->next_block_struct = iter_blocked_proc;
+                        iter_blocked_proc_prev->next_block_struct = blocked_proc_sem;
+                    }
+                    break;    
+                }
+                iter_blocked_proc_prev = iter_blocked_proc; 
+                iter_blocked_proc = iter_blocked_proc->next_block_struct;
+            }
+            if (iter_blocked_proc == NULL){
+                print_sem_api_no_arg("Adding process into the semaphore tail\n");
+                sem_struct->list_header_process->tail_blocked->next_block_struct = blocked_proc_sem;
+                sem_struct->list_header_process->tail_blocked = blocked_proc_sem;
+            }
         }
         proc_sem->semaphore_id = sem; 
         proc_sem->state = BLOCKEDSEMAPHORE;
