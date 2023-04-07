@@ -1,4 +1,4 @@
-#include "../drivers/console.h"
+//#include "../tests/sys_api.h"
 #include <stdio.h>
 #include "riscv.h" //to use wfi
 

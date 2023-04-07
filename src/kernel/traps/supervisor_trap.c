@@ -47,10 +47,9 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
       exit_process(tf->a0);
       return 0; // we need to return something
     case SYSC_cons_write:
-      return cons_write((const char*) tf->a0, (unsigned long) tf->a1);
+      return cons_write((char*) tf->a0, (unsigned long) tf->a1);
     case SYSC_cons_read:
-      // TODO:
-      return -1;
+      return cons_read((const char*) tf->a0, (unsigned long) tf->a1);
     case SYSC_cons_echo:
       // TODO:
       return -1;
