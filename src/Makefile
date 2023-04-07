@@ -72,7 +72,7 @@ QEMU_GDB_OPTS = -s -S
 QEMU_NO_GRAPH_OPTS = -nographic
 # Pour avoir l'uart + le VGA en mode graphique
 QEMU_GRAPH_OPTS = --enable-sdl --with-sdlabi=2.0 -display sdl -serial mon:stdio
-
+OPT=TESTING
 #
 # Docker
 #
@@ -84,12 +84,18 @@ DK_GATEWAY = 172.17.0.1
 # Targets
 #
 
+
+
 .PHONY: clean kernel $(KERNEL_BIN) user lib
+
+test : all
+
+test : OPT=TESTING
 
 all $(KERNEL_BIN) : kernel
 
 kernel: user
-	make MACHINE=$(MACHINE) -C kernel/ all
+	make MACHINE=$(MACHINE) OPT=$(OPT) -C kernel/ all
 
 user:
 	make -C user
