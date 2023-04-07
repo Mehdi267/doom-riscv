@@ -11,6 +11,7 @@
 #include "queue.h"
 #include "stdarg.h"
 #include "stdbool.h"
+#include "../keyboard/consread.h"
 #include "../memory/virtual_memory.h"
 #include "../memory/pages.h"
 #include <stdint.h>
@@ -332,6 +333,9 @@ extern int chprio(int pid, int newprio);
  * @param retval this value is passed as signal to the parent process
  */
 extern void exit_process(int retval);
+
+extern int cons_read(char *string, unsigned long length);
+
 
 /**
  * @brief Returns the pid of the currently running process
