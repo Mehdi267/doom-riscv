@@ -14,7 +14,7 @@ const char *tests[TESTS_NUMBER] = {
         "test3",
         "test4",
         "test5",
-        //"test7", 
+        //"test7", //takes too long
         "test8",
         "test10",
         "test11", 
