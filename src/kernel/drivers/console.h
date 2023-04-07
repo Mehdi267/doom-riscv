@@ -15,7 +15,7 @@ typedef struct console_device {
 	//void (*add_to_buffer)(char);
 	bool ignore;
 	char buffer[128]; //temp
-	int top_ptr;
+	unsigned long top_ptr;
 	bool echo;
 } console_device_t;
 

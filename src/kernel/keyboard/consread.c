@@ -25,7 +25,7 @@ Lorsque length est exactement égal au nombre de caractères frappés,
 fin de ligne non comprise, le marqueur de fin de ligne reste dans le tampon. 
 Le prochain appel récupèrera une ligne vide.
 */
-int cons_read(char *string, unsigned long length){
+unsigned long cons_read(char *string, unsigned long length){
     //requires string -> string + length valid
     if(!length) return 0;
     //lets chars get stored in buffer
