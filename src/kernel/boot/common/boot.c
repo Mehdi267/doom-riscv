@@ -67,11 +67,9 @@ static void delegate_traps()
      * in order to have more control over what we do for that reason we exploit the two registers :
      *  medeleg(exceptions) and mideleg(interrupts) for delegating the appropriate traps to the appropriate mode
     */
-    // csr_set(medeleg, SIE_STIE);
-    // csr_set(mideleg, SIE_STIE);
-    
-    csr_set(medeleg, 0xffff);
-    csr_set(mideleg, 0xffff);
+    csr_set(medeleg, SIE_STIE);
+    csr_set(mideleg, SIE_STIE);
+    csr_set(mideleg, SIE_SEI);
     //page fault delegation 
     csr_set(medeleg, SIE_INST_PAGE_FAULT);
     csr_set(medeleg, SIE_INST_PAGE_FAULT);

@@ -115,6 +115,7 @@
 #define SIE_INST_PAGE_FAULT     (1 << 12)
 #define SIE_LOAD_PAGE_FAULT     (1 << 13)
 #define SIE_STORE_PAGE_FAULT    (1 << 15)
+#define SIE_SEI                 (1 << IRQ_S_EXT) //external interrupts
 
 
 #define SIP_SSIP MIP_SSIP

@@ -1,4 +1,8 @@
 // See LICENSE for license details.
+#ifndef _CONSOLE_H_
+#define _CONSOLE_H_
+
+#include <stdbool.h>
 
 #pragma once
 
@@ -8,6 +12,11 @@ typedef struct console_device {
 	void (*init)();
 	int (*getchar)();
 	int (*putchar)(int);
+	//void (*add_to_buffer)(char);
+	bool ignore;
+	char buffer[128]; //temp
+	int top_ptr;
+	bool echo;
 } console_device_t;
 
 /*
@@ -26,6 +35,8 @@ static inline int kputchar(int ch)
 	return console_dev->putchar(ch);
 }
 
+void kaddtobuffer(char c);
+
 /*
  * Console drivers
  */
@@ -39,3 +50,4 @@ extern console_device_t console_semihost;
 void register_console(console_device_t *dev);
 
 
+#endif

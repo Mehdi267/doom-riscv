@@ -21,6 +21,7 @@
 #include "syscall_num.h"
 #include "../msgqueue.h"
 #include "cons_write.h"
+#include "../keyboard/keyboard.h"
 
 extern void inc_sepc(void); // defined in supervisor_trap_entry.S
 unsigned long static syscall_handler(struct trap_frame *tf) {
@@ -126,6 +127,12 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 				 * so that we don't jump into the same interrupt again
 				*/
 				csr_clear(sip, MIP_STIP);
+				break;
+			case intr_s_external:
+				//interruption clavier
+				handle_keyboard_interrupt();
+
+				csr_clear(sip, SIE_SEI); //clear interrupt
 				break;
 			default:
 				die(

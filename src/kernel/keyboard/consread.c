@@ -1,6 +1,17 @@
 #include "../drivers/console.h"
 #include <stdio.h>
+#include "riscv.h" //to use wfi
 
+
+void cons_echo(int on){
+    if(!on) console_dev->echo = false;
+    else console_dev->echo = true;
+}
+
+void cons_flush(){
+    console_dev->top_ptr = 0;
+    console_dev->putchar('\n');
+}
 
 /**
 Si length est nul, cette fonction retourne 0.
@@ -17,15 +28,15 @@ Le prochain appel récupèrera une ligne vide.
 int cons_read(char *string, unsigned long length){
     //requires string -> string + length valid
     if(!length) return 0;
-    int n = 0;
-    int c = -1;
-    while(c < 0) c = kgetchar();
-    string[0] = (char) c;
-    while (c != EOL){
-        c = -1;
-        while(c < 0) c = kgetchar();
-        n++;
-        if(n < length && c != EOL) string[n] = (char) c; // Le caractère de fin de ligne (13) n'est jamais transmis à l'appelant.
+    //lets chars get stored in buffer
+    console_dev->ignore = false;
+    //make sure buffer is empty => any earlier strike is ignored
+    cons_flush();
+    //wait until buffer contains n char, or last char is a EOL
+    while(console_dev->top_ptr != length && (console_dev->top_ptr == 0 || console_dev->buffer[console_dev->top_ptr-1] != EOL)){
+        wfi();
     }
-    return n;
+    printf("%i", console_dev->top_ptr);
+    console_dev->ignore = true;
+    return console_dev->top_ptr;
 }
