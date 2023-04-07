@@ -49,9 +49,8 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
     case SYSC_cons_write:
       return cons_write((char*) tf->a0, (unsigned long) tf->a1);
     case SYSC_cons_read:
-      return cons_read((const char*) tf->a0, (unsigned long) tf->a1);
+      return cons_read((char*) tf->a0, (unsigned long) tf->a1);
     case SYSC_cons_echo:
-      // TODO:
       return -1;
     case SYSC_pcount:
       return pcount(tf->a0, (int*) tf->a1);

@@ -1,7 +1,8 @@
 //#include "../tests/sys_api.h"
 #include <stdio.h>
 #include "riscv.h" //to use wfi
-
+#include "stdbool.h"
+#include "../drivers/console.h"
 
 void cons_echo(int on){
     if(!on) console_dev->echo = false;
@@ -36,7 +37,7 @@ unsigned long cons_read(char *string, unsigned long length){
     while(console_dev->top_ptr != length && (console_dev->top_ptr == 0 || console_dev->buffer[console_dev->top_ptr-1] != EOL)){
         wfi();
     }
-    printf("%i", console_dev->top_ptr);
+    //printf("%i", console_dev->top_ptr);
     console_dev->ignore = true;
     return console_dev->top_ptr;
 }

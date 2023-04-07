@@ -49,11 +49,7 @@ int kernel_start() {
   // while(1){
   //   release_frame(get_frame());
   // }
-<<<<<<< HEAD
   // assert(start(kernel_tests, 4000, 2, "kernel_tests", NULL) != -1);
-=======
-  //assert(start(kernel_tests, 4000, 2, "kernel_tests", NULL) != -1);
->>>>>>> 5f2f768 (console working)
   activate_and_launch_scheduler();
   while (1)
     wfi();

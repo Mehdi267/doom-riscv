@@ -17,9 +17,6 @@
 #include "drivers/splash.h"
 #include "memory/frame_dist.h" //used to call init_frames
 #include "process/process.h" // used for the debug method
-#include "frame_dist.h"
-#include "pages.h"
-#include "process/process.h"
 
 
 extern void _start();
