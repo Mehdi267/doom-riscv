@@ -70,8 +70,8 @@ static int create_idle_process() {
   #endif
 }
 
+#ifdef TESTING
 static int create_testing_process() {
-  #ifdef TESTING
     #ifdef USER_PROCESSES_ON
       int pid_test;
       pid_test = start_virtual("autotest", 4000, 1,cast_int_to_pointer(300));
@@ -84,9 +84,9 @@ static int create_testing_process() {
     #else
       return 0;
     #endif
-  #endif
   return 0;
 }
+#endif
 
 int activate_and_launch_custom_process(process *process_to_activate) {
   // This mehtod is mostly used for debugging, use with care

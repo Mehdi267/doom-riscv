@@ -11,7 +11,7 @@ KERNEL_NAME = kernel.bin
 STDLIB_NAME = lib
 BUILD_DIR = build
 KERNEL_BIN = $(BUILD_DIR)/$(KERNEL_NAME)
-
+OPT=Null
 #
 # Import GNU toolchain configuration
 #
@@ -72,7 +72,6 @@ QEMU_GDB_OPTS = -s -S
 QEMU_NO_GRAPH_OPTS = -nographic
 # Pour avoir l'uart + le VGA en mode graphique
 QEMU_GRAPH_OPTS = --enable-sdl --with-sdlabi=2.0 -display sdl -serial mon:stdio
-OPT=TESTING
 #
 # Docker
 #
@@ -84,11 +83,11 @@ DK_GATEWAY = 172.17.0.1
 # Targets
 #
 
-
-
 .PHONY: clean kernel $(KERNEL_BIN) user lib
 
-test : all
+
+test : clean all 
+	$(QEMU) $(QEMU_OPTS) $(QEMU_NO_GRAPH_OPTS)
 
 test : OPT=TESTING
 
@@ -111,7 +110,7 @@ clean:
 #
 
 # go :Lance l'OS avec QEmu dans le terminal
-go: all
+go: clean all
 	$(QEMU) $(QEMU_OPTS) $(QEMU_NO_GRAPH_OPTS)
 
 # debug : Lance l'OS dans un terminal avec QEmu et attend gdb.

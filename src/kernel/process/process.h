@@ -51,7 +51,7 @@
  * @param
  */
 // #define DEBUG
-// #define TESTING //testing should defined by the make file when doing a make test 
+// #define TESTING //Use make test in order to enable this header
 // #define RELEASE
 #define USER_PROCESSES_ON
 // #define KERNEL_PROCESSES_ON
