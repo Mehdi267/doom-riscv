@@ -30,6 +30,7 @@ extern clint_device_t clint_none;
 extern clint_device_t spike_clint;
 extern clint_device_t sifive_clint;
 extern clint_device_t cep_clint;
+extern clint_device_t virt_clint;
 
 void register_clint(clint_device_t *dev);
 

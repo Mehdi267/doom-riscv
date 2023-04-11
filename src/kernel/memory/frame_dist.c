@@ -23,7 +23,6 @@ void init_frames(){
     }
     *((char**)curptr) = 0;
     mem_ptr = _free_memory_start;
-    // printf("init done");
     assert(curptr < _memory_end);
     assert(curptr + FRAME_SIZE >= _memory_end);
     assert(*((char**)curptr) == 0);

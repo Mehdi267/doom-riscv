@@ -18,7 +18,7 @@ test_apps_t test_table[] = {
   {test15_sem, "test15_sem", 0},
   {test10, "test10", 0},
   {test12, "test12", 0},
-  {test13, "test13", 0},
+  {test13_msg, "test13_msg", 0},
   {test14, "test14", 0},
   {test15, "test15", 0},
   {test17, "test17", 0},

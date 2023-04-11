@@ -18,5 +18,6 @@ extern plic_device_t *plic_dev;
 extern plic_device_t plic_none;
 extern plic_device_t cep_plic;
 extern plic_device_t sifive_plic;
+extern plic_device_t virt_plic;
 
 void register_plic(plic_device_t *dev);

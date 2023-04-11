@@ -102,7 +102,6 @@ static inline void enter_supervisor_mode() {
     // avant de passer en mode superviseur.
     setup_pmp();
 
-
     /*
     * Configuration du mode à utiliser lors de l'instruction mret.
     *
@@ -123,13 +122,6 @@ static inline void enter_supervisor_mode() {
     // les bits suivants : 01
     csr_set(mstatus, MSTATUS_MPP_0);
     csr_clear(mstatus, MSTATUS_MPP_1);
-
-    //enables global Supervisor mode interrupts
-    /*csr_set(sstatus, SSTATUS_SIE); // interruptions desactivated for now */
-    //csr_set(mip, MIP_STIP);
-
-    //set mxr to one to access executable pages
-    //csr_set(sstatus, SSTATUS_MXR);
     
     #ifdef USER_PROCESS_DEBUG
         //set sum value in sstatus to one to debug user processes
@@ -159,17 +151,29 @@ __attribute__((noreturn)) void boot_riscv()
     // Configuration des composants spécifiques à la machine (uart / htif, timer et interruptions externes).
     arch_setup();
 
-
     display_info_proc();
 
     // Délégations des interruptions et des exceptions
     delegate_traps();
     
-    //We disable machine mode interrupts
-    csr_clear(mstatus, MSTATUS_MIE);
 
-    //enables timer interrupts for the Supervisor mode
-    csr_set(sie, SIE_STIE);
+
+    #ifdef VIRTMACHINE
+        //enables timer interrupts for the machine mode
+        //since this machine cannot handle s time interrupts
+        csr_set(mie, MIE_MTIE);
+        csr_set(sie, SIE_STIE);
+        csr_set(sie, 0x2); //We enable software interrupts
+        csr_set(mstatus, MSTATUS_MIE);
+    #else
+        //enables timer interrupts for the Supervisor mode
+        csr_set(sie, SIE_STIE);
+        //We disable machine mode interrupts
+        csr_clear(mstatus, MSTATUS_MIE);
+    #endif
+
+
+    
     
     //Initilisates frame division 
     init_frames();

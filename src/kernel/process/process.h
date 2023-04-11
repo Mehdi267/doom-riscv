@@ -211,7 +211,7 @@ typedef struct process_t {
   // Process return value
   int return_value; // return value of the process, used in waitpid
   // Process memory management
-  page_table *page_table_level_2; // Pointer to the level 0 page table
+  page_table *page_table_level_2; // Pointer to the level  2 page table
                                   // associated with the process
   page_table_link_list_t
       *page_tables_lvl_1_list; // pointer to the list that holds the lvl1 page
@@ -605,6 +605,23 @@ extern int idle(void *arg);
 
 #define print_sem_api_no_arg(fmt, ...) \
         do {if (DEBUG_SEMAPHORE_API_LEVEL){ printf(fmt);} } while (0)
+
+
+/**
+ * @brief the following macro are used to debug the timer for the 
+ * virt qemu machine 
+ */
+#define DEBUG_VIRT_TIMER_LEVEL 0 //Indicates if debug type is active
+
+#define debug_print_virt_timer(fmt, ...) \
+        do {if (DEBUG_VIRT_TIMER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_VIRT_TIMER_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+
+#define print_virt_timer_no_arg(fmt, ...) \
+        do {if (DEBUG_SEMAPHORE_API_LEVEL){ printf(fmt);} } while (0)
+
 
 
 #endif

@@ -28,8 +28,13 @@ int initialize_process_hash_table() {
 }
 
 void activate_and_launch_scheduler(void){
-    set_supervisor_timer_interrupt(100); 
-    csr_set(sstatus, MSTATUS_SIE);
+    #ifdef VIRTMACHINE
+      csr_set(sstatus, MSTATUS_SIE);
+      set_machine_timer_interrupt(100);
+    #else
+      set_supervisor_timer_interrupt(100); 
+      csr_set(sstatus, MSTATUS_SIE);
+    #endif
     while(1){ wfi();}
     return;
 }

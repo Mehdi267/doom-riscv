@@ -118,7 +118,13 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 		// Interruption cause
 		uint8_t interrupt_number = scause & ~INTERRUPT_CAUSE_FLAG;
 		switch (scause & ~INTERRUPT_CAUSE_FLAG) {
-			case intr_s_timer: // in case the s timer interrupt has not been delegated to supervisor mode
+			#ifdef VIRTMACHINE
+        case intr_s_software:
+        	set_supervisor_interrupts(false);
+          csr_clear(sip, 0x2);
+          handle_stimer_interrupt();
+      #endif
+      case intr_s_timer: // in case the s timer interrupt has not been delegated to supervisor mode
 				handle_stimer_interrupt();
 				/**
 				 * We clear the bit in the sip register that was responsible for this interrupt 
@@ -129,7 +135,6 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 			case intr_s_external:
 				//interruption clavier
 				handle_keyboard_interrupt();
-
 				csr_clear(sip, SIE_SEI); //clear interrupt
 				break;
 			default:
@@ -165,6 +170,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
         csr_write(sepc, csr_read(sepc) + 4);
         csr_clear(sstatus, MSTATUS_SPP);
         break;
+      /*
       case 13:
         kill(getpid());
         scheduler();
@@ -177,6 +183,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
         kill(getpid());
         scheduler();
         break;
+      */
 			default:
         //The cause is treated we exit immediately
 				blue_screen(tf);

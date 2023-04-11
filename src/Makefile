@@ -11,7 +11,9 @@ KERNEL_NAME = kernel.bin
 STDLIB_NAME = lib
 BUILD_DIR = build
 KERNEL_BIN = $(BUILD_DIR)/$(KERNEL_NAME)
-OPT=Null
+TEST_OPT=NULL_TEST
+VIRT_OPT=NULL_VIRT
+
 #
 # Import GNU toolchain configuration
 #
@@ -22,11 +24,11 @@ include toolchain.config
 # Machine
 #
 
-#MACHINE ?= virt
+MACHINE ?= virt
 #MACHINE ?= sifive_u
 #MACHINE ?= spike
 #MACHINE ?= zybo
-MACHINE ?= cep
+# MACHINE ?= cep
 
 #
 # Hardware plateforme
@@ -52,6 +54,17 @@ GDB_OPTS = -q \
 # Qemu
 #
 
+#Starting with QEMU 4.1.0, we must add the '-bios none' flag
+QEMU_OPTS = -machine $(QEMU_MACHINE) -kernel $(KERNEL_BIN)  -rtc base=localtime -k fr 
+QEMU_CEP_MEM = -m 32M
+QEMU_VIRT_MEM = -m 128M
+QEMU_NO_BIOS = -bios none
+QEMU_GDB_OPTS = -s -S
+# Pour afficher l'affichage série en console, marche à travers ssh
+QEMU_NO_GRAPH_OPTS = -nographic
+# Pour avoir l'uart + le VGA en mode graphique
+QEMU_GRAPH_OPTS = --enable-sdl --with-sdlabi=2.0 -display sdl -serial mon:stdio
+
 QEMU = $(RISCV_ROOT)qemu-system-riscv64
 ifeq ("$(MACHINE)", "spike")
 	QEMU_MACHINE=spike_v1.10
@@ -59,19 +72,16 @@ else ifeq ("$(MACHINE)", "sifive_u")
 	QEMU_MACHINE=sifive_u
 else ifeq ("$(MACHINE)", "virt")
 	QEMU_MACHINE=virt
+	QEMU_OPTS+=$(QEMU_NO_BIOS)
+	QEMU_OPTS+=$(QEMU_VIRT_MEM)
+	VIRT_OPT=VIRTMACHINE
 else ifeq ("$(MACHINE)", "cep")
 	QEMU_MACHINE=cep
+	QEMU_OPTS+=$(QEMU_CEP_MEM)
 else
 	$(error Machine unknown)
 endif
 
-#Starting with QEMU 4.1.0, we must add the '-bios none' flag
-QEMU_OPTS = -machine $(QEMU_MACHINE) -kernel $(KERNEL_BIN) -rtc base=localtime -k fr -m 32M
-QEMU_GDB_OPTS = -s -S
-# Pour afficher l'affichage série en console, marche à travers ssh
-QEMU_NO_GRAPH_OPTS = -nographic
-# Pour avoir l'uart + le VGA en mode graphique
-QEMU_GRAPH_OPTS = --enable-sdl --with-sdlabi=2.0 -display sdl -serial mon:stdio
 #
 # Docker
 #
@@ -89,12 +99,12 @@ DK_GATEWAY = 172.17.0.1
 test : clean all 
 	$(QEMU) $(QEMU_OPTS) $(QEMU_NO_GRAPH_OPTS)
 
-test : OPT=TESTING
+test : TEST_OPT=TESTING
 
 all $(KERNEL_BIN) : kernel
 
 kernel: user
-	make MACHINE=$(MACHINE) OPT=$(OPT) -C kernel/ all
+	make MACHINE=$(MACHINE) TEST_OPT=$(TEST_OPT) VIRT_OPT=$(VIRT_OPT) -C kernel/ all
 
 user:
 	make -C user
@@ -110,7 +120,7 @@ clean:
 #
 
 # go :Lance l'OS avec QEmu dans le terminal
-go: clean all
+go: all
 	$(QEMU) $(QEMU_OPTS) $(QEMU_NO_GRAPH_OPTS)
 
 # debug : Lance l'OS dans un terminal avec QEmu et attend gdb.
