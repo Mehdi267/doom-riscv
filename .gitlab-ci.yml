@@ -7,6 +7,6 @@ kernel_tests:
   stage: test
   script:
     - cd src
-    - make go
+    - make test
   only:
     - master

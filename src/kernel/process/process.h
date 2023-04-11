@@ -53,9 +53,8 @@
  * @param
  */
 // #define DEBUG
-#define TESTING
-#define TESTING_KERNEL
-#define TESTING_USER
+// #define TESTING //Use make test in order to enable this header
+// #define RELEASE
 #define USER_PROCESSES_ON
 // #define KERNEL_PROCESSES_ON
 // #define RELEASE
