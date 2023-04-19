@@ -17,6 +17,7 @@
 #include "drivers/clint.h"
 #include "drivers/poweroff.h"
 #include "drivers/console.h"
+#include "drivers/disk_device.h"
 
 char * default_program = "console";
 
@@ -35,6 +36,7 @@ void arch_setup()
 	register_poweroff(&poweroff_virt_test);
 	register_clint(&virt_clint);
 	register_plic(&virt_plic);
+	register_disk(&virt_disk);
 
 	// activation des compteurs de performances
 	csr_write(mcounteren, -1);

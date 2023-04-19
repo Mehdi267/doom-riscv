@@ -170,7 +170,6 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
         csr_write(sepc, csr_read(sepc) + 4);
         csr_clear(sstatus, MSTATUS_SPP);
         break;
-      /*
       case 13:
         kill(getpid());
         scheduler();
@@ -183,7 +182,6 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
         kill(getpid());
         scheduler();
         break;
-      */
 			default:
         //The cause is treated we exit immediately
 				blue_screen(tf);

@@ -5,9 +5,9 @@
  * @version 0.1
  * @date 2023-04-11
  * 
- * @copyright this work is inspired from the xv6 riscv os project
+ * This work is inspired from the xv6 riscv os project at mit
  * and the ensimag os project
- * 
+ * https://github.com/mit-pdos/xv6-riscv
  */
 #include "stdint.h"
 
@@ -39,7 +39,7 @@ static void virt_plic_init()
 
 	/**
 	 * @brief An interrupt is raised through the plic if it has a threshold that is superior
-	 * to the set priority this in this case we set the priority to 0 to make sure that 
+	 * to the set priority. In this case we set the priority to 0 to make sure that 
 	 * all interrupts are raised. 
 	 * The following line will enable interrupts only for this core 0 
 	 */
@@ -47,17 +47,6 @@ static void virt_plic_init()
 	*((uint32_t*) (VIRT_PLIC_TARGET)) = 0; //machine mode prio
 	*((uint32_t*) (VIRT_PLIC_TARGET + 0x1000)) = 0;//supervisor mode prio
 	
-	// // target 0 (cpu M mode) enable -> everything
-	// uint64_t* plic_addr = (uint64_t*) VIRT_PLIC_ENABLE;
-	// *plic_addr = -1;
-	// plic_addr++;
-	// *plic_addr = -1;
-
-	// // target 1 (cpu S mode) enable -> everything
-	// plic_addr = (uint64_t*) (VIRT_PLIC_ENABLE + 0x80);
-	// *plic_addr = -1;
-	// plic_addr++;
-	// *plic_addr = -1;
 }
 
 plic_device_t virt_plic = {

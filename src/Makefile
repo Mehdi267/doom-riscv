@@ -11,8 +11,17 @@ KERNEL_NAME = kernel.bin
 STDLIB_NAME = lib
 BUILD_DIR = build
 KERNEL_BIN = $(BUILD_DIR)/$(KERNEL_NAME)
+
+#Preprocessing tags
 TEST_OPT=NULL_TEST
 VIRT_OPT=NULL_VIRT
+
+#Disk variables
+#in order to create the disk image using this command :
+# qemu-img create -f raw xinul_disk.img 25M
+#Set this value to virt if the disk is present in not
+#then this value must set to any other value
+DISK_VIRT ?= virt
 
 #
 # Import GNU toolchain configuration
@@ -60,6 +69,12 @@ QEMU_CEP_MEM = -m 32M
 QEMU_VIRT_MEM = -m 128M
 QEMU_NO_BIOS = -bios none
 QEMU_GDB_OPTS = -s -S
+#in order to create the disk image using this command :
+# qemu-img create -f raw xinul_disk.img 25M
+QEMU_VIRTIO_CONF = -global virtio-mmio.force-legacy=false 
+QEMU_OPT_DISK = -drive file=xinul_disk.img,if=none,format=raw,id=x0
+QEMU_OPT_LINK_BLOCK = -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
+
 # Pour afficher l'affichage série en console, marche à travers ssh
 QEMU_NO_GRAPH_OPTS = -nographic
 # Pour avoir l'uart + le VGA en mode graphique
@@ -74,6 +89,11 @@ else ifeq ("$(MACHINE)", "virt")
 	QEMU_MACHINE=virt
 	QEMU_OPTS+=$(QEMU_NO_BIOS)
 	QEMU_OPTS+=$(QEMU_VIRT_MEM)
+	ifeq ("$(DISK_VIRT)", "virt")
+		QEMU_OPTS += $(QEMU_VIRTIO_CONF)
+		QEMU_OPTS += $(QEMU_OPT_DISK)
+		QEMU_OPTS += $(QEMU_OPT_LINK_BLOCK)
+	endif
 	VIRT_OPT=VIRTMACHINE
 else ifeq ("$(MACHINE)", "cep")
 	QEMU_MACHINE=cep
@@ -82,7 +102,8 @@ else
 	$(error Machine unknown)
 endif
 
-#
+
+
 # Docker
 #
 
