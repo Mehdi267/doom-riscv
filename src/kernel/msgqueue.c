@@ -277,20 +277,38 @@ void add_message(msg_queue_t *msg_queue, int message) {
   msg_queue->iffc = (msg_queue->iffc + 1) % msg_queue->size;
 }
 
-void debug_queue(size_t n) {
+
+void info_msgqueues() {
+  for (size_t i; i < NBQUEUES; i++) {
+    if (all_queues[i] != NULL)
+      print_queue(i);
+  }
+}
+void print_queue(size_t n) {
+  msg_queue_t * msg_queue = all_queues[n];
   process * curr;
-  printf("Blocked cons\n");
-  queue_for_each(curr, &(all_queues[n]->blocked_cons), process, next_prev) {
-    printf("%s -> ", curr->process_name);
+  printf("Size: %ld\n", msg_queue->size);
+  printf("Current number of messages: %ld\n", msg_queue->number_of_msgs);
+  size_t blocked_cons = queue_length(&(msg_queue->blocked_cons));
+  printf("Blocked consummers: %ld\n", blocked_cons);
+  if (blocked_cons > 0) {
+    queue_for_each(curr, &(msg_queue->blocked_cons), process, next_prev) {
+      printf("    {process name: %s | priority: %d} -> ", curr->process_name, curr->prio);
+    }
+    printf("\n");
   }
-  printf("\nBlocked prods\n");
-  printf("\nhead: %p\n", &(all_queues[n]->blocked_prod));
-  queue_for_each(curr, &(all_queues[n]->blocked_prod), process, next_prev) {
-    printf("{%s, %d, %p} -> ", curr->process_name, curr->prio, &(curr->next_prev));
+
+  size_t blocked_prod = queue_length(&(msg_queue->blocked_prod));
+  printf("Blocked producers: %ld\n", blocked_prod);
+  if (blocked_prod > 0) {
+    queue_for_each(curr, &(msg_queue->blocked_prod), process, next_prev) {
+      printf("    {process name: %s, priority: %d} -> ", curr->process_name, curr->prio);
+    }
+    printf("\n");
   }
-  printf("\nMSG in the arr : [");
-  for (int i = 0; i < all_queues[n]->size; i++) {
-    printf("%c, ", all_queues[n]->msg_arr[i]);
-  }
-  printf("]\n");
+  /* printf("\nMSG in the arr : ["); */
+  /* for (int i = 0; i < msg_queue->size; i++) { */
+  /*   printf("%c, ", msg_queue->msg_arr[i]); */
+  /* } */
+  /* printf("]\n"); */
 }

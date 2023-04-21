@@ -79,5 +79,6 @@ int pcount(int fid, int *count);
 */
 int preset(int fid);
 
-void debug_queue(size_t n);
+void print_queue(size_t n);
+void info_msgqueues();
 #endif // MSGQUEUE_H_
