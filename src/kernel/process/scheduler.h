@@ -28,6 +28,7 @@ extern scheduler_struct* scheduler_main;
  */
 extern link activatable_process_queue;
 extern link asleep_process_queue;
+extern link dead_process_queue;
 extern bool started_user_process;
 
 extern int init_scheduling_process_queue();

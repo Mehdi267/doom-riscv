@@ -37,8 +37,12 @@ int current_running_process_pid = -1;
 int pid_iterator = 0;
 //Counts the currenlty running processes
 int nb_proc_running = 0;
-
-
+//Saves all of the used ids of the processess
+id_list_t* process_id_list = NULL;
+//killed counter used to indicate the order at which the process got killed
+int killed_counter = 0;
+//linked list for killed procesess;
+killed_proc_list_t* killed_list = NULL;
 
 
 int setpid(int new_pid) {
@@ -245,9 +249,13 @@ static int make_children_orphans_and_kill_zombies(process *parent_process) {
     process *temp_process = parent_process->children_head;
     while (temp_process != NULL) {
       // We free the process in this casse
+      // printf("[temp child process] %s state = ", temp_process->process_name);
+      // print_process_state(temp_process->state);
+      // printf("\n");
       if (temp_process->state == ZOMBIE) {
         //  We don't need to the fix the links of the elements because their
         //  relationship is not relevant after this call
+        make_children_orphans_and_kill_zombies(temp_process); 
         process *process_to_free = temp_process;
         temp_process = temp_process->next_sibling;
         if (free_child_zombie_process(process_to_free) < 0) {
@@ -292,12 +300,19 @@ static int turn_current_process_into_a_zombie_or_kill_it(bool current_or_custom,
     return -1;
   }
   current_process->state = ZOMBIE;
+  // printf("[Parent proc ==] %s \n", current_process->process_name);
+  // printf("[parent of parent is equal to] %s state = ", current_process->parent->process_name);
+  // print_process_state(current_process->parent->state);
+  // printf("\n");
   if (current_process->parent == NULL) {
-    return free_child_zombie_process(current_process);
+      return free_child_zombie_process(current_process);
   } else {
     // If the parent is waiting for a child we wake it and see
     // if the child that left correspand to that child that the parent
     // was waiting for.
+    if (current_process->parent->state == ZOMBIE) {
+      return free_child_zombie_process(current_process);
+    }
     if (current_process->parent->state == BLOCKEDWAITCHILD) {
       current_process->parent->state = ACTIVATABLE;
       add_process_to_queue_wrapper(current_process->parent, ACTIVATABLE_QUEUE);
@@ -723,4 +738,19 @@ int kill(int pid) {
   }
   process_pid->return_value = 0;
   return 0;
+}
+
+
+void show_ps_info(){
+  int pid_iterator = get_pid_iterator();
+  process* proc_iter = NULL;
+  for (int proc_n_iter = 0; proc_n_iter <= pid_iterator; proc_n_iter++){
+    proc_iter = ((process *)hash_get(
+        get_process_hash_table(), cast_int_to_pointer(proc_n_iter), NULL));
+    if(proc_iter){
+      printf("pid = %d, name = %s, etat = ", proc_iter->pid, proc_iter->process_name);
+      print_process_state(proc_iter->state);
+      printf("\n");
+    }
+  }
 }

@@ -150,5 +150,22 @@ process* get_current_process();
  */
 extern void print_shared_page_node(char* text_print ,shared_pages_proc_t* node);
 
+/**
+ * @brief Saves process pid 
+ * @param pid the pid to save 
+ * @return int 0 if sucessful and -1 if not
+ */
+extern int save_pid(int pid);
 
+/**
+ * @brief Get the pid iterator 
+ * @return int the pid iterator
+ */
+extern int get_pid_iterator();
+
+/**
+ * @brief Print process state 
+ * @param state process state 
+ */
+extern void print_process_state(process_state state);
 #endif

@@ -64,6 +64,6 @@ int main(void)
 		assert(ret == 0);
 	}
 	printf("Auto test done.\n");
-        power_off(0);
+  power_off(0);
 }
 

@@ -22,6 +22,7 @@
 #include "../msgqueue.h"
 #include "cons_write.h"
 #include "../keyboard/keyboard.h"
+#include <string.h>
 
 extern void inc_sepc(void); // defined in supervisor_trap_entry.S
 unsigned long static syscall_handler(struct trap_frame *tf) {
@@ -51,7 +52,8 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
     case SYSC_cons_read:
       return cons_read((char*) tf->a0, (unsigned long) tf->a1);
     case SYSC_cons_echo:
-      return -1;
+      cons_echo((int)tf->a0);
+      return 0;
     case SYSC_pcount:
       return pcount(tf->a0, (int*) tf->a1);
     case SYSC_pcreate:
@@ -103,6 +105,9 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
       break; 
     case SYSC_power_off:
       exit(tf->a0);
+      break;
+    case SYSC_show_ps_info:
+      show_ps_info();
       break;
     default:
       printf("Syscall code does not match any of the defined syscalls");

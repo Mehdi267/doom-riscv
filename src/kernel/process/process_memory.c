@@ -671,6 +671,7 @@ int free_process_memory(process* proc)
         proc->process_name = 0;
     }
     debug_print_memory("free_process_memory ENDED, current process: %s\n", getname());
+    save_pid(proc->pid);
     free(proc);
     proc = 0;
     return 0;

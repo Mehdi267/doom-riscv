@@ -3,6 +3,7 @@
 * Mehdi Frikha
 * See license for license details.
 */
+#include "memory_api.h"
 #include "process.h"
 #include "hash.h"
 #include "stddef.h"
@@ -123,11 +124,11 @@ void scheduler(){
     awake_sleeping_process();
 
     //We free the memory of the processes that were killed and they are orphans
-    process* dead_proc = get_peek_element_queue_wrapper(DEAD_QUEUE);
-    if (dead_proc !=NULL){
-        pop_element_queue_wrapper(DEAD_QUEUE);
-        free_process_memory(dead_proc);
-        dead_proc = get_peek_element_queue_wrapper(DEAD_QUEUE);
+    if (killed_list != NULL){
+        killed_proc_list_t* head = killed_list;
+        free_process_memory(head->proc);
+        killed_list = head->next_proc;
+        free(head);
     }
     //Scheduler has been called before any execution has started
     //the scheduler_main is configured when we start the kernel if its value is null 
@@ -214,7 +215,17 @@ void scheduler(){
             }
             /* set_supervisor_interrupts(true); */
             top_process->state = ACTIF;
-            add_process_to_queue_wrapper(current_process,  DEAD_QUEUE);
+            if (current_process != NULL){
+              killed_proc_list_t* node = (killed_proc_list_t*) malloc(sizeof(killed_proc_list_t));
+              node->proc = current_process;
+              if (killed_list){
+                node->next_proc = killed_list;
+              }else {
+                node->next_proc = NULL;
+                killed_list = node;
+              }
+            }
+            
             direct_context_swap(top_process->context_process);
         }
         //if the process was placed in an other state when this was called
@@ -235,53 +246,4 @@ void scheduler(){
     debug_print_scheduler("[scheduler -> %d] I managed to return to the scheduler %d\n",getpid(),getpid());
 }
 
-/**
- * @brief x86 projet os function used only for reference
- * 
- */
-// void ordonnanceLinkedlist()
-// {
-//     //int pid_running = mon_pid();
-//     /*
-//     Cette partie rend le process en cours d'execution qui est dans l'état Elu en l'etat Activable  et  inversement pour l'autre process
-//     donc il passe de Activable vers ELU
-//     */  
-//     debug_print_scheduler("name of running process %s \n", mon_nom());
-//     emptyAndFreeListeMourant();
-//     process* oldRunningProcess = get_running_process();
-//     debug_print_scheduler("Check point 2 \n");
-
-//     if (oldRunningProcess->state == ELU){
-//         debug_print_scheduler("Check point 2 before prime  \n");
-//         oldRunningProcess->state = ACTIVABLE;
-//         add_process_activable(oldRunningProcess);
-//     }
-
-//     debug_print_scheduler("Check point 2 prime  \n");
-
-//     if (oldRunningProcess->state == MOURANT){
-//         debug_print_scheduler("Adding dead process %s \n", mon_nom());
-//         add_process_mourant(oldRunningProcess);
-//     }
-
-//     debug_print_scheduler("Check point 3 \n");
-//     getHeadActivable()->processActivable->state = ELU;
-//     update_running_process(getHeadActivable()->processActivable);
-//     removeHeadProcessActivableListe();
-
-//     if (getHeadEndormi() != NULL){
-//         while (getHeadEndormi()){
-//             if (getHeadEndormi() -> timeWakeUp <= getTicCount()){
-//                 add_process_activable(getHeadEndormi()->processEndormi);
-//                 removeHeadProcessEndormiListe(getHeadEndormi());
-//             }
-//             break;
-//         }
-//     }
-//     debug_print_scheduler("Ordananceur pid_running = %i and new pid is equal to %i \n", oldRunningProcess->pid, get_running_process()->pid);
-//     if (oldRunningProcess->pid != get_running_process()->pid){
-//         ctx_sw(oldRunningProcess->table_registers, get_running_process()->table_registers);
-//     }
-//     return;
-// }
 

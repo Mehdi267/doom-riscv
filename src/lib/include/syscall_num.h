@@ -52,7 +52,9 @@
 
 #define SYSC_power_off          39
 
+//Information 
+#define SYSC_show_ps_info       40
 
-#define NB_SYSCALLS             40
+#define NB_SYSCALLS             41
 
 #endif

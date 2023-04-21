@@ -171,6 +171,18 @@ typedef struct shared_pages_wrap{
 } shared_pages_wrap_t;
 
 /**
+ * @brief Linked list to store used process ids 
+ * 
+ */
+typedef struct id_list{
+  int id;
+  struct id_list* next_id;
+} id_list_t;
+extern id_list_t* process_id_list;
+
+
+
+/**
   * @brief this structure is given to all processesn it will stored at the kernel level
   * @param pid  id of the process
   * @param process_name  process name
@@ -244,6 +256,15 @@ typedef struct process_t {
 typedef struct scheduler_t {
   context_t *main_context;
 } scheduler_struct;
+
+/**
+ * @brief Linked list for killed processes
+ */
+typedef struct killed_proc_list{
+  process* proc;
+  struct killed_proc_list* next_proc;
+} killed_proc_list_t;
+extern killed_proc_list_t* killed_list;
 
 /**
  * @brief this function defines the necessary data structures that will be
@@ -470,6 +491,12 @@ extern void wait_clock(unsigned long clock);
  * does not share the time with them
  */
 extern int idle(void *arg);
+
+/**
+ * @brief This system call is used to display the information related to processes
+ */
+extern void show_ps_info();
+
 
 /**
  * @brief the following macros are used when debugging the c

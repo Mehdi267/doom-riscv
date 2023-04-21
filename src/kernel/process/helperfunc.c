@@ -17,6 +17,7 @@
 #include "string.h"
 #include "riscv.h"
 
+
 void* cast_int_to_pointer(int int_to_cast){
     return (void*)((long) int_to_cast);
 }
@@ -79,8 +80,32 @@ char* get_pid_name(int pid){
     return process_pid->process_name;
 }
 
+int save_pid(int pid){
+  id_list_t* node = (id_list_t*)malloc(sizeof(id_list_t));
+  if (!node){
+    return -1;
+  }
+  node->id = pid;
+  if (process_id_list){
+    node->next_id = process_id_list;
+  }
+  else{
+    node->next_id = NULL;
+  }
+  process_id_list = node;
+  return 0;
+}
+
+int get_pid_iterator(){
+  return pid_iterator;
+} 
 
 int increment_pid_and_get_new_pid(){
+    if (process_id_list){
+      int return_pid = process_id_list->id; 
+      process_id_list = process_id_list->next_id;
+      return return_pid;
+    }
     pid_iterator++;
     return pid_iterator;
 }
@@ -129,15 +154,7 @@ int validate_action_process_valid(process* process_pid){
     if (   process_pid->state == ZOMBIE
         || process_pid->state == KILLED){
         return -1;
-    }    
-    // if (   process_pid->state == ZOMBIE
-    //     || process_pid->state == KILLED
-    //     || process_pid->state == ASLEEP
-    //     || process_pid->state == BLOCKEDSEMAPHORE
-    //     || process_pid->state == BLOCKEDIO
-    //     || process_pid->state == ASLEEP){
-    //     return -1;
-    // }
+    }
     return 0;
 }
 
@@ -182,5 +199,35 @@ void print_shared_page_node(char* text_print ,shared_pages_proc_t* node){
     if (text_print!=NULL){
         debug_print_memory_api("---------%s---------\n",text_print);
     }
+}
+
+void print_process_state(process_state state){
+  if (state == ACTIF){
+    printf("ACTIF");
+  }
+  if (state == ACTIVATABLE){
+    printf("ACTIVATABLE");
+  }
+  if (state == BLOCKEDSEMAPHORE){
+    printf("BLOCKEDSEMAPHORE");
+  }
+  if (state == BLOCKEDIO){
+    printf("BLOCKEDIO");
+  }
+  if (state == BLOCKEDQUEUE){
+    printf("BLOCKEDQUEUE");
+  }
+  if (state == BLOCKEDWAITCHILD){
+    printf("BLOCKEDWAITCHILD");
+  }
+  if (state == ASLEEP){
+    printf("ASLEEP");
+  }
+  if (state == ZOMBIE){
+    printf("ZOMBIE");
+  }
+  if (state == KILLED){
+    printf("KILLED");
+  }
 }
 

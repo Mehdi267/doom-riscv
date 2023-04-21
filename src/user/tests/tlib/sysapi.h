@@ -79,6 +79,7 @@ int getpid(void);
 int getprio(int pid);
 int kill(int pid);
 void power_off(int exit_value);
+void show_ps_info();
 
 /* #define WITH_SEM */
 // #define WITH_MSG
