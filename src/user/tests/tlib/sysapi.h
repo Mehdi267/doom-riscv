@@ -80,15 +80,7 @@ int getprio(int pid);
 int kill(int pid);
 void power_off(int exit_value);
 
-
-int pcount(int fid, int *count);
-int pcreate(int count);
-int pdelete(int fid);
-int preceive(int fid,int *message);
-int preset(int fid);
-int psend(int fid, int message);
-
-#define WITH_SEM
+/* #define WITH_SEM */
 // #define WITH_MSG
 
 #if defined WITH_SEM
