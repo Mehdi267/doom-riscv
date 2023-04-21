@@ -33,11 +33,11 @@ include toolchain.config
 # Machine
 #
 
-MACHINE ?= virt
+# MACHINE ?= virt
 #MACHINE ?= sifive_u
 #MACHINE ?= spike
 #MACHINE ?= zybo
-# MACHINE ?= cep
+MACHINE ?= cep
 
 #
 # Hardware plateforme
@@ -178,6 +178,9 @@ dk-all: $(DK_MAKEFILE_DIR)/Makefile
 
 dk-go: $(DK_MAKEFILE_DIR)/Makefile
 	make -C $(DK_MAKEFILE_DIR) CMD="make go" exec
+
+dk-test: $(DK_MAKEFILE_DIR)/Makefile
+	make -C $(DK_MAKEFILE_DIR) CMD="make test" exec
 
 dk-debug: $(DK_MAKEFILE_DIR)/Makefile
 	make -C $(DK_MAKEFILE_DIR) DK_OPTS="-p $(GDB_TARGET_PORT):$(GDB_TARGET_PORT)" CMD="make debug" exec
