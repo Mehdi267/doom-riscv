@@ -281,6 +281,7 @@ void add_message(msg_queue_t *msg_queue, int message) {
 void info_msgqueues() {
   for (size_t i; i < NBQUEUES; i++) {
     if (all_queues[i] != NULL)
+      printf("[message queue %d]\n", i)
       print_queue(i);
   }
 }
