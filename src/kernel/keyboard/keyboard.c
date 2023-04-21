@@ -21,7 +21,7 @@ void handle_keyboard_interrupt(){
     char c = kgetchar();
     if(is_printable(c)){
         kaddtobuffer(c);
-        console_dev->putchar(c);//echo
+        if(console_dev->echo) console_dev->putchar(c);//echo
     }
     else if((int)c == HT){
         //put char space to erase what should be erased
@@ -38,7 +38,7 @@ void handle_keyboard_interrupt(){
     }
     else if(c == LF){
         kaddtobuffer(c);
-        console_dev->putchar('\n');//putchar(R) only goes to beginning of line
+        if(console_dev->echo) console_dev->putchar('\n');//putchar(R) only goes to beginning of line
     }
     else if(c == DL){
         //deletes current line
@@ -49,12 +49,12 @@ void handle_keyboard_interrupt(){
     else if(c == DW){
         //deletes current word
         while(console_dev->top_ptr != 0 && console_dev->buffer[console_dev->top_ptr-1] == ' ')
-            delete_last();
+            if(console_dev->echo) delete_last();
         while(console_dev->top_ptr != 0 && console_dev->buffer[console_dev->top_ptr-1] != ' ')
-            delete_last();
+            if(console_dev->echo) delete_last();
     }
     else if(c == CR){
         kaddtobuffer('\n');
-        console_dev->putchar('\n');//echo
+        if(console_dev->echo) console_dev->putchar('\n');//echo
     }
 }

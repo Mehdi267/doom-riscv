@@ -37,6 +37,7 @@ const char *interruption_names[16] = {
 
 void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf)
 {
+	printf("mcause");
 	if (mcause & INTERRUPT_CAUSE_FLAG) {
 		// Interruption cause
 		uint8_t interrupt_number = mcause & ~INTERRUPT_CAUSE_FLAG;

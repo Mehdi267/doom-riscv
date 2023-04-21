@@ -3,7 +3,7 @@
 #include "riscv.h" //to use wfi
 #include "stdbool.h"
 #include "../drivers/console.h"
-
+#include "encoding.h"
 void cons_echo(int on){
     if(!on) console_dev->echo = false;
     else console_dev->echo = true;
@@ -28,6 +28,8 @@ Le prochain appel récupèrera une ligne vide.
 */
 unsigned long cons_read(char *string, unsigned long length){
     //requires string -> string + length valid
+    puts("cons read called");
+    cons_echo(1);
     if(!length) return 0;
     //lets chars get stored in buffer
     console_dev->ignore = false;
@@ -35,7 +37,7 @@ unsigned long cons_read(char *string, unsigned long length){
     cons_flush();
     //wait until buffer contains n char, or last char is a EOL
     while(console_dev->top_ptr != length && (console_dev->top_ptr == 0 || console_dev->buffer[console_dev->top_ptr-1] != EOL)){
-        wfi();
+        				csr_clear(sip, SIE_SEI); //clear interrupt
     }
     //printf("%i", console_dev->top_ptr);
     console_dev->ignore = true;

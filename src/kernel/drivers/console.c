@@ -51,6 +51,6 @@ void register_console(console_device_t *dev)
 		dev->init();
 		dev->ignore = false; // not reading at first
 		dev->top_ptr = 0;
-		dev->echo = true; // echo is on by default
+		dev->echo = true; // echo is off by default
 	}
 }

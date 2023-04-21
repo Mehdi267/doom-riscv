@@ -3,6 +3,7 @@
 #define _CONSOLE_H_
 
 #include <stdbool.h>
+#include <stdio.h>
 
 #pragma once
 
@@ -32,7 +33,8 @@ static inline int kgetchar()
 
 static inline int kputchar(int ch)
 {
-	return console_dev->putchar(ch);
+	if(console_dev->echo) return console_dev->putchar(ch);
+	return 0;
 }
 
 void kaddtobuffer(char c);

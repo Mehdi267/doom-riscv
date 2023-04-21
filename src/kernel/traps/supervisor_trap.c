@@ -130,9 +130,11 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 				 * We clear the bit in the sip register that was responsible for this interrupt 
 				 * so that we don't jump into the same interrupt again
 				*/
-				csr_clear(sip, MIP_STIP);
+				csr_clear(sip, SIP_STIP);
 				break;
 			case intr_s_external:
+        //printf("scause %ld \n", scause);
+
 				//interruption clavier
 				handle_keyboard_interrupt();
 				csr_clear(sip, SIE_SEI); //clear interrupt
