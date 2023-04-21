@@ -149,7 +149,6 @@ int preceive(int fid, int *message) {
     blocked->message.status = SENT;
     if (message != NULL)
       *message = blocked->message.value;
-    printf("blocked: %s | _>>>> %c\n", blocked->process_name, *message);
     queue_add(blocked, &activatable_process_queue, process, next_prev, prio);
     scheduler();
   } else if (is_empty(msg_queue) &&  queue_empty(blocked_producers)) {
@@ -165,8 +164,9 @@ int preceive(int fid, int *message) {
     if (message != NULL)
       *message = p->message.value;
   } else if (is_full(msg_queue) && !queue_empty(blocked_producers)) {
+    int msg = pop_oldest_msg(msg_queue);
     if (message != NULL)
-      *message = pop_oldest_msg(msg_queue);
+      *message = msg;
     process * blocked = queue_out(blocked_producers, process, next_prev);
     add_message(msg_queue, blocked->message.value);
     blocked->message.status = SENT;
@@ -177,8 +177,9 @@ int preceive(int fid, int *message) {
     /* *message = blocked->message.value; */
   } else {
     // the queue is not empty and there arent blocked consumers
+    int msg = pop_oldest_msg(msg_queue);
     if (message != NULL)
-      *message = pop_oldest_msg(msg_queue);
+      *message = msg;
   }
   return SUCCES;
 
@@ -196,7 +197,7 @@ size_t queue_length(link * queue) {
 
 
 int pcount(int fid, int *count) {
-  if (!valid_fid(fid))
+  if (!valid_fid(fid) || count == NULL)
     return FAILURE;
   msg_queue_t * msg_queue = all_queues[fid];
   if (!queue_empty(&(msg_queue->blocked_cons)))
