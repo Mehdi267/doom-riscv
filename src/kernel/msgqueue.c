@@ -7,9 +7,9 @@
 #include "stdio.h"
 #define SUCCES 0
 #define FAILURE -1
-#define NBQUEUE 100
+#define NBQUEUES 100
 
-msg_queue_t* all_queues[NBQUEUE];
+msg_queue_t* all_queues[NBQUEUES];
 
 /*
 ** HELPER FUNCTIONS DECLARATION
@@ -83,7 +83,7 @@ int pcreate(int count) {
 
 
 bool valid_fid(int fid) {
-  if (fid < 0 || fid >= NBQUEUE || all_queues[fid] == NULL)
+  if (fid < 0 || fid >= NBQUEUES || all_queues[fid] == NULL)
     return false;
   return true;
 }
@@ -259,12 +259,12 @@ int pop_oldest_msg(msg_queue_t * msg_queue) {
 }
 
 void init_msg_queues() {
-  for (int i = 0; i < NBQUEUE; i++)
+  for (int i = 0; i < NBQUEUES; i++)
     all_queues[i] = NULL;
 }
 
 int get_first_free_index() {
-  for (int i = 0; i < NBQUEUE; i++) {
+  for (int i = 0; i < NBQUEUES; i++) {
     if (all_queues[i] == NULL)
       return i;
   }
@@ -280,9 +280,10 @@ void add_message(msg_queue_t *msg_queue, int message) {
 
 void info_msgqueues() {
   for (size_t i; i < NBQUEUES; i++) {
-    if (all_queues[i] != NULL)
-      printf("[message queue %d]\n", i)
+    if (all_queues[i] != NULL) {
+      printf("[message queue %ld]\n", i);
       print_queue(i);
+    }
   }
 }
 void print_queue(size_t n) {
