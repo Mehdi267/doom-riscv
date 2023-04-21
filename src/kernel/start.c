@@ -37,6 +37,8 @@ int kernel_start() {
     exit(-1);
   }
 
+
+
   // while(1);
   // char* string = (char*)malloc(64);
   // cons_read(string, 8);

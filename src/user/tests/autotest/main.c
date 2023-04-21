@@ -8,6 +8,7 @@
 #define TESTS_NUMBER 20
 
 const char *tests[TESTS_NUMBER] = {
+        "test19",
         "test0",
         "test1",
         "test2",
@@ -48,11 +49,7 @@ const char *tests[TESTS_NUMBER] = {
 
 int main(void)
 {
-        char string[8];
-        puts("calling cons_read");
-        cons_read(string, 8);
-        printf("%s", string);
-        while(1);
+
 	int i;
 	int pid;
 	long int ret;

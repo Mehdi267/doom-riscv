@@ -14,6 +14,7 @@
 #include "traps/trap.h"
 #include "timer.h"
 #include "../process/process.h"
+#include "../keyboard/keyboard.h"
 
 const char *interruption_names[16] = {
 		"u_software",
@@ -37,7 +38,6 @@ const char *interruption_names[16] = {
 
 void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf)
 {
-	printf("mcause");
 	if (mcause & INTERRUPT_CAUSE_FLAG) {
 		// Interruption cause
 		uint8_t interrupt_number = mcause & ~INTERRUPT_CAUSE_FLAG;
@@ -52,6 +52,13 @@ void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf)
 				// printf("machine int = 1\n");
 				handle_stimer_interrupt();
 				csr_clear(mip, intr_s_timer);
+				break;
+			case intr_s_external:
+        		//printf("scause %ld \n", scause);
+
+				//interruption clavier
+				handle_keyboard_interrupt();
+				csr_clear(mip, SIE_SEI); //clear interrupt
 				break;
 			default:
 				die(
