@@ -26,13 +26,15 @@ void add_to_buffer(char c)
 }*/
 
 void kaddtobuffer(char c){
-	if(!console_dev->ignore){
-		if(!(console_dev->top_ptr >= 128)){ //if buffer is full, ignore
-			console_dev->buffer[console_dev->top_ptr] = c;
-			console_dev->top_ptr ++;
+	if(!console_dev->ignore){ //if buffer is full, ignore
+		console_dev->buffer[console_dev->top_ptr] = c;
+		console_dev->top_ptr ++;
+		if(console_dev->top_ptr == 20){
+			//buffer is full
+			cons_echo(0);
+			console_dev->ignore = true;
 		}
 	}
-	//console_dev->add_to_buffer(c);
 }
 
 console_device_t console_none = {
