@@ -9,7 +9,6 @@ int main(void *arg)
 {
         int j, pid;
         struct philo *p;
-        show_ps_info();
 
         (void)arg;
 
