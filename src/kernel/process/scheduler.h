@@ -30,6 +30,7 @@ extern link activatable_process_queue;
 extern link asleep_process_queue;
 extern link dead_process_queue;
 extern bool started_user_process;
+extern link blocked_io_process_queue;
 
 extern int init_scheduling_process_queue();
 

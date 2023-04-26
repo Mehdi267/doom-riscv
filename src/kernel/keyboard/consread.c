@@ -3,7 +3,10 @@
 #include "riscv.h" //to use wfi
 #include "stdbool.h"
 #include "../drivers/console.h"
+#include "../process/scheduler.h"
 #include "encoding.h"
+#include <queue.h>
+#include "../process/helperfunc.h"
 #include <string.h>
 
 void cons_echo(int on){
@@ -31,15 +34,20 @@ unsigned long cons_read(char *string, unsigned long length){
     if(!length) return 0;
     //lets chars get stored in buffer
     console_dev->ignore = false;
+    process* p = get_current_process();
     //wait until buffer contains n char, or last char is a EOL
     while(console_dev->top_ptr ==0 || console_dev->buffer[console_dev->top_ptr-1] != '\n'){//on attend que l'utilisateur finisse sa ligne
-        wfi();
+    
+        queue_add(p, blocked_io_process_queue, process, next_prev, prio);
+        p->state = BLOCKEDIO;
+        scheduler();
     }
     //length of line (without \n) is equal to top_ptr
     unsigned long nb_char;
     if(console_dev->top_ptr < length){
         nb_char = console_dev->top_ptr - 1; //not taking EOL into account
         memcpy(string, console_dev->buffer, nb_char); //EOL is not transmitted
+        string[nb_char] = NULL;
         //in that case, we empty the buffer
         console_dev->top_ptr = 0;
         console_dev->buffer[0] = ' ';
@@ -47,6 +55,7 @@ unsigned long cons_read(char *string, unsigned long length){
     else{
         nb_char = length;
         memcpy(string, console_dev->buffer, nb_char);
+        string[nb_char] = NULL;
         //saving the rest of the buffer
         unsigned long to_save = console_dev->top_ptr - length;
         char saved[to_save];

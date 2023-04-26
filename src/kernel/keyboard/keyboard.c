@@ -57,4 +57,5 @@ void handle_keyboard_interrupt(){
         kaddtobuffer('\n');
         if(console_dev->echo) console_dev->putchar('\n');//echo
     }
+    //on signale au scheduler qu'il doit débloquer un processus
 }

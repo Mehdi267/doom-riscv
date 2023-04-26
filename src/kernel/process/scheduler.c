@@ -24,7 +24,7 @@
 #include "timer_api.h"
 #include "riscv.h"
 
-
+LIST_HEAD(blocked_io_process_queue);
 LIST_HEAD(activatable_process_queue);
 LIST_HEAD(asleep_process_queue);
 LIST_HEAD(dead_process_queue);
