@@ -93,7 +93,7 @@ static int create_testing_process() {
 }
 #endif
 
-int create_testing_process() {
+int create_shell_program() {
     int pid_test;
     pid_test = start_virtual("shell", 4000, 1,cast_int_to_pointer(300));
     return pid_test;
