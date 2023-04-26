@@ -9,6 +9,52 @@
 #ifndef ___SYSCALL_H___
 #define ___SYSCALL_H___
 
+#define NULL ((void*)0)
+typedef __SIZE_TYPE__ size_t;
+
+/*******************************************************************************
+ * var args
+ ******************************************************************************/
+
+typedef __builtin_va_list va_list;
+#define va_start(v,l)   __builtin_va_start(v,l)
+#define va_end(v)       __builtin_va_end(v)
+#define va_arg(v,l)     __builtin_va_arg(v,l)
+#define va_copy(d,s)    __builtin_va_copy(d,s)
+
+
+/*******************************************************************************
+ * stdio
+ ******************************************************************************/
+
+int getchar(void);
+int printf(const char *, ...);
+int puts(const char *);
+int sprintf(char *, const char *, ...);
+int snprintf(char *, size_t, const char *, ...);
+int vprintf(const char *, va_list);
+int vsprintf(char *, const char *, va_list);
+int vsnprintf(char *, size_t, const char *, va_list);
+#define fprintf(f, ...) printf(__VA_ARGS__)
+
+/*******************************************************************************
+ * Printf macros
+ ******************************************************************************/
+#define PRINTF_LEFT_JUSTIFY 1
+#define PRINTF_SHOW_SIGN 2
+#define PRINTF_SPACE_PLUS 4
+#define PRINTF_ALTERNATE 8
+#define PRINTF_PAD0 16
+#define PRINTF_CAPITAL_X 32
+
+#define PRINTF_BUF_LEN 512
+
+int strcmp(const char *str1, const char *str2);
+size_t strlen(const char *s);
+char *strncpy(char *, const char *, size_t);
+void *memset(void *dst, int c, size_t n);
+
+
 extern int chprio(int pid, int newprio);
 extern int cons_write(const char *str, unsigned long size);
 extern unsigned long cons_read(char *string, unsigned long length);
