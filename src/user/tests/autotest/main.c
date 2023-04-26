@@ -8,7 +8,6 @@
 #define TESTS_NUMBER 21
 
 const char *tests[TESTS_NUMBER] = {
-        "test19",
         "test0",
         "test1",
         "test2",

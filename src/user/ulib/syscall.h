@@ -9,7 +9,6 @@
 #ifndef ___SYSCALL_H___
 #define ___SYSCALL_H___
 
-#define NULL ((void*)0)
 typedef __SIZE_TYPE__ size_t;
 
 /*******************************************************************************

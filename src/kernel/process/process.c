@@ -79,7 +79,7 @@ static int create_idle_process() {
 static int create_testing_process() {
     #ifdef USER_PROCESSES_ON
       int pid_test;
-      pid_test = start_virtual("autotest", 4000, 1,cast_int_to_pointer(300));
+      pid_test = start_virtual("autotest", 4000, 2,cast_int_to_pointer(300));
       return pid_test;
     #endif
     #ifdef KERNEL_PROCESSES_ON
@@ -95,7 +95,7 @@ static int create_testing_process() {
 
 int create_shell_program() {
     int pid_test;
-    pid_test = start_virtual("shell", 4000, 1,cast_int_to_pointer(300));
+    pid_test = start_virtual("shell", 4000, 2,0);
     return pid_test;
 }
 

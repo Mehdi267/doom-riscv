@@ -37,24 +37,6 @@ int kernel_start() {
     exit(-1);
   }
 
-
-
-  // while(1);
-  // char* string = (char*)malloc(64);
-  // cons_read(string, 8);
-
-  // printf("%s", string);
-
-  /* set_supervisor_timer_interrupt(50); // setting the 1st interrupt */
-  /* assert(start(test10,4000, 192, "test10", (void *)0) != -1); */
-  /* assert(start(test12,4000, 128, "test12", (void *)0) != -1); */
-  /* assert(start(test14,4000, 128, "test14", (void *)0) != -1); */
-  /* assert(start(test17, 4000, 128, "test17", (void *)0) != -1); */
-  // we start the process who launch all the tests;
-  // while(1){
-  //   release_frame(get_frame());
-  // }
-  // assert(start(kernel_tests, 4000, 2, "kernel_tests", NULL) != -1);
   activate_and_launch_scheduler();
   while (1)
     wfi();
