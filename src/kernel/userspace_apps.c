@@ -15,17 +15,11 @@ const struct uapps *find_app(const char *name)
 {
 	//Iterator
 	int app = 0;
-	while (1){
-		if (symbols_table[app].name == NULL){
-			//The app does not exist
-			break;
-		}
-		else{
-			if (strcmp(symbols_table[app].name, name) == 0){
-				//We found the app
-				return &symbols_table[app];
-			}
-		}
+	while (symbols_table[app].name != NULL){
+    if (strcmp(symbols_table[app].name, name) == 0){
+      //We found the app
+      return &symbols_table[app];
+    }
 		app++;
 	}
 	return NULL;
