@@ -251,7 +251,6 @@ int mod(int a, int b) {
     return r < 0 ? r + b : r;
 }
 
-// TODO: check if possible interrupts can make problems
 int pop_oldest_msg(msg_queue_t * msg_queue) {
   int index = mod((msg_queue->iffc - (int)msg_queue->number_of_msgs), (int)msg_queue->size);
   msg_queue->number_of_msgs--;
@@ -279,7 +278,7 @@ void add_message(msg_queue_t *msg_queue, int message) {
 
 
 void info_msgqueues() {
-  for (size_t i; i < NBQUEUES; i++) {
+  for (size_t i = 0; i < NBQUEUES; i++) {
     if (all_queues[i] != NULL) {
       printf("[message queue %ld]\n", i);
       print_queue(i);
