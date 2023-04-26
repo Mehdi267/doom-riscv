@@ -45,24 +45,18 @@ void add_process_to_queue_wrapper(process* process_to_add, queue_process_type ty
     else if (type == ASLEEP_QUEUE){
         queue_add(process_to_add, &asleep_process_queue, process, next_prev, sleep_time);
     }
-    else if (type == DEAD_QUEUE){
-        queue_add(process_to_add, &dead_process_queue, process, next_prev, prio);
+    else if (type == IO_QUEUE){
+        queue_add(process_to_add, &blocked_io_process_queue, process, next_prev, prio);
     }
 }
 
 
 void delete_process_from_queue_wrapper(process* process_to_delete, queue_process_type type){
-    if (type == ACTIVATABLE_QUEUE){
-        queue_del(process_to_delete, next_prev);
-    }
-    else if (type == ASLEEP_QUEUE){
-        queue_del(process_to_delete, next_prev);
-    }   
-    else if (type == DEAD_QUEUE){   
-        queue_del(process_to_delete, next_prev);
-    }
+    queue_del(process_to_delete, next_prev);
+    queue_del(process_to_delete, next_prev);
+    queue_del(process_to_delete, next_prev);
+  }
 
-}
 
 
 process* pop_element_queue_wrapper(queue_process_type type){
@@ -72,11 +66,10 @@ process* pop_element_queue_wrapper(queue_process_type type){
     else if (type == ASLEEP_QUEUE){
         return queue_out(&asleep_process_queue, process, next_prev);
     }
-    else if (type == DEAD_QUEUE){
-        return queue_out(&dead_process_queue, process, next_prev);
+    else if (type == IO_QUEUE){
+        return queue_out(&blocked_io_process_queue, process, next_prev);
     }
     return NULL;
-
 }
 
 process* get_peek_element_queue_wrapper(queue_process_type type){
@@ -86,8 +79,8 @@ process* get_peek_element_queue_wrapper(queue_process_type type){
     else if (type == ASLEEP_QUEUE){
         return queue_top(&asleep_process_queue, process, next_prev);
     }
-    else if (type == DEAD_QUEUE){
-        queue_out(&dead_process_queue, process, next_prev);
+    else if (type == IO_QUEUE){
+        queue_out(&blocked_io_process_queue, process, next_prev);
     }
     return NULL;
 }
