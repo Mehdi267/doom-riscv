@@ -93,6 +93,12 @@ static int create_testing_process() {
 }
 #endif
 
+int create_testing_process() {
+    int pid_test;
+    pid_test = start_virtual("shell", 4000, 1,cast_int_to_pointer(300));
+    return pid_test;
+}
+
 int activate_and_launch_custom_process(process *process_to_activate) {
   // This mehtod is mostly used for debugging, use with care
   if (process_to_activate == NULL) {
@@ -215,6 +221,10 @@ int initialize_process_workflow(){
     }
     #ifdef TESTING
       if (create_testing_process()<0){
+        return -1;
+      }
+    #else
+      if (create_shell_program()<0){
         return -1;
       }
     #endif
