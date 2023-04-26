@@ -8,6 +8,7 @@
 #define TESTS_NUMBER 20
 
 const char *tests[TESTS_NUMBER] = {
+        "test19",
         "test0",
         "test1",
         "test2",
@@ -48,6 +49,7 @@ const char *tests[TESTS_NUMBER] = {
 
 int main(void)
 {
+
 	int i;
 	int pid;
 	long int ret;

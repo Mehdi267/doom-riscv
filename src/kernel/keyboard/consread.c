@@ -3,15 +3,12 @@
 #include "riscv.h" //to use wfi
 #include "stdbool.h"
 #include "../drivers/console.h"
+#include "encoding.h"
+#include <string.h>
 
 void cons_echo(int on){
     if(!on) console_dev->echo = false;
     else console_dev->echo = true;
-}
-
-void cons_flush(){
-    console_dev->top_ptr = 0;
-    console_dev->putchar('\n');
 }
 
 /**
@@ -28,16 +25,34 @@ Le prochain appel récupèrera une ligne vide.
 */
 unsigned long cons_read(char *string, unsigned long length){
     //requires string -> string + length valid
+    //puts("cons read called");
+    cons_echo(1);
     if(!length) return 0;
     //lets chars get stored in buffer
     console_dev->ignore = false;
-    //make sure buffer is empty => any earlier strike is ignored
-    cons_flush();
     //wait until buffer contains n char, or last char is a EOL
-    while(console_dev->top_ptr != length && (console_dev->top_ptr == 0 || console_dev->buffer[console_dev->top_ptr-1] != EOL)){
+    while(console_dev->top_ptr ==0 || console_dev->buffer[console_dev->top_ptr-1] != '\n'){//on attend que l'utilisateur finisse sa ligne
         wfi();
     }
-    //printf("%i", console_dev->top_ptr);
+    //length of line (without \n) is equal to top_ptr
+    unsigned long nb_char;
+    if(console_dev->top_ptr < length){
+        nb_char = console_dev->top_ptr - 1; //not taking EOL into account
+        memcpy(string, console_dev->buffer, nb_char); //EOL is not transmitted
+        //in that case, we empty the buffer
+        console_dev->top_ptr = 0;
+        console_dev->buffer[0] = ' ';
+    }
+    else{
+        nb_char = length;
+        memcpy(string, console_dev->buffer, nb_char);
+        //saving the rest of the buffer
+        unsigned long to_save = console_dev->top_ptr - length;
+        char saved[to_save];
+        memcpy(saved, console_dev->buffer + length, to_save);
+        memcpy(console_dev->buffer, saved, to_save);
+        console_dev->top_ptr = to_save;
+    }
     console_dev->ignore = true;
-    return console_dev->top_ptr;
+    return nb_char;
 }
