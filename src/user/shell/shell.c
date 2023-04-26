@@ -22,9 +22,9 @@ int main(void) {
     printf("shell$>");
     cons_read(cmd, 20);
     if (builtin_cmd(cmd) != 0) {
-      printf("\nProgram name %s \n", cmd);
       pid = start(cmd, 4000, 128, NULL);
       waitpid(pid, &ret);
+      memset(cmd, 0, 20);
     }
   }
 }
