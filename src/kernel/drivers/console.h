@@ -7,6 +7,7 @@
 
 #pragma once
 
+#define BUFFER_SIZE 20
 #define EOL 13
 
 typedef struct console_device {
@@ -15,7 +16,7 @@ typedef struct console_device {
 	int (*putchar)(int);
 	//void (*add_to_buffer)(char);
 	bool ignore;
-	char buffer[128]; //temp
+	char buffer[BUFFER_SIZE]; //temp
 	unsigned long top_ptr;
 	bool echo;
 } console_device_t;

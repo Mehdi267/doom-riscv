@@ -73,10 +73,10 @@ int main(void *arg) {
 	waitpid(pid4, 0);
 
 	printf("Enfin on teste que dans le cas d'entrées bloquantes, les 4 processus fils seront servis dans l'ordre de leurs priorités. Entrez quatre lignes : ");
-	pid2 = start("cons_rdN", 4000, 132, 0);
 	pid4 = start("cons_rdN", 4000, 129, 0);
-	pid3 = start("cons_rdN", 4000, 131, 0);
 	pid1 = start("cons_rdN", 4000, 130, 0);
+	pid3 = start("cons_rdN", 4000, 131, 0);
+	pid2 = start("cons_rdN", 4000, 132, 0);
 	waitpid(pid2, 0);
 	waitpid(pid3, 0);
 	waitpid(pid1, 0);

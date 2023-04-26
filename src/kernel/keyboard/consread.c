@@ -7,6 +7,7 @@
 #include <string.h>
 
 void cons_echo(int on){
+    //active (on!=0) ou desactive (on=0) l'echo sur la console
     if(!on) console_dev->echo = false;
     else console_dev->echo = true;
 }
