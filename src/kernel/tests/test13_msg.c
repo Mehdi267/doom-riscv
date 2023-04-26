@@ -85,7 +85,6 @@ int test13_msg(void *arg)
         chprio(pid3, 125);
         for (i=0; i<6; i++) {
                 assert(preceive(fid, &msg) == 0);
-                printf("msg is equal to  %c expected value %c\n",msg, 'e'+i);
                 assert(msg == 'e' + i);
         }
         chprio(pid1, 125);
