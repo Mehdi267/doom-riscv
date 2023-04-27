@@ -354,7 +354,7 @@ extern int chprio(int pid, int newprio);
  */
 extern void exit_process(int retval);
 
-extern int cons_read(char *string, unsigned long length);
+extern unsigned long cons_read(char *string, unsigned long length);
 
 
 /**

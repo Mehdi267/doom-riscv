@@ -1,6 +1,10 @@
 #include "../drivers/console.h"
 #include <stdio.h>
 #include "keyboard.h"
+#include "queue.h"
+#include "../process/scheduler.h"
+#include "../process/process.h"
+#include <assert.h>
 
 bool is_printable(char c){
     return ((int)c < 127) && ((int)c > 31);
@@ -58,4 +62,8 @@ void handle_keyboard_interrupt(){
         if(console_dev->echo) console_dev->putchar('\n');//echo
     }
     //on signale au scheduler qu'il doit débloquer un processus
+    process *next = queue_out(&blocked_io_process_queue, process, next_prev);
+    next->state = ACTIVATABLE;
+    queue_add(next, &activatable_process_queue, process, next_prev, prio);
+    scheduler();
 }
