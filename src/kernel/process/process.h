@@ -497,6 +497,11 @@ extern int idle(void *arg);
  */
 extern void show_ps_info();
 
+/**
+ * @brief 
+ * List all of the existing programs
+ */
+extern void show_programs();
 
 /**
  * @brief the following macros are used when debugging the c

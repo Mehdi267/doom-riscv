@@ -92,4 +92,5 @@ extern void shm_release(const char*);
 
 extern void power_off(int exit_value);
 extern void show_ps_info();
+extern void show_programs();
 #endif

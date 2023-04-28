@@ -4,7 +4,7 @@
 
 int main(void *arg)
 {
-  printf("Shuting down system");
+  printf("Shuting down system\n");
 	(void) arg;
 	int a = (int)((long) arg);
   power_off(a);

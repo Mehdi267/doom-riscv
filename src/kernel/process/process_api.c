@@ -517,6 +517,9 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg){
   if (!(ssize > 0))
     return -1;
 
+  if (!find_app(name)){
+    return -1;
+  }
   //----------Process generation-----------
 
   process *new_process;
@@ -753,4 +756,14 @@ void show_ps_info(){
       printf("\n");
     }
   }
+}
+
+
+void show_programs(){
+	printf("\n");
+  int app = 0;
+	while (symbols_table[app].name != NULL){
+    printf("%s \n",symbols_table[app].name);
+    app++;
+	}
 }

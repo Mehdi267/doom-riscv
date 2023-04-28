@@ -55,6 +55,8 @@
 //Information 
 #define SYSC_show_ps_info       40
 
-#define NB_SYSCALLS             41
+#define SYSC_show_programs      41
+
+#define NB_SYSCALLS             42
 
 #endif
