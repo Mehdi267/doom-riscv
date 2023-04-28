@@ -81,7 +81,7 @@ void handle_stimer_interrupt()
 {
 	//Machine cep
 	#ifndef VIRTMACHINE
-		debug_print_no_arg("--Inside timer interreupt handler-- \n"); 
+		// debug_print_no_arg("--Inside timer interreupt handler-- \n"); 
 		#ifdef KERNEL_PROCESSES_ON
 			set_supervisor_interrupts(false);
 		#endif

@@ -20,7 +20,7 @@ void delete_last(){
 }
 
 void handle_keyboard_interrupt(){
-    //puts("keyboard interrupt");
+    // puts("keyboard interrupt");
     //Dans le pilote de clavier, à chaque fois qu'une touche est appuyée et qu'une séquence de caractères est entrée en tampon, elle doit être affichée en même temps à l'écran sauf si le mode d'écho a été désactivé avec [cons_echo](#cons_echo-configuration-du-terminal).;
     char c = kgetchar();
     if(is_printable(c)){
@@ -62,8 +62,13 @@ void handle_keyboard_interrupt(){
         if(console_dev->echo) console_dev->putchar('\n');//echo
     }
     //on signale au scheduler qu'il doit débloquer un processus
-    process *next = queue_out(&blocked_io_process_queue, process, next_prev);
-    next->state = ACTIVATABLE;
-    queue_add(next, &activatable_process_queue, process, next_prev, prio);
-    scheduler();
+    process *next = get_peek_element_queue_wrapper(IO_QUEUE);
+    // printf("next ADDRESS %p\n", next);
+    if (next && next->prio > getprio(getpid())){
+      printf("proc is not null %s  pid %d \n", next->process_name, next->pid);
+      pop_element_queue_wrapper(IO_QUEUE);
+      next->state = ACTIVATABLE;
+      add_process_to_queue_wrapper(next, ACTIVATABLE_QUEUE);
+      printf("writing car %c \n", console_dev->buffer[console_dev->top_ptr-1]);
+    }
 }

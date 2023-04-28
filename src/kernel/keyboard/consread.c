@@ -33,17 +33,15 @@ unsigned long cons_read(char *string, unsigned long length){
     //puts("cons read called");
     cons_echo(1);
     if(!length) return 0;
-    string[0] = 'a';
     //lets chars get stored in buffer
     console_dev->ignore = false;
-    process* p = get_current_process();
+    process* proc = get_current_process();
     //wait until buffer contains n char, or last char is a EOL
     while(console_dev->top_ptr ==0 || console_dev->buffer[console_dev->top_ptr-1] != '\n'){//on attend que l'utilisateur finisse sa ligne
-        queue_add(p, &blocked_io_process_queue, process, next_prev, prio);
-        p->state = BLOCKEDIO;
-        printf("%c", string[0]);
+        printf("reading caracters %c \n", console_dev->buffer[console_dev->top_ptr-1]);
+        proc->state = BLOCKEDIO;
+        add_process_to_queue_wrapper(proc, IO_QUEUE);
         scheduler();
-        printf("%c", string[0]);
     }
     //length of line (without \n) is equal to top_ptr
     unsigned long nb_char;

@@ -53,8 +53,6 @@ void add_process_to_queue_wrapper(process* process_to_add, queue_process_type ty
 
 void delete_process_from_queue_wrapper(process* process_to_delete, queue_process_type type){
     queue_del(process_to_delete, next_prev);
-    queue_del(process_to_delete, next_prev);
-    queue_del(process_to_delete, next_prev);
   }
 
 
@@ -80,7 +78,7 @@ process* get_peek_element_queue_wrapper(queue_process_type type){
         return queue_top(&asleep_process_queue, process, next_prev);
     }
     else if (type == IO_QUEUE){
-        queue_out(&blocked_io_process_queue, process, next_prev);
+        return queue_top(&blocked_io_process_queue, process, next_prev);
     }
     return NULL;
 }

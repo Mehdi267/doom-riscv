@@ -15,7 +15,7 @@
 #include "stdbool.h"
 
 
-typedef enum _queue_type {ACTIVATABLE_QUEUE, ASLEEP_QUEUE, DEAD_QUEUE} queue_process_type;
+typedef enum _queue_type {ACTIVATABLE_QUEUE, ASLEEP_QUEUE, DEAD_QUEUE, IO_QUEUE} queue_process_type;
 extern scheduler_struct* scheduler_main;
 
 /**
