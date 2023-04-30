@@ -67,7 +67,7 @@ static void delegate_traps()
     //We delegate every thing to supervisor mode
     csr_set(medeleg, 0xffffffff);
     csr_set(mideleg, 0xffffffff);
-    csr_clear(mideleg, 1<<9);
+    /* csr_clear(mideleg, 1<<9); */
 }
 
 
