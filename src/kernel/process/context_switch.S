@@ -5,14 +5,6 @@
  * See license for license details.
  */
 
- //TODO : A chaque changement de contexte, il faut également changer le page directory pour que le processus qui va s'exécuter 
- //retrouve son espace virtuel, à savoir son code, sa pile et ses données. Lorsque le processus se termine, son mapping est détruit,
- // le page directory et le page table sont détruits, la mémoire physique est libérée. Le processus a libéré son espace.
-
- //TODO, ADD STACK PER PROCESS AND CHANGE THE SSCRATCH VALUE SO THAT WE CHANGE THE INTTEUPT STACK FOR EVERY PROCESS
- 
- //Comment :  Le processus nouvellement activé disposera d'une nouvelle période de préemption aussi longue que possible (maximum 1 / SCHEDFREQ s) en perdant simplement le temps entre son activation et la précédente interruption d'horloge.
- // meaning what exactly
 
     .text
     .globl context_switch

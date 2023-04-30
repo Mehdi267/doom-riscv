@@ -128,7 +128,7 @@ kernel: user
 	make MACHINE=$(MACHINE) TEST_OPT=$(TEST_OPT) VIRT_OPT=$(VIRT_OPT) -C kernel/ all
 
 user:
-	make -C user
+	make TEST_OPT=$(TEST_OPT) -C user
 
 lib:
 	make -C $(STDLIB_NAME)

@@ -77,7 +77,7 @@ include build/apps.mk
 #
 
 TESTS_DIR     := tests
-TESTS_OPTIONS := WITH_MSG USER_SPACE
+TESTS_OPTIONS := WITH_MSG USER_SPACE $(TEST_OPT)
 include build/tests.mk
 
 #

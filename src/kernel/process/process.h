@@ -455,9 +455,12 @@ extern int start(int (*pt_func)(void *), unsigned long ssize, int prio,
                  const char *name, void *arg);
 
 /**
- * @note This function will eventually take the name start when virtual memory
- * is complete
- */
+ * @note This function is very similar to the dunction defined above but this method 
+ * exploits virtual memory. Also this method does not run function as processus. 
+ * It identifies the programs by their name that is given as function arguent then it does 
+ * a table lookup in the struct that possess all of the programs and then it takes the memory 
+ * associated to that program and places it in the memory space associated to the program it self
+*/
 extern int start_virtual(const char *name, unsigned long ssize, int prio,
                          void *arg);
 

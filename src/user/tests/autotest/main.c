@@ -5,9 +5,10 @@
 
 #include "sysapi.h"
 
-#define TESTS_NUMBER 21
+#define TESTS_NUMBER 22
 
 const char *tests[TESTS_NUMBER] = {
+
         "test0",
         "test1",
         "test2",
@@ -24,7 +25,9 @@ const char *tests[TESTS_NUMBER] = {
         "test15",
         "test16",
         "test17",
-        //"test19", // syscalls not working yet
+        #ifndef TESTING
+        "test19",
+        #endif
         "test20",
         "test21",
         "test22",
@@ -49,22 +52,19 @@ const char *tests[TESTS_NUMBER] = {
 int main(void)
 {
 
-	int i;
-	int pid;
-	long int ret;
-        // printf("%d", cons_write("help", 4));
-        // csr_clear(sstatus, 0x2);
-        // while(x){x = 4;}
-	for (i = 0; i < TESTS_NUMBER; i++) {
-		if (tests[i] == NULL){
+        int i;
+        int pid;
+        long int ret;
+        for (i = 0; i < TESTS_NUMBER; i++) {
+                if (tests[i] == NULL){
                         break;
                 }
                 printf("Test %s : ", tests[i]);
-		pid = start(tests[i], 4000, 128, NULL);
-		waitpid(pid, &ret);
-		assert(ret == 0);
-	}
-	printf("Auto test done.\n");
-  power_off(0);
+                pid = start(tests[i], 4000, 128, NULL);
+                waitpid(pid, &ret);
+                assert(ret == 0);
+        }
+        printf("Auto test done.\n");
+        power_off(0);
 }
 

@@ -249,9 +249,6 @@ static int make_children_orphans_and_kill_zombies(process *parent_process) {
     process *temp_process = parent_process->children_head;
     while (temp_process != NULL) {
       // We free the process in this casse
-      // printf("[temp child process] %s state = ", temp_process->process_name);
-      // print_process_state(temp_process->state);
-      // printf("\n");
       if (temp_process->state == ZOMBIE) {
         //  We don't need to the fix the links of the elements because their
         //  relationship is not relevant after this call
@@ -300,10 +297,6 @@ static int turn_current_process_into_a_zombie_or_kill_it(bool current_or_custom,
     return -1;
   }
   current_process->state = ZOMBIE;
-  // printf("[Parent proc ==] %s \n", current_process->process_name);
-  // printf("[parent of parent is equal to] %s state = ", current_process->parent->process_name);
-  // print_process_state(current_process->parent->state);
-  // printf("\n");
   if (current_process->parent == NULL) {
       return free_child_zombie_process(current_process);
   } else {

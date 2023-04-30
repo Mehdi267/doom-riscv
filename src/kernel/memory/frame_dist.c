@@ -40,8 +40,6 @@ void *get_frame(){
 
 
 void release_frame(void *frame){
-    // printf("[release_frame] Releasing frame with address %p \n", frame);
-    // return;
     //LIFO : frame est pointée par mem_ptr
     //frame pointe vers l'ancien mem_ptr
     //checks : la frame est comprise dans la memoire accessible

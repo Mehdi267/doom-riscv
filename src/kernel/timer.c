@@ -48,11 +48,13 @@ void set_supervisor_timer_interrupt(uint64_t delta_ms)
 
 void handle_mtimer_interrupt()
 {
+	//Machine cep
 	#ifndef VIRTMACHINE
 		printf("Tic machine \n");
 		set_machine_timer_interrupt(TIC_PER); // this fills the role of ack
 		counter++;
 		return ;
+	//Machine virt
 	#else
 		//inspired for the xv6 project
 		//We force a timer intterupt that will have 
@@ -77,15 +79,16 @@ void handle_mtimer_interrupt()
 
 void handle_stimer_interrupt()
 {
+	//Machine cep
 	#ifndef VIRTMACHINE
 		debug_print_no_arg("--Inside timer interreupt handler-- \n"); 
 		#ifdef KERNEL_PROCESSES_ON
-			//TODO: delete this
 			set_supervisor_interrupts(false);
 		#endif
 		counter++;
 		set_supervisor_timer_interrupt(TIC_PER); 
 		scheduler();
+	//Machine virt
 	#else
 		debug_print_no_arg("--Called from m mode"  
 					"Inside timer interreupt handler supervisor -- \n"); 

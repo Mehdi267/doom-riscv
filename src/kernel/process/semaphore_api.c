@@ -6,12 +6,7 @@
 #include <stdlib.h>
 #include "msgqueue.h"
 #include "assert.h"
-/**
- * ISSUES:
- * When we pass to used mode or when we excute this normally the scheduler call might not be 
- * the best approch since we risk losing data or the return value of the method
- * This problem is not certain but it must be investigated in order to evaluate how the program runs exactly
- */
+
 
 //Boolean used to stop the child function from calling the scheduler
 static bool parent_block = false;
@@ -127,7 +122,6 @@ int scount(int sem){
     //We have to return a signed 16 bits integer placed in a 32 bit int
     //While always having the upper half of hte bits always equal to 0
     int return_val = 0xffff & sem_struct->count;
-    // printf("scount = %d \n",return_val);
     return return_val;
 }
 
@@ -156,7 +150,6 @@ int screate(short int count){
     if (hash_set(get_semaphore_table(),
         cast_int_to_pointer(semaphore_id),
         sem)<0){
-        printf("semcreate fail 4\n");
         return -1;
     }
     currently_running_semaphores++;
@@ -176,8 +169,6 @@ int wait(int sem){
     //the one called by the signal method, or if we just decrement inside this wait method 
     proc_sem->sem_signal = 0;
 
-    // printf("\nsemaphore has been called from the process : %s and sem count is = %d\n",
-    //         proc_sem->process_name, sem_struct->count);
     //If the value of the sem_struct is true then the semaphore is 
     //being used this in this case 
     //We acquire the semaphore, making any ch

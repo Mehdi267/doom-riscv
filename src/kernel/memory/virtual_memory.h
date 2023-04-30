@@ -28,7 +28,6 @@
 #define USERSPACE_ADDRESS 0x40000000
 #define VRAM_SPACE_1_ADDRESS 0x80000000
 #define VRAM_SPACE_2_ADDRESS 0xc0000000
-#define SHARED_PAGES_ADDRESS 0x100000000 //Not using this space just yet all of the pages are in the user page
 
 
 //Kernel's base page table

@@ -112,7 +112,7 @@ static inline void enter_supervisor_mode() {
 
     // changing to supervisor mode
     //On met dans le registre mepc l'adresse de la méthode
-    //qu'on exécutera en mode superviseur qui dans ce cas la méthode
+    //qu'on exécutera en mode superviseur. dans ce cas, ca sera  la méthode
     //kernel_start défini dans le fichier start.c
     csr_write(mepc, kernel_start);
 
@@ -127,6 +127,10 @@ static inline void enter_supervisor_mode() {
     
     
     #ifdef USER_PROCESS_DEBUG
+        //The following lines allows us to access user pages from the kernel mode
+        //this is not very secure because a malious user can potentially make the supervisor 
+        //run code or modify memory that he is not allowed to access
+        //Solving this issue is not hard but it was not done during this project  
         //set sum value in sstatus to one to debug user processes
         csr_set(sstatus, SSTATUS_SUM);
         debug_print_memory("Sum Attribut has been set correctly sstatus = %ld\n", csr_read(sstatus));

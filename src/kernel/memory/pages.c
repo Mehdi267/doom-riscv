@@ -14,7 +14,6 @@
  */
 page_table *create_page_table(){
     page_table *ptr = (page_table *) get_frame(); //Allocates data for the page table
-    // printf("---Table adress frame---= %p\n", ptr);
     if (ptr == NULL){
         return NULL;
     }
@@ -31,14 +30,11 @@ void configure_page_entry(page_table_entry *pte, long unsigned int address,
                             bool user_mode,
                             page_size_t page_size){
     //address is relative to satp.ppn
-    // assert(read || !write); //or the page would be invalid
-    // assert(read || exec); //or the page is not a leaf
     set_valid(pte);
     set_read(pte, read);
     set_write(pte, write);
     set_exec(pte, exec);
     set_user_mode(pte, user_mode);
-    // set_user_mode(pte, false);
     //in accordance to point 6 of 4.3.2, we have to set ppn[1] and ppn[0] to 0
     //The value of these ppn are not relevant since we only use pp2 
     //to get the adress of the giga byte page
@@ -115,9 +111,10 @@ void set_invalid(page_table_entry *pte){
     pte->valid = 0;
 }
 
-
-
-//link pte to address
+/*
+ * links the pte given in the function argument 
+ * to the address that is also given as argument 
+*/
 void link_pte(page_table_entry *pte, long unsigned int address){
     address =  address >> FRAME_SIZE_EXP; //we do not write the 12 zeros of the alignment
     pte->ppn0 = MASK_ADDRESS(address, PPN0_MASK);
