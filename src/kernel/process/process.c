@@ -194,7 +194,6 @@ static int declares_debug_processes() {
 
 
 int initialize_process_workflow(){
-    init_scheduling_process_queue();
     if (initialize_process_hash_table()<0){
         return -1;
     }
