@@ -10,7 +10,7 @@
 #include "process/process.h" // for initialize_process_workflow
 #include "memory/virtual_memory.h" //for set_up_virtual_memory
 #include "riscv.h" // for csr_set
-
+#include "timer.h"
 int kernel_start() {
   puts("Inside kernel start\n");
   if (set_up_virtual_memory() < 0) {
@@ -23,6 +23,9 @@ int kernel_start() {
     puts("error while setting up process");
     exit(-1);
   }
+  #ifdef VIRTMACHINE
+      set_machine_timer_interrupt(100);
+  #endif
   csr_set(sstatus, MSTATUS_SIE); // active interruption in supervisor mode
                                  // not that there's a interrupt pending so
                                  // we will jump to that interruption automatically
