@@ -27,19 +27,6 @@ int initialize_process_hash_table() {
   return 0;
 }
 
-void activate_and_launch_scheduler(void){
-    #ifdef VIRTMACHINE
-      csr_set(sstatus, MSTATUS_SIE);
-      set_machine_timer_interrupt(100);
-    #else
-      set_supervisor_timer_interrupt(100); 
-      csr_set(sstatus, MSTATUS_SIE);
-    #endif
-    while(1){ wfi();}
-    return;
-}
-
-
 
 /**
  * @brief setup_main_context is used to allocate space for a scheduler_struct
