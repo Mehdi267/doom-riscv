@@ -31,32 +31,14 @@ LIST_HEAD(dead_process_queue);
 
 // initially user process are not on, this will become true when we first visit the scheduler
 bool started_user_process = false; 
-scheduler_struct *scheduler_main;
+scheduler_struct * scheduler_main = NULL;
 
-uint64_t get_smallest_sleep_time() {
-  process* p = queue_top(&asleep_process_queue, process, next_prev);
-  if (p) {
-    assert(-p->sleep_time >= 0);
-    return -p->sleep_time;
-  }
-  return 0;
-}
-
-void awake_sleeping_process() {
-    uint64_t sleep_time = get_smallest_sleep_time();
-    while (sleep_time != 0 && current_clock() > sleep_time) { // several process can be awaken
-      process* awake = queue_out(&asleep_process_queue, process, next_prev);
-      queue_add(awake, &activatable_process_queue, process, next_prev, prio);
-      sleep_time = get_smallest_sleep_time();
-    }
-}
-
-void free_dead_process() {
-  while (!queue_empty(&dead_process_queue)){
-    process * top = queue_out(&dead_process_queue, process, next_prev);
-    free_process_memory(top);
-  }
-}
+/*
+** HELPER FUNCTIONS DECLARATIONS
+*/
+uint64_t get_next_wake_time();
+void awake_sleeping_process();
+void free_dead_process();
 
 void scheduler(){
     #ifdef USER_PROCESSES_ON
@@ -70,11 +52,12 @@ void scheduler(){
     // awake process and insert the in activable queue;
     awake_sleeping_process();
 
-    //free the memory of the processes that were killed and they are orphans
+    // free the memory of the processes that were killed and they are orphans
     free_dead_process();
     //Scheduler has been called before any execution has started
     //the scheduler_main is configured when we start the kernel if its value is null 
     //then we found an error
+    //
     if (scheduler_main == NULL){
         return ;
     }
@@ -181,4 +164,40 @@ void scheduler(){
     debug_print_scheduler("[scheduler -> %d] I managed to return to the scheduler %d\n",getpid(),getpid());
 }
 
+/*
+** HELPER FUNCTIONS DEFINITIONS
+*/
+/**
+ *@brief returns the smallest wake time of the top process from the
+ * asleep_process_queue
+ */
+uint64_t get_next_wake_time() {
+  process* p = queue_top(&asleep_process_queue, process, next_prev);
+  if (p) {
+    assert(-p->wake_time >= 0);
+    return -p->wake_time;
+  }
+  return 0;
+}
 
+/**
+ *@brief awakes sleeping process if the current time is > of their wake time
+ */
+void awake_sleeping_process() {
+    uint64_t wake_time = get_next_wake_time();
+    while (wake_time != 0 && current_clock() > wake_time) { // several process can be awaken
+      process* awake = queue_out(&asleep_process_queue, process, next_prev);
+      queue_add(awake, &activatable_process_queue, process, next_prev, prio);
+      wake_time = get_next_wake_time();
+    }
+}
+
+/**
+ * @brief free the dead process queue
+ */
+void free_dead_process() {
+  while (!queue_empty(&dead_process_queue)){
+    process * top = queue_out(&dead_process_queue, process, next_prev);
+    free_process_memory(top);
+  }
+}
