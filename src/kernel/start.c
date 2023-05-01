@@ -6,23 +6,10 @@
  *
  * See license for license details.
  */
-
-//#include <unistd.h>
-#include "assert.h"
-#include "drivers/splash.h"
-#include "memory/frame_dist.h"
-#include "process/helperfunc.h"
-#include "process/process.h"
-#include "process/scheduler.h"
-#include "riscv.h"
-#include "stddef.h"
-#include "stdint.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include "tests/tests.h"
-#include "memory/virtual_memory.h"
-#include <stdint.h>
+#include "drivers/splash.h" // for splash_screen and splash_vga_screen
+#include "process/process.h" // for initialize_process_workflow
+#include "memory/virtual_memory.h" //for set_up_virtual_memory
+#include "riscv.h" // for csr_set
 
 int kernel_start() {
   puts("Inside kernel start\n");
