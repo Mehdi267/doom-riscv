@@ -308,7 +308,7 @@ static int turn_current_process_into_a_zombie_or_kill_it(bool current_or_custom,
     }
     if (current_process->parent->state == BLOCKEDWAITCHILD) {
       current_process->parent->state = ACTIVATABLE;
-      add_process_to_queue_wrapper(current_process->parent, ACTIVATABLE_QUEUE);
+      queue_add(current_process->parent, &activatable_process_queue, process, next_prev, prio);
     }
   }
   return 0;
@@ -469,7 +469,7 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio,
   new_process->sem_signal = 0;
   //------------Add process to the activatable queue
   new_process->state = ACTIVATABLE;
-  add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
+  queue_add(new_process, &activatable_process_queue, process, next_prev, prio);
 
   debug_print("[%s] created process with pid = %d \n",
               new_process->process_name, new_process->pid);
@@ -612,7 +612,7 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg){
   new_process->sem_signal = 0;
   //------------Add process to the activatable queue
   new_process->state = ACTIVATABLE;
-  add_process_to_queue_wrapper(new_process, ACTIVATABLE_QUEUE);
+  queue_add(new_process, &activatable_process_queue, process, next_prev, prio);
 
   debug_print("[%s] created process with pid = %d \n",
               new_process->process_name, new_process->pid);

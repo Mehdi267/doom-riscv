@@ -115,7 +115,7 @@ int activate_and_launch_custom_process(process *process_to_activate) {
   if (process_to_activate->state != ACTIVATABLE) {
     return -1;
   }
-  delete_process_from_queue_wrapper(process_to_activate, ACTIVATABLE_QUEUE);
+  queue_del(process_to_activate, next_prev);
   process_to_activate->state = ACTIF;
 
   set_supervisor_timer_interrupt(100);

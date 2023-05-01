@@ -33,59 +33,8 @@ LIST_HEAD(dead_process_queue);
 bool started_user_process = false; 
 scheduler_struct *scheduler_main;
 
-int init_scheduling_process_queue(){
-    return 0;
-}
-
-
-void add_process_to_queue_wrapper(process* process_to_add, queue_process_type type){
-    if (type == ACTIVATABLE_QUEUE){
-        queue_add(process_to_add, &activatable_process_queue, process, next_prev, prio);
-    }
-    else if (type == ASLEEP_QUEUE){
-        queue_add(process_to_add, &asleep_process_queue, process, next_prev, sleep_time);
-    }
-    else if (type == IO_QUEUE){
-        queue_add(process_to_add, &blocked_io_process_queue, process, next_prev, prio);
-    }
-}
-
-
-void delete_process_from_queue_wrapper(process* process_to_delete, queue_process_type type){
-    queue_del(process_to_delete, next_prev);
-  }
-
-
-
-process* pop_element_queue_wrapper(queue_process_type type){
-    if (type == ACTIVATABLE_QUEUE){
-        return queue_out(&activatable_process_queue, process, next_prev);
-    }
-    else if (type == ASLEEP_QUEUE){
-        return queue_out(&asleep_process_queue, process, next_prev);
-    }
-    else if (type == IO_QUEUE){
-        return queue_out(&blocked_io_process_queue, process, next_prev);
-    }
-    return NULL;
-}
-
-process* get_peek_element_queue_wrapper(queue_process_type type){
-    if (type == ACTIVATABLE_QUEUE){
-        return queue_top(&activatable_process_queue, process, next_prev);
-    }
-    else if (type == ASLEEP_QUEUE){
-        return queue_top(&asleep_process_queue, process, next_prev);
-    }
-    else if (type == IO_QUEUE){
-        return queue_top(&blocked_io_process_queue, process, next_prev);
-    }
-    return NULL;
-}
-
-
 uint64_t get_smallest_sleep_time() {
-  process* p = get_peek_element_queue_wrapper(ASLEEP_QUEUE);
+  process* p = queue_top(&asleep_process_queue, process, next_prev);
   if (p) {
     assert(-p->sleep_time >= 0);
     return -p->sleep_time;
@@ -96,8 +45,8 @@ uint64_t get_smallest_sleep_time() {
 void awake_sleeping_process() {
     uint64_t sleep_time = get_smallest_sleep_time();
     while (sleep_time != 0 && current_clock() > sleep_time) { // several process can be awaken
-      process* awake = pop_element_queue_wrapper(ASLEEP_QUEUE);
-      add_process_to_queue_wrapper(awake, ACTIVATABLE_QUEUE);
+      process* awake = queue_out(&asleep_process_queue, process, next_prev);
+      queue_add(awake, &activatable_process_queue, process, next_prev, prio);
       sleep_time = get_smallest_sleep_time();
     }
 }
@@ -129,11 +78,11 @@ void scheduler(){
     }
     //Scheduler has been called directly for the first time 
     if (getpid() == -1){ // pid has not been set yet
-        process* top_process = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
+        process* top_process = queue_top(&activatable_process_queue, process, next_prev);
         if (top_process == NULL){
             return;
         }
-        pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
+        queue_out(&activatable_process_queue, process, next_prev);
         if (setpid(top_process->pid)<0){
             return;
         }
@@ -165,7 +114,7 @@ void scheduler(){
         //In here we treat the normal case 
         //We take the current process struct:
         process* current_process = get_process_struct_of_pid(getpid());
-        process* top_process = get_peek_element_queue_wrapper(ACTIVATABLE_QUEUE);
+        process* top_process = queue_top(&activatable_process_queue, process, next_prev);
         if (top_process == NULL || current_process == NULL){
             return; 
         }
@@ -180,14 +129,14 @@ void scheduler(){
             if (top_process->prio >= current_process->prio){
                 //In this case we switch the process and 
                 debug_print_scheduler("[scheduler -> %d] Trying to swap from process current pid = %d ->>>>>>>> peek pid = %d\n", getpid(), current_process->pid, top_process->pid);
-                pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
+                queue_out(&activatable_process_queue, process, next_prev);
                 if (setpid(top_process->pid)<0){ 
                     return;
                 }
                 current_process->state = ACTIVATABLE;
                 /* set_supervisor_interrupts(true); */
                 top_process->state = ACTIF;
-                add_process_to_queue_wrapper(current_process, ACTIVATABLE_QUEUE);  
+                queue_add(current_process, &activatable_process_queue, process, next_prev, prio);
                 debug_print_scheduler("[scheduler -> %d] Swapping processes;  current pid = %d ->>>>>>>> peek pid = %d\n", top_process->pid , current_process->pid, top_process->pid);
                 context_switch(current_process->context_process, top_process->context_process);
             }
@@ -200,7 +149,7 @@ void scheduler(){
         else if(current_process->state == KILLED){ 
             debug_print_scheduler("[scheduler -> %d] I am in a killed process id = %d, moving to process = %d\n",
                                     getpid(), current_process->pid, top_process->pid);
-            pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
+            queue_out(&activatable_process_queue, process, next_prev);
             if (setpid(top_process->pid)<0){
                 return;
             }
@@ -225,7 +174,7 @@ void scheduler(){
         else{
             debug_print_scheduler("[scheduler -> %d] Current process is not in a actif state= %d swaping to %d\n", 
                                     getpid(), current_process->pid, top_process->pid);
-            pop_element_queue_wrapper(ACTIVATABLE_QUEUE);
+            queue_out(&activatable_process_queue, process, next_prev);
             if (setpid(top_process->pid)<0){
                 return;
             }

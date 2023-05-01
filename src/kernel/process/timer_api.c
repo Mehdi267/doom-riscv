@@ -2,8 +2,8 @@
 #include "scheduler.h" //for scheduler
 #include "../timer.h" // for TIC_PER cte
 #include <stdint.h>
-#include "helperfunc.h" // for add_process_toqueue_wrapper, getpid,
-                                // get_process_struct_of_pid
+#include "assert.h"
+#include "helperfunc.h" // get_current_process
 #include "drivers/clint.h" // for clint_dev
 #include "process.h"
 
@@ -22,7 +22,7 @@ void wait_clock(uint64_t clock) {
   process * current_process = get_current_process();
   current_process->sleep_time = - (current_clock() + clock);
   current_process->state = ASLEEP;
-  add_process_to_queue_wrapper(current_process, ASLEEP_QUEUE);
+  queue_add(current_process, &asleep_process_queue, process, next_prev, sleep_time);
   scheduler();
 }
 

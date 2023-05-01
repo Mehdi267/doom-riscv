@@ -72,7 +72,7 @@ int remove_proc_queue(semaphore_t* sem_struct, awake_signal_t signal_enum, int p
     if (signal_enum != KILL_CALL){
         //In this case the process does need to be executed again since it will be killed, thus we don't add to 
         //activatable queue
-        add_process_to_queue_wrapper(blocked_proc->blocked_process, ACTIVATABLE_QUEUE);
+        queue_add(blocked_proc->blocked_process, &activatable_process_queue, process, next_prev, prio);
     }
     blocked_proc->blocked_process->sem_signal = signal_enum;
     free(blocked_proc);
@@ -99,7 +99,7 @@ int unblock_process_sem(semaphore_t* sem_struct, awake_signal_t signal_enum){
         //In this case the process does need to be executed again since it will be killed, thus we don't add to 
         //activatable queue
     }
-    add_process_to_queue_wrapper(blocked_proc->blocked_process, ACTIVATABLE_QUEUE);
+    queue_add(blocked_proc->blocked_process, &activatable_process_queue, process, next_prev, prio);
     blocked_proc->blocked_process->sem_signal = signal_enum;
     free(blocked_proc);
     return 0;
