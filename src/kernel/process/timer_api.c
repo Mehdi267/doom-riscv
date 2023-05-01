@@ -20,9 +20,9 @@ uint64_t current_clock() {
 
 void wait_clock(uint64_t clock) {
   process * current_process = get_current_process();
-  current_process->sleep_time = - (current_clock() + clock);
+  current_process->wake_time = - (current_clock() + clock);
   current_process->state = ASLEEP;
-  queue_add(current_process, &asleep_process_queue, process, next_prev, sleep_time);
+  queue_add(current_process, &asleep_process_queue, process, next_prev, wake_time);
   scheduler();
 }
 

@@ -239,7 +239,7 @@ typedef struct process_t {
   void* sscratch_frame;//used to hold the sscratch frame 
                        //so that we can delete it later
   // Timer management
-  int64_t sleep_time;
+  int64_t wake_time;
   // Queue managment
   message_t message;
   // Semaphore signal
