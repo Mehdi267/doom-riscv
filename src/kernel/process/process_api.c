@@ -142,9 +142,11 @@ int chprio(int pid, int newprio) {
       queue_del(p, next_prev);
       queue_add(p, p->message.blocked_head, process, next_prev, prio);
       break;
+    case BLOCKEDIO:
+      queue_del(p, next_prev);
+      queue_add(p, &blocked_io_process_queue, process, next_prev, prio);
     default:
       /* BLOCKEDSEMAPHORE, */
-      /* BLOCKEDIO, */
       /* BLOCKEDWAITCHILD, */
       /* ASLEEP, */
       /* ZOMBIE, */
