@@ -51,6 +51,13 @@ void awake_sleeping_process() {
     }
 }
 
+void free_dead_process() {
+  while (!queue_empty(&dead_process_queue)){
+    process * top = queue_top(&dead_process_queue, process, next_prev);
+    free_process_memory(top);
+  }
+}
+
 void scheduler(){
     #ifdef USER_PROCESSES_ON
         //We need to go back to user mode when the scheduler is called
@@ -63,13 +70,8 @@ void scheduler(){
     // awake process and insert the in activable queue;
     awake_sleeping_process();
 
-    //We free the memory of the processes that were killed and they are orphans
-    if (killed_list != NULL){
-        killed_proc_list_t* head = killed_list;
-        free_process_memory(head->proc);
-        killed_list = head->next_proc;
-        free(head);
-    }
+    //free the memory of the processes that were killed and they are orphans
+    free_dead_process();
     //Scheduler has been called before any execution has started
     //the scheduler_main is configured when we start the kernel if its value is null 
     //then we found an error
@@ -156,14 +158,7 @@ void scheduler(){
             /* set_supervisor_interrupts(true); */
             top_process->state = ACTIF;
             if (current_process != NULL){
-              killed_proc_list_t* node = (killed_proc_list_t*) malloc(sizeof(killed_proc_list_t));
-              node->proc = current_process;
-              if (killed_list){
-                node->next_proc = killed_list;
-              }else {
-                node->next_proc = NULL;
-                killed_list = node;
-              }
+              queue_add(current_process, &dead_process_queue, process, next_prev, prio);
             }
             
             direct_context_swap(top_process->context_process);
