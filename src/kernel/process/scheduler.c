@@ -53,7 +53,7 @@ void awake_sleeping_process() {
 
 void free_dead_process() {
   while (!queue_empty(&dead_process_queue)){
-    process * top = queue_top(&dead_process_queue, process, next_prev);
+    process * top = queue_out(&dead_process_queue, process, next_prev);
     free_process_memory(top);
   }
 }
