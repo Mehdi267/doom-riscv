@@ -173,6 +173,7 @@ __attribute__((noreturn)) void boot_riscv()
         csr_set(sie, 0x2); //We enable software interrupts
         csr_set(mstatus, MSTATUS_MIE);
     #else
+        csr_set(mip, MIP_STIP);
         //enables timer and external interrupts for the Supervisor mode
         csr_set(sie, SIE_STIE);
         csr_set(sie, SIE_SEI);
@@ -187,7 +188,6 @@ __attribute__((noreturn)) void boot_riscv()
     init_frames();
 
 
-    csr_set(mip, MIP_STIP); // interrupt pending activated
     /**
      * This function will enter in the supervisor mode and it will enable
      * supervisor mode intterupts
