@@ -97,7 +97,7 @@ unsigned long cons_read(char *string, unsigned long length) {
   if (!detected_eol() && !is_buffer_full()) {
     process *proc = get_current_process();
     proc->state = BLOCKEDIO;
-    add_process_to_queue_wrapper(proc, IO_QUEUE);
+    queue_add(proc, &blocked_io_process_queue, process, next_prev, prio);
     scheduler();
   }
   return copy(string, length);
