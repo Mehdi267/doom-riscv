@@ -29,9 +29,9 @@ scheduler_struct *scheduler_main = NULL;
 /*
 ** HELPER FUNCTIONS DECLARATIONS
 */
-uint64_t get_next_wake_time();
-void awake_sleeping_process();
-void free_dead_process();
+static uint64_t get_next_wake_time();
+static void awake_sleeping_process();
+static void free_dead_process();
 
 void scheduler() {
 #ifdef USER_PROCESSES_ON
@@ -201,7 +201,7 @@ void scheduler() {
  *@brief returns the smallest wake time of the top process from the
  * asleep_process_queue
  */
-uint64_t get_next_wake_time() {
+static uint64_t get_next_wake_time() {
   process *p = queue_top(&asleep_process_queue, process, next_prev);
   if (p) {
     assert(-p->wake_time >= 0);
@@ -213,7 +213,7 @@ uint64_t get_next_wake_time() {
 /**
  *@brief awakes sleeping process if the current time is > of their wake time
  */
-void awake_sleeping_process() {
+static void awake_sleeping_process() {
   uint64_t wake_time = get_next_wake_time();
   while (wake_time != 0 &&
          current_clock() > wake_time) { // several process can be awaken
@@ -226,7 +226,7 @@ void awake_sleeping_process() {
 /**
  * @brief free the dead process queue
  */
-void free_dead_process() {
+static void free_dead_process() {
   while (!queue_empty(&dead_process_queue)) {
     process *top = queue_out(&dead_process_queue, process, next_prev);
     free_process_memory(top);

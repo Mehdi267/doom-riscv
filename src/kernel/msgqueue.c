@@ -15,17 +15,16 @@ msg_queue_t *all_queues[NBQUEUES];
 ** HELPER FUNCTIONS DECLARATION
 */
 
-void free_blocked_queue(link *queue);
-bool is_full(msg_queue_t *msg_queue);
-bool is_empty(msg_queue_t *msg_queue);
-int pop_oldest_msg(msg_queue_t *msg_queue);
-void init_msg_queues();
-int get_first_free_index();
-void add_message(msg_queue_t *msg_queue, int message);
-size_t queue_length(link *queue);
-int mod(int a, int b);
-bool valid_fid(int fid);
-void print_queue(size_t n);
+static void free_blocked_queue(link *queue);
+static bool is_full(msg_queue_t *msg_queue);
+static bool is_empty(msg_queue_t *msg_queue);
+static int pop_oldest_msg(msg_queue_t *msg_queue);
+static int get_first_free_index();
+static void add_message(msg_queue_t *msg_queue, int message);
+static size_t queue_length(link *queue);
+static int mod(int a, int b);
+static bool valid_fid(int fid);
+static void print_queue(size_t n);
 
 /*
 ** MAIN FUNCTIONS
@@ -185,7 +184,7 @@ void info_msgqueues() {
  * activable queue
  * @param queue: queue of blocked process;
  */
-void free_blocked_queue(link *queue) {
+static void free_blocked_queue(link *queue) {
   // for each blocked process make it activatable
   while (!queue_empty(queue)) {
     process *curr = queue_out(queue, process, next_prev);
@@ -202,7 +201,7 @@ void free_blocked_queue(link *queue) {
  * @brief checks if the msg_queue is full
  * @param msg_queue: the msg_queue
  */
-bool is_full(msg_queue_t *msg_queue) {
+static bool is_full(msg_queue_t *msg_queue) {
   return msg_queue->number_of_msgs == msg_queue->size;
 }
 
@@ -210,7 +209,7 @@ bool is_full(msg_queue_t *msg_queue) {
  * @brief checks if the msg_queue is empty
  * @param msg_queue: the msg_queue
  */
-bool is_empty(msg_queue_t *msg_queue) {
+static bool is_empty(msg_queue_t *msg_queue) {
   assert(msg_queue->msg_arr != NULL);
   return msg_queue->number_of_msgs == 0;
 }
@@ -219,7 +218,7 @@ bool is_empty(msg_queue_t *msg_queue) {
  * @brief removes and returns the oldest message from the msg_queue
  * @param msg_queue: the msg_queue
  */
-int pop_oldest_msg(msg_queue_t *msg_queue) {
+static int pop_oldest_msg(msg_queue_t *msg_queue) {
   int index = mod((msg_queue->iffc - (int)msg_queue->number_of_msgs),
                   (int)msg_queue->size);
   msg_queue->number_of_msgs--;
@@ -227,17 +226,9 @@ int pop_oldest_msg(msg_queue_t *msg_queue) {
 }
 
 /**
- * @brief initialize each queue in all_queues variable to NULL
- */
-void init_msg_queues() {
-  for (int i = 0; i < NBQUEUES; i++)
-    all_queues[i] = NULL;
-}
-
-/**
  * @brief returns the 1st free queue index of all_queues
  */
-int get_first_free_index() {
+static int get_first_free_index() {
   for (int i = 0; i < NBQUEUES; i++) {
     if (all_queues[i] == NULL)
       return i;
@@ -245,7 +236,7 @@ int get_first_free_index() {
   return -1;
 }
 
-int mod(int a, int b) {
+static int mod(int a, int b) {
   int r = a % b;
   return r < 0 ? r + b : r;
 }
@@ -257,7 +248,7 @@ int mod(int a, int b) {
  * @note this function doesnt verify if theres is space available,
  * make sure there's space calling is full helper func
  */
-void add_message(msg_queue_t *msg_queue, int message) {
+static void add_message(msg_queue_t *msg_queue, int message) {
   msg_queue->msg_arr[msg_queue->iffc] = message;
   msg_queue->number_of_msgs++;
   msg_queue->iffc = (msg_queue->iffc + 1) % msg_queue->size;
@@ -266,7 +257,7 @@ void add_message(msg_queue_t *msg_queue, int message) {
 /**
  * @brief returns the queue length
  */
-size_t queue_length(link *queue) {
+static size_t queue_length(link *queue) {
   size_t len = 0;
   process *it;
   queue_for_each(it, queue, process, next_prev) { len++; }
@@ -276,13 +267,13 @@ size_t queue_length(link *queue) {
 /**
  * @brief returns whether the fid is valid identifier
  */
-bool valid_fid(int fid) {
+static bool valid_fid(int fid) {
   if (fid < 0 || fid >= NBQUEUES || all_queues[fid] == NULL)
     return false;
   return true;
 }
 
-void print_queue(size_t n) {
+static void print_queue(size_t n) {
   msg_queue_t *msg_queue = all_queues[n];
   process *curr;
   printf("Size: %ld\n", msg_queue->size);
