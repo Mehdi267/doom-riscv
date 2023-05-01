@@ -46,7 +46,7 @@ static void cep_uart_init()
 	uart[UART_REG_RXCTRL] = UART_RXEN;
 	uart[UART_REG_IE] = 2;
 	//making sure buffer is empty
-	console_dev->top_ptr=0;
+	console_dev->last_written_char_index=0;
 }
 
 static int cep_uart_getchar()
