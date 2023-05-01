@@ -27,7 +27,7 @@ int kernel_start() {
       set_machine_timer_interrupt(100);
   #endif
   csr_set(sstatus, MSTATUS_SIE); // active interruption in supervisor mode
-                                 // not that there's a interrupt pending so
+                                 // note that there's a interrupt pending so
                                  // we will jump to that interruption automatically
   while (1)
     wfi();
