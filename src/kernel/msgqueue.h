@@ -79,6 +79,8 @@ int pcount(int fid, int *count);
 */
 int preset(int fid);
 
-void print_queue(size_t n);
+/**
+ * @brief returns information of the state of the msgqueues
+*/
 void info_msgqueues();
 #endif // MSGQUEUE_H_
