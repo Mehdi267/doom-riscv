@@ -11,7 +11,6 @@
 #include "queue.h"
 #include "stdarg.h"
 #include "stdbool.h"
-#include "../keyboard/consread.h"
 #include "../memory/virtual_memory.h"
 #include "../memory/pages.h"
 #include <stdint.h>
@@ -20,7 +19,7 @@
 #include "stdlib.h"
 #include "msgqueue.h" // for message_t
 #include "../userspace_apps.h" //Used for locating the app and adding its code
-#include "../keyboard/consread.h"
+#include "../input-output/cons_read.h"
 
 /**
  * @brief global function constants

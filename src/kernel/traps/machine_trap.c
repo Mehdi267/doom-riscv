@@ -14,7 +14,7 @@
 #include "traps/trap.h"
 #include "timer.h"
 #include "../process/process.h"
-#include "../keyboard/keyboard.h"
+#include "../input-output/keyboard.h"
 
 const char *interruption_names[16] = {
 		"u_software",

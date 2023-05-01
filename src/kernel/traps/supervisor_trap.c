@@ -20,8 +20,8 @@
 #include "../process/scheduler.h"
 #include "syscall_num.h"
 #include "../msgqueue.h"
-#include "cons_write.h"
-#include "../keyboard/keyboard.h"
+#include "../input-output/cons_write.h"
+#include "../input-output/keyboard.h"
 #include <string.h>
 
 extern void inc_sepc(void); // defined in supervisor_trap_entry.S
