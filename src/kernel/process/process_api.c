@@ -41,8 +41,6 @@ int nb_proc_running = 0;
 id_list_t* process_id_list = NULL;
 //killed counter used to indicate the order at which the process got killed
 int killed_counter = 0;
-//linked list for killed procesess;
-killed_proc_list_t* killed_list = NULL;
 
 
 int setpid(int new_pid) {

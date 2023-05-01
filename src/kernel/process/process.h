@@ -257,15 +257,6 @@ typedef struct scheduler_t {
 } scheduler_struct;
 
 /**
- * @brief Linked list for killed processes
- */
-typedef struct killed_proc_list{
-  process* proc;
-  struct killed_proc_list* next_proc;
-} killed_proc_list_t;
-extern killed_proc_list_t* killed_list;
-
-/**
  * @brief this function defines the necessary data structures that will be
  * exploited to have running processes;
  * @return the value 0 if there were no errors and a negative number if there
