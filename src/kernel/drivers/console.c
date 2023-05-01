@@ -25,10 +25,19 @@ void add_to_buffer(char c)
 	}
 }*/
 
+bool is_buffer_full() {
+  if (console_dev->last_written_char_index == -1) return 0;
+  return (console_dev->last_written_char_index + 1) % BUFFER_SIZE == console_dev->start_of_buffer_index;
+}
+
+bool is_buffer_empty() {
+  return console_dev->last_written_char_index == -1;
+}
+
 void kaddtobuffer(char c){
-	if(!console_dev->ignore){ //if buffer is full, ignore
-		console_dev->buffer[console_dev->top_ptr] = c;
-		console_dev->top_ptr ++;
+	if(!is_buffer_full()){ //if buffer is full, ignore
+		console_dev->last_written_char_index = (console_dev->last_written_char_index + 1) % BUFFER_SIZE;
+		console_dev->buffer[console_dev->last_written_char_index] = c;
 	}
 }
 
@@ -47,7 +56,8 @@ void register_console(console_device_t *dev)
 	{
 		dev->init();
 		dev->ignore = false; // not reading at first
-		dev->top_ptr = 0;
+		dev->last_written_char_index = -1;
+		dev->start_of_buffer_index = 0;
 		dev->echo = true; // echo is off by default
 	}
 }

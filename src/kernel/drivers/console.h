@@ -17,7 +17,8 @@ typedef struct console_device {
 	//void (*add_to_buffer)(char);
 	bool ignore;
 	char buffer[BUFFER_SIZE]; //temp
-	unsigned long top_ptr;
+	int last_written_char_index;
+	int start_of_buffer_index;
 	bool echo;
 } console_device_t;
 
@@ -38,8 +39,18 @@ static inline int kputchar(int ch)
 	return 0;
 }
 
+/**
+ *@brief add char c to the buffer if buffer is not full
+*/
 void kaddtobuffer(char c);
-
+/**
+ *@brief returns whether buffer is full or not
+*/
+bool is_buffer_full();
+/**
+ *@brief returns whether buffer is empty or not
+*/
+bool is_buffer_empty();
 /*
  * Console drivers
  */
