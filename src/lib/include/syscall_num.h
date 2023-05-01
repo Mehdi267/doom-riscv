@@ -57,6 +57,8 @@
 
 #define SYSC_show_programs      41
 
-#define NB_SYSCALLS             42
+#define SYSC_info_queue         42
+
+#define NB_SYSCALLS             43
 
 #endif

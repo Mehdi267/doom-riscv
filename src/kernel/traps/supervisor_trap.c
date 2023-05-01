@@ -112,6 +112,9 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
     case SYSC_show_programs:
       show_programs();
       break;
+    case SYSC_info_queue:
+      info_msgqueues();
+      break;
     default:
       printf("Syscall code does not match any of the defined syscalls");
       blue_screen(tf);
