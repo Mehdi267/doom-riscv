@@ -167,11 +167,16 @@ int preset(int fid) {
 }
 
 void info_msgqueues() {
+  int count = 0;
   for (size_t i = 0; i < NBQUEUES; i++) {
     if (all_queues[i] != NULL) {
+      count++;
       printf("[message queue %ld]\n", i);
       print_queue(i);
     }
+  }
+  if (count == 0) {
+    printf("There aren't currently active message queues\n");
   }
 }
 
