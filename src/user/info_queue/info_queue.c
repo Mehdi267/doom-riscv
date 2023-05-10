@@ -5,6 +5,6 @@
 long int ret;
 
 int main(void) {
-  printf("Displaying queue inforamtion : \n");
+  printf("Displaying queue information : \n");
   info_queue();
 }
