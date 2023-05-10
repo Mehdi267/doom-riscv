@@ -182,6 +182,9 @@ dk-go: $(DK_MAKEFILE_DIR)/Makefile
 dk-test: $(DK_MAKEFILE_DIR)/Makefile
 	make -C $(DK_MAKEFILE_DIR) CMD="make test" exec
 
+dk-clean: $(DK_MAKEFILE_DIR)/Makefile
+	make -C $(DK_MAKEFILE_DIR) CMD="make clean" exec
+
 dk-debug: $(DK_MAKEFILE_DIR)/Makefile
 	make -C $(DK_MAKEFILE_DIR) DK_OPTS="-p $(GDB_TARGET_PORT):$(GDB_TARGET_PORT)" CMD="make debug" exec
 
