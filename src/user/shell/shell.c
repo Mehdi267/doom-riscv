@@ -2,14 +2,18 @@
 #include "stdio.h"
 #include "string.h"
 
-long int ret;
+long int ret = 0;
 
 /**
  * @brief if cmd is a builtin, executes the builtin and returns 0, returns 1 if not
  */
 int builtin_cmd(char *cmd) {
   if (!strcmp(cmd, "echo $?")) {
-    printf("%li\n", ret);
+    printf("value: %ld\n", ret);
+    return 0;
+  }
+  if (!strcmp(cmd, "quit")) {
+    power_off(0);
     return 0;
   }
   return 1;
@@ -23,8 +27,13 @@ int main(void) {
     cons_read(cmd, 20);
     if (builtin_cmd(cmd) != 0) {
       pid = start(cmd, 4000, 128, NULL);
-      waitpid(pid, &ret);
-      memset(cmd, 0, 20);
+      if (pid == -1) {
+        printf("shell: program not found: %s\n", cmd);
+        ret = -1;
+      } else {
+        waitpid(pid, &ret);
+      }
     }
+    memset(cmd, 0, 20);
   }
 }
