@@ -1,12 +1,25 @@
 #include "../ulib/syscall.h"
 #include "stdio.h"
-#include "stdlib.h"
 #include "string.h"
 #define LINES 10
 #define COLUMNS 50
+#define MEMORY_SIZE 1000
 
 typedef enum bool { false, true } bool;
 typedef enum direction { NORTH, EAST, WEST, SOUTH } direction_t;
+
+char memory_pool[MEMORY_SIZE];
+size_t offset = 0;
+void * malloc(size_t size) {
+  printf("size %lu\n", offset + size);
+  if (offset + size > MEMORY_SIZE) {
+    printf("segmetation fault \n");
+    exit(-1);
+  }
+  char * res = memory_pool + offset;
+  offset += size;
+  return res;
+}
 
 typedef struct node_t {
   int i, j;
