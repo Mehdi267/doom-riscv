@@ -24,8 +24,8 @@ void wait_clock(uint64_t clock);
 
 /**
 * @brief just a wrapper of wait_clock to simplify use
-* @param nb_sec: number of seconds that the current process should wait
+* @param nb_mili_sec: number of mili seconds that the current process should wait
 */
-void sleep(uint64_t nb_sec);
+void sleep(uint64_t nb_mili_sec);
 
 #endif // SYNC_H_

@@ -27,6 +27,9 @@ void wait_clock(uint64_t clock) {
 }
 
 
-void sleep(uint64_t nbr_sec) { // TODO check overflows
-  wait_clock(1000 / TIC_PER * nbr_sec);
+void sleep(uint64_t nbr_ms) { // TODO check overflows
+  /* printf("1: %lu\n", 1000 / TIC_PER * nbr_sec); */
+  /* printf("2: %lu\n", TIC_PER * nbr_sec); */
+  /* wait_clock(1000 / TIC_PER * nbr_sec); */
+  wait_clock(nbr_ms / TIC_PER);
 }
