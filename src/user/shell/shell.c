@@ -12,10 +12,6 @@ int builtin_cmd(char *cmd) {
     printf("value: %ld\n", ret);
     return 0;
   }
-  if (!strcmp(cmd, "quit")) {
-    power_off(0);
-    return 0;
-  }
   return 1;
 }
 
