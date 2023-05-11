@@ -47,6 +47,7 @@ void move_snake(game_t * game) {
   get_next_case(snake, &next_pos);
   if (snake_in_case(snake, next_pos)) {
     printf("\n GAME OVER \n");
+    cons_echo(1);
     exit(0);
   }
 
