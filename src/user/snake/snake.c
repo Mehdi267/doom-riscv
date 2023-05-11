@@ -81,8 +81,6 @@ static int mod(int a, int b) {
 void move_snake(snake_t * snake) {
   int prev_i = snake->head->i;
   int prev_j = snake->head->j;
-  /* int prev_i = head_i; */
-  /* int prev_j = head_j; */
   node_t * curr = snake->head->next;
   while (curr != NULL) {
     int tmp_i = curr->i;
@@ -112,14 +110,35 @@ void move_snake(snake_t * snake) {
 int main(void) {
   offset = 0;
   snake_t * snake = create_snake();
+  long int fid = pcreate(1);
+  int pid = start("input_reader", 4096, 129, (void *)fid);
+  (void)pid;
   printf("snake %p\n", snake);
-  /* int * t = malloc(1); */
-  /* (void)t; */
-  /* node_t queue = {5, 5, NULL}; */
-  /* node_t head = {5, 6, &queue}; */
-  /* snake_t s = {&head, WEST}; */
-  /* snake_t * snake = &s; */
+  int count = 0;
+  int cmd;
   do {
+    pcount(fid, &count);
+    if (count > 0) {
+      preceive(fid, &cmd);
+      switch (cmd) {
+        case 'k': case 'w':
+          if (snake->direction != SOUTH)
+            snake->direction = NORTH;
+          break;
+        case 'j': case 's':
+          if (snake->direction != NORTH)
+            snake->direction = SOUTH;
+          break;
+        case 'l': case 'd':
+          if (snake->direction != EAST)
+            snake->direction = WEST;
+          break;
+        case 'h': case 'a':
+          if (snake->direction != WEST)
+            snake->direction = EAST;
+          break;
+      }
+    }
     move_snake(snake);
     print_game(snake);
     sleep(1);
