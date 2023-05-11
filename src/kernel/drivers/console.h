@@ -35,8 +35,9 @@ static inline int kgetchar()
 
 static inline int kputchar(int ch)
 {
-	if(console_dev->echo) return console_dev->putchar(ch);
-	return 0;
+	/* if(console_dev->echo) */
+	return console_dev->putchar(ch);
+	/* return 0; */
 }
 
 /**
@@ -51,6 +52,8 @@ bool is_buffer_full();
  *@brief returns whether buffer is empty or not
 */
 bool is_buffer_empty();
+
+size_t buffer_current_size();
 /*
  * Console drivers
  */

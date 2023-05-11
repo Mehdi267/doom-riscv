@@ -41,6 +41,18 @@ void kaddtobuffer(char c){
 	}
 }
 
+static int mod(int a, int b) {
+  int r = a % b;
+  return r < 0 ? r + b : r;
+}
+
+size_t buffer_current_size() {
+  return mod((console_dev->last_written_char_index -
+              console_dev->start_of_buffer_index) +
+                 1,
+             BUFFER_SIZE);
+}
+
 console_device_t console_none = {
 		.init = NULL,
 		.getchar = default_getchar,
