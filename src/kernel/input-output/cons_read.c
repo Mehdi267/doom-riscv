@@ -90,11 +90,11 @@ unsigned copy(char *string, unsigned long length) {
   }
   return i;
 }
+
 unsigned long cons_read(char *string, unsigned long length) {
-  cons_echo(1);
   if (!length)
     return 0;
-  if (!detected_eol() && !is_buffer_full()) {
+  while(!detected_eol() && !is_buffer_full() && length > buffer_current_size()) {
     process *proc = get_current_process();
     proc->state = BLOCKEDIO;
     queue_add(proc, &blocked_io_process_queue, process, next_prev, prio);

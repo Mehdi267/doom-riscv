@@ -64,15 +64,11 @@ void handle_keyboard_interrupt() {
     kaddtobuffer('\n');
     if (console_dev->echo)
       console_dev->putchar('\n'); // echo
-    process *next = queue_out(&blocked_io_process_queue, process, next_prev);
-    // printf("next ADDRESS %p\n", next);
-    if (next) {
-      /* printf("proc is not null %s  pid %d \n", next->process_name, next->pid); */
-      next->state = ACTIVATABLE;
-      queue_add(next, &activatable_process_queue, process, next_prev, prio);
-      scheduler();
-      /* printf("writing car %c \n", console_dev->buffer[console_dev->last_written_char_index - 1]); */
   }
-  // on signale au scheduler qu'il doit débloquer un processus
+  process *next = queue_out(&blocked_io_process_queue, process, next_prev);
+  if (next) {
+    next->state = ACTIVATABLE;
+    queue_add(next, &activatable_process_queue, process, next_prev, prio);
+    scheduler();
   }
 }
