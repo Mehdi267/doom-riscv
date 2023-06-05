@@ -5,6 +5,7 @@
 #ifndef _FRAME_DIST_H
 #define _FRAME_DIST_H
 
+//Sizes of the different blocks of the ppn memory
 #define PPN0_SIZE 9
 #define PPN1_SIZE 9
 #define PPN2_SIZE 26

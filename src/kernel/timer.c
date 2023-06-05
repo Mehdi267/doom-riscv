@@ -57,10 +57,11 @@ void handle_mtimer_interrupt()
 	//Machine virt
 	#else
 		//inspired for the xv6 project
-		//We force a timer intterupt that will have 
-		//to go through the kernel mode 
+		//We force a software interrupt that will have 
+		//to go through the kernel mode and runs the code that we have added
+		//for the cep machine 
 		//Timer interupts must come from user mode, if it is not the case we return 
-		//directly to the running execution
+		//directly to the state at which we were in.
 		debug_print_no_arg("Inside machine mode time handler\n");
 		if (((csr_read(mstatus) & MSTATUS_MPP_0) != 0) && !first_call){
 			debug_print_no_arg("Int comming from supervisor mode and " 
