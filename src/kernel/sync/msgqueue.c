@@ -1,8 +1,8 @@
-#include "msgqueue.h"
+#include "../sync/msgqueue.h"
 #include "assert.h"
-#include "process/helperfunc.h"
-#include "process/process.h"
-#include "process/scheduler.h"
+#include "../process/helperfunc.h"
+#include "../process/process.h"
+#include "../process/scheduler.h"
 #include "stdint.h"
 #include "stdio.h"
 #define SUCCES 0

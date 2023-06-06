@@ -16,7 +16,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "semaphore_api.h"
+#include "../sync/semaphore_api.h"
 #include "riscv.h"
 
 int initialize_process_hash_table() {

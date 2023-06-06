@@ -1,10 +1,10 @@
-#include "scheduler.h"
+#include "../process/scheduler.h"
 #include "stdbool.h"
-#include "process.h"
-#include "semaphore_api.h"
-#include "helperfunc.h"
+#include "../process/process.h"
+#include "../sync/semaphore_api.h"
+#include "../process/helperfunc.h"
 #include <stdlib.h>
-#include "msgqueue.h"
+#include "../sync/msgqueue.h"
 #include "assert.h"
 
 
@@ -368,7 +368,7 @@ int signaln(int sem, short int count){
 #ifdef XMETHODS_SEMAPHORE
     void xwait(union sem *s)
     {
-            wait(s->sem);
+      wait(s->sem);
     }
 
     void xsignal(union sem *s)

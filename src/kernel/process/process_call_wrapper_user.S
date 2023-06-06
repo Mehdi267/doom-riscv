@@ -1,7 +1,4 @@
 
-
-
-
 .text 
 .globl process_call_wrapper_user  
 .align 2

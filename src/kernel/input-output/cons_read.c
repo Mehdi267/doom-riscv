@@ -1,22 +1,29 @@
-// #include "../tests/sys_api.h"
 #include "../drivers/console.h"
 #include "../process/helperfunc.h"
 #include "../process/scheduler.h"
 #include "encoding.h"
-#include "stdbool.h"
+#include <stdbool.h>
 #include <assert.h>
 #include <queue.h>
 #include <stdio.h>
 #include <string.h>
 
+/**
+ * Enable or disable echo on the console.
+ *
+ * @param on 0 to disable echo, any other value to enable echo.
+ */
 void cons_echo(int on) {
-  // active (on!=0) ou desactive (on=0) l'echo sur la console
+  // Enable or disable echo on the console based on the 'on' parameter.
   if (!on)
     console_dev->echo = false;
   else
     console_dev->echo = true;
 }
 
+/**
+ * Print the content of the console buffer.
+ */
 void print_buffer() {
   printf("buffer: [");
   for (size_t i = 0; i < BUFFER_SIZE; i++)
@@ -25,19 +32,20 @@ void print_buffer() {
 }
 
 /**
-Si length est nul, cette fonction retourne 0.
-Sinon, elle attend que l'utilisateur ait tapé une ligne complète terminée par le
-caractère 13 puis transfère dans le tableau string soit la ligne entière
-(caractère 13 non compris), si sa longueur est strictement inférieure à length,
-soit les length premiers caractères de la ligne. Finalement, la fonction
-retourne à l'appelant le nombre de caractères effectivement transmis. Les
-caractères frappés et non prélevés restent dans le tampon associé au clavier et
-seront prélevés aux appels suivants. Le caractère de fin de ligne (13) n'est
-jamais transmis à l'appelant. Lorsque length est exactement égal au nombre de
-caractères frappés, fin de ligne non comprise, le marqueur de fin de ligne reste
-dans le tampon. Le prochain appel récupèrera une ligne vide.
-*/
-
+ * Check if an end-of-line character is detected in the console buffer.
+ * If length is zero, this function returns 0.
+ * Otherwise, it waits for the user to type a complete line terminated by the
+ * character 13 (carriage return). It then transfers either the entire line
+ * (excluding the character 13), if its length is strictly less than length,
+ * or the first 'length' characters of the line, into the 'string' array.
+ * Finally, the function returns the number of characters actually transferred.
+ * The characters typed but not retrieved remain in the keyboard buffer and will
+ * be retrieved in subsequent calls. The end-of-line character (13) is never
+ * transmitted to the caller. When 'length' is exactly equal to the number of
+ * typed characters (excluding the end-of-line character), the end-of-line marker
+ * remains in the buffer. The next call will retrieve an empty line.
+ * @return 1 if end-of-line character is detected, 0 otherwise.
+ */
 unsigned detected_eol() {
   unsigned long temp = console_dev->start_of_buffer_index;
   if (is_buffer_empty()) {
@@ -53,24 +61,32 @@ unsigned detected_eol() {
 
   return 0;
 }
-unsigned copy(char *string, unsigned long length) {
-  unsigned long i = 0;
+
+/**
+ * Copy characters from the console buffer to a string.
+ *
+ * @param string  The destination string to copy the characters into.
+ * @param length  The maximum number of characters to copy.
+ * @return The number of characters actually copied.
+ */
+unsigned copy(char *dest, unsigned long length) {
+  unsigned long index = 0;
   unsigned long temp = console_dev->start_of_buffer_index;
   assert(console_dev->last_written_char_index != -1);
-  while (i < length && console_dev->buffer[temp] != '\n' &&
+  while (index < length && console_dev->buffer[temp] != '\n' &&
          temp != console_dev->last_written_char_index) {
-    string[i++] = console_dev->buffer[temp];
+    dest[index++] = console_dev->buffer[temp];
     console_dev->buffer[temp] = 0;
     temp = (temp + 1) % BUFFER_SIZE;
   }
-  if (i >= length) { // the length of the buffer was the problem
+  if (index >= length) { // the length of the buffer was the problem
     console_dev->start_of_buffer_index = temp;
   } else if (temp == console_dev->last_written_char_index &&
              console_dev->buffer[temp] != '\n') {
     // we read the whole buffer but the '\n' was not the last character
     // so it means that we can read one more character and obviously we still
-    // have spece in string
-    string[i++] = console_dev->buffer[temp];
+    // have space in 'dest'
+    dest[index++] = console_dev->buffer[temp];
     console_dev->buffer[temp] = 0;
     // reset buffer
     console_dev->start_of_buffer_index = 0;
@@ -82,19 +98,31 @@ unsigned copy(char *string, unsigned long length) {
     console_dev->start_of_buffer_index = 0;
     console_dev->last_written_char_index = -1;
   } else if (console_dev->buffer[temp] == '\n') {
-    // the loop stopped bc we read a '\n' and we didnt arrived to the top of
-    // the buffer so we increment start_of_buffer_index to ignore '\n\ for
-    // future cons_read
+    // the loop stopped because we read a '\n' and we didn't reach the top of
+    // the buffer, so we increment 'start_of_buffer_index' to ignore '\n' for
+    // future 'cons_read' calls
     console_dev->buffer[temp] = 0;
     console_dev->start_of_buffer_index = (temp + 1) % BUFFER_SIZE;
   }
-  return i;
+  return index;
 }
 
+/**
+ * Read characters from the console buffer into a string.
+ *
+ * This function waits for the user to enter a complete line terminated by the
+ * carriage return (ASCII code 13). It then transfers either the entire line
+ * (excluding the carriage return) if its length is strictly less than 'length',
+ * or the first 'length' characters of the line into the 'string' array.
+ *
+ * @param string  The destination string to copy the characters into.
+ * @param length  The maximum number of characters to read.
+ * @return The number of characters actually read and copied.
+ */
 unsigned long cons_read(char *string, unsigned long length) {
   if (!length)
     return 0;
-  while(!detected_eol() && !is_buffer_full() && length > buffer_current_size()) {
+  while (!detected_eol() && !is_buffer_full() && length > buffer_current_size()) {
     process *proc = get_current_process();
     proc->state = BLOCKEDIO;
     queue_add(proc, &blocked_io_process_queue, process, next_prev, prio);
@@ -102,3 +130,4 @@ unsigned long cons_read(char *string, unsigned long length) {
   }
   return copy(string, length);
 }
+

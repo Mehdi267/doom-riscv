@@ -5,9 +5,9 @@
  */
 
 .text 
-.globl direct_context_swap  
+.globl direct_context_jump  
 .align 2
-direct_context_swap:
+direct_context_jump:
 	# Restauration du contexte
 	ld sp,    0(a0)
 	ld ra,    8(a0)

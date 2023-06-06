@@ -22,7 +22,7 @@
 #include "bios/info.h"
 #include "drivers/splash.h"
 #include "encoding.h"
-#include "semaphore_api.h"
+#include "../sync/semaphore_api.h"
 #include "timer.h"
 #include "traps/trap.h"
 

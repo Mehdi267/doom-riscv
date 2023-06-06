@@ -6,7 +6,7 @@
 
 #include "../process/process.h"
 #include "../process/helperfunc.h"
-#include "msgqueue.h" // for p funcs
+#include "../sync/msgqueue.h" // for p funcs
 #include "stdio.h"
 #include "assert.h"
 #include "stdint.h"

@@ -10,7 +10,7 @@
 #include "stdint.h"
 #include "process.h"
 #include "../memory/pages.h"
-#include "semaphore_api.h"
+#include "../sync/semaphore_api.h"
 /**
  * @brief Casts an int to a void * pointer 
 */

@@ -6,7 +6,7 @@
 #include "../process/helperfunc.h"
 #include "../process/timer_api.h"
 #include "../process/memory_api.h"
-#include "../process/semaphore_api.h"
+#include "../sync/semaphore_api.h"
 #include "assert.h"
 #include "drivers/clint.h"
 

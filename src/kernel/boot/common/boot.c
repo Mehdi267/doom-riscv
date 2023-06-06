@@ -19,10 +19,6 @@
 #include "process/process.h" // used for the debug method
 
 
-extern void _start();
-extern void test();
-extern int tic;
-
 // Indicates if sum will be activated or not (used to debug user mode)
 #define USER_PROCESS_DEBUG
 

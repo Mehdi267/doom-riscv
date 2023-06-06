@@ -170,7 +170,7 @@ void scheduler() {
       /* set_supervisor_interrupts(true); */
       top_process->state = ACTIF;
 
-      direct_context_swap(top_process->context_process);
+      direct_context_jump(top_process->context_process);
     }
     // if the process was placed in an other state when this was called
     // then we change the context directly and we don't place the process in the

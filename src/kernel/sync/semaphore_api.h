@@ -4,7 +4,7 @@
 * See license for license details.
 */
 #include "stdbool.h"
-#include "process.h"
+#include "../process/process.h"
 #ifndef _SEMAPHORE_H_
 #define _SEMAPHORE_H_
 

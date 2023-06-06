@@ -15,11 +15,11 @@
 #include "timer.h"
 #include "../process/process.h"
 #include "../process/timer_api.h"
-#include "../process/semaphore_api.h"
+#include "../sync/semaphore_api.h"
 #include "../process/memory_api.h"
 #include "../process/scheduler.h"
 #include "syscall_num.h"
-#include "../msgqueue.h"
+#include "../sync/msgqueue.h"
 #include "../input-output/cons_write.h"
 #include "../input-output/keyboard.h"
 #include <string.h>

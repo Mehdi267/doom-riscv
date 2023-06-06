@@ -6,7 +6,7 @@
 
 #include "../process/timer_api.h"
 #include "assert.h"
-#include "msgqueue.h" // for p funcs
+#include "../sync/msgqueue.h" // for p funcs
 #include "stdio.h"
 #include "string.h" // for strlen
 #include "tests.h"

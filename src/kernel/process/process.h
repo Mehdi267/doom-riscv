@@ -11,15 +11,15 @@
 #include "queue.h"
 #include "stdarg.h"
 #include "stdbool.h"
-#include "../memory/virtual_memory.h"
-#include "../memory/pages.h"
 #include <stdint.h>
 #include "stddef.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "msgqueue.h" // for message_t
+#include "../memory/virtual_memory.h" 
+#include "../memory/pages.h" // used to access structs for page managements
+#include "../sync/msgqueue.h" // for message_t
 #include "../userspace_apps.h" //Used for locating the app and adding its code
-#include "../input-output/cons_read.h"
+#include "../input-output/cons_read.h" //for cons_read declation
 
 /**
  * @brief global function constants
@@ -320,7 +320,7 @@ extern void context_switch(context_t *current, context_t *future);
  * this scenario we kill it
  * @param future the context that we will go to
  */
-extern void direct_context_swap(context_t *future);
+extern void direct_context_jump(context_t *future);
 
 /**
  * @brief Runs the first executed process
