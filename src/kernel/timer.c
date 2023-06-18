@@ -7,7 +7,7 @@
 #include "drivers/auxval.h"
 #include "process/scheduler.h" // for scheduler car
 #include "process/helperfunc.h" //to use helper functions
-#include "process/timer_api.h" // to exploit the counter variable
+#include "sync/timer_api.h" // to exploit the counter variable
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -99,3 +99,14 @@ void handle_stimer_interrupt()
 	#endif
   return;
 }
+
+
+void sleep_cpu(unsigned int sec){
+  unsigned long long tsc1 = get_mtime();
+  unsigned long long tsc2 = tsc1 + sec *10000000;
+  unsigned long tsc;
+  do {
+    tsc = get_mtime();
+  } while (tsc < tsc2);
+}
+

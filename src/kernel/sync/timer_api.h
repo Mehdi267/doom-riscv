@@ -1,6 +1,6 @@
 #ifndef SYNC_H_
 #define SYNC_H_
-#include "process.h"
+#include "../process/process.h"
 #include <stdint.h>
 
 

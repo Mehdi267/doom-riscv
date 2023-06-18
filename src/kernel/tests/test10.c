@@ -4,7 +4,7 @@
  *******************************************************************************/
 /* Test d'utilisation d'une file comme espace de stockage temporaire. */
 
-#include "../process/timer_api.h"
+#include "../sync/timer_api.h"
 #include "assert.h"
 #include "../sync/msgqueue.h" // for p funcs
 #include "stdio.h"

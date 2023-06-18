@@ -33,11 +33,11 @@ include toolchain.config
 # Machine
 #
 
-# MACHINE ?= virt
+MACHINE ?= virt
 #MACHINE ?= sifive_u
 #MACHINE ?= spike
 #MACHINE ?= zybo
-MACHINE ?= cep
+# MACHINE ?= cep
 
 #
 # Hardware plateforme
@@ -64,7 +64,7 @@ GDB_OPTS = -q \
 #
 
 #Starting with QEMU 4.1.0, we must add the '-bios none' flag
-QEMU_OPTS = -machine $(QEMU_MACHINE) -kernel $(KERNEL_BIN)  -rtc base=localtime -k fr 
+QEMU_OPTS = -machine $(QEMU_MACHINE) -kernel $(KERNEL_BIN)  -rtc base=localtime -k fr  
 QEMU_CEP_MEM = -m 32M
 QEMU_VIRT_MEM = -m 128M
 QEMU_NO_BIOS = -bios none
@@ -97,7 +97,7 @@ else ifeq ("$(MACHINE)", "virt")
 	VIRT_OPT=VIRTMACHINE
 else ifeq ("$(MACHINE)", "cep")
 	QEMU_MACHINE=cep
-	QEMU_OPTS+=$(QEMU_CEP_MEM)
+	QEMU_OPTS+=$(QEMU_CEP_MEM) 
 else
 	$(error Machine unknown)
 endif

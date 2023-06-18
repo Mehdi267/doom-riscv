@@ -13,7 +13,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "timer_api.h"
+#include "../sync/timer_api.h"
 #include <stdint.h>
 
 LIST_HEAD(blocked_io_process_queue);

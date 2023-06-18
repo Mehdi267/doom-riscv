@@ -1,11 +1,11 @@
 #include "timer_api.h"
-#include "scheduler.h" //for scheduler
 #include "../timer.h" // for TIC_PER cte
 #include <stdint.h>
 #include "assert.h"
-#include "helperfunc.h" // get_current_process
 #include "drivers/clint.h" // for clint_dev
-#include "process.h"
+#include "../process/helperfunc.h" // get_current_process
+#include "../process/scheduler.h" //for scheduler
+#include "../process/process.h"
 
 void clock_settings(unsigned long *quartz, unsigned long *ticks) {
   *quartz = clint_dev->clk_freq;
