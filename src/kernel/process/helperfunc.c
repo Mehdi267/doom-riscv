@@ -86,28 +86,28 @@ int save_pid(int pid){
     return -1;
   }
   node->id = pid;
-  if (process_id_list){
-    node->next_id = process_id_list;
+  if (proc_mang_g.process_id_list){
+    node->next_id = proc_mang_g.process_id_list;
   }
   else{
     node->next_id = NULL;
   }
-  process_id_list = node;
+  proc_mang_g.process_id_list = node;
   return 0;
 }
 
 int get_pid_iterator(){
-  return pid_iterator;
+  return proc_mang_g.pid_iterator;
 } 
 
 int increment_pid_and_get_new_pid(){
-    if (process_id_list){
-      int return_pid = process_id_list->id; 
-      process_id_list = process_id_list->next_id;
-      return return_pid;
-    }
-    pid_iterator++;
-    return pid_iterator;
+  if (proc_mang_g.process_id_list != 0){
+    int return_pid = proc_mang_g.process_id_list->id; 
+    proc_mang_g.process_id_list = proc_mang_g.process_id_list->next_id;
+    return return_pid;
+  }
+  proc_mang_g.pid_iterator++;
+  return proc_mang_g.pid_iterator;
 }
 
 
@@ -129,7 +129,7 @@ hash_t* get_shared_pages_hash_table(void){
 
 
 hash_t* get_process_hash_table(void){
-    return pid_process_hash_table;
+    return proc_mang_g.pid_process_hash_table;
 }
 
 

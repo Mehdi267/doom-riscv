@@ -61,18 +61,23 @@
 #define TESTING_MEMORY
 
 /**
- * @brief Global variables
- * @param pid_process_hash_table: Hash table that associates to every pid the
- * process struct associated to it
- * @param current_running_process_pid: Id of the process that is currently
- * executing
- * @param pid_iterator : Pid iterator that will be used to associate to every
- * process a unique pid
+ * @brief Linked list to store used process ids 
+ * 
  */
-extern hash_t *pid_process_hash_table;
-extern int current_running_process_pid;
-extern int pid_iterator;
-extern int nb_proc_running;
+typedef struct id_list{
+  int id;
+  struct id_list* next_id;
+} id_list_t;
+
+struct process_management_global {
+    hash_t *pid_process_hash_table;    // Hash table that associates to every pid the process struct associated to it
+    int current_running_process_pid;   // Id of the process that is currently running (changed dynamically by the scheduler)
+    int pid_iterator;                  // Pid iterator used to associate a unique pid to every process
+    int nb_proc_running;               // Counts the currently running processes
+    id_list_t *process_id_list;        // Saves all the used ids of the processes
+    int killed_counter;                // Counter indicating the order at which processes were killed
+};
+extern struct process_management_global proc_mang_g;
 
 /**
  * @brief Allocated space for the hash table that we will use and
@@ -169,15 +174,6 @@ typedef struct shared_pages_wrap{
    shared_pages_proc_t* tail_shared_page;
 } shared_pages_wrap_t;
 
-/**
- * @brief Linked list to store used process ids 
- * 
- */
-typedef struct id_list{
-  int id;
-  struct id_list* next_id;
-} id_list_t;
-extern id_list_t* process_id_list;
 
 
 

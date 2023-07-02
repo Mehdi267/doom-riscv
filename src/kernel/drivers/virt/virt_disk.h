@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 /**
  * @brief I am using virtio 1.1 
  * because this is an old version qemu 
@@ -24,7 +24,6 @@
 #define R(r) ((volatile uint32_t *)(VIRTIO0 + (r)))
 
 #define NUMQ 24 //Number of queues that we will define
-#define BLOCK_SIZE 512 
 
 //######################################################
 //##  Configuration constants  ##
@@ -248,9 +247,15 @@ void free_list(uint32_t* list);
 
 /**
  * @brief Prints the current queue configuration
- * 
- * @param features 
+ * @param features the current virtio disk features
  */
 void print_queue_configuration(uint32_t features);
+
+/**
+ * @brief Get the disk capacity
+ * @return uint32_t the disk capacity
+ */
+uint32_t get_disk_capacity();
+
 
 #endif

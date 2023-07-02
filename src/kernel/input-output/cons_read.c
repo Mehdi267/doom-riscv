@@ -128,6 +128,7 @@ unsigned long cons_read(char *string, unsigned long length) {
     queue_add(proc, &blocked_io_process_queue, process, next_prev, prio);
     scheduler();
   }
+  // printf("String is equal to %s", string);
   return copy(string, length);
 }
 

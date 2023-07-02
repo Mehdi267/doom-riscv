@@ -1,11 +1,13 @@
 // See LICENSE for license details.
 #include <stdlib.h>
+#include <stdint.h>
 #pragma once
 
 typedef struct disk_device {
 	void (*init)();
-  void (*read_disk)(disk_op*);
-  void (*write_disk)(disk_op*);
+  int (*read_disk)(disk_op*);
+  int (*write_disk)(disk_op*);
+  uint32_t (*get_disk_size)();
 } disk_device_t;
 
 /*

@@ -56,7 +56,7 @@ static void delegate_traps(){
   // We delegate everything to supervisor mode
   csr_set(medeleg, 0xffffffff);
   csr_set(mideleg, 0xffffffff);
-  /* csr_clear(mideleg, 1<<9); */
+  csr_clear(mideleg, 1<<9); 
 }
 
 
@@ -138,6 +138,9 @@ __attribute__((noreturn)) void boot_riscv(){
     csr_set(mie, MIE_MTIE);
     csr_set(sie, SIE_STIE);
     csr_set(sie, 0x2); // We enable software interrupts
+    csr_set(mie, 1<<13);
+    csr_set(mie, 1<<11);
+    csr_set(sie, 1<<9);
     csr_set(mstatus, MSTATUS_MIE);
   #else
     csr_set(mip, MIP_STIP); // Activate supervisor interrupt pending

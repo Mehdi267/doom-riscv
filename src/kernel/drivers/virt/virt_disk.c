@@ -5,7 +5,7 @@
  * This file contains the implementation of the Virtual Disk Device, which interacts with the disk
  * in the virtual environment.
  * Virtio spec :  "https://docs.oasis-open.org/virtio/virtio/v1.1/virtio-v1.1.pdf"
- * THis spec is mentioned many times in this article as all of the details related to 
+ * This spec is mentioned many times in this article as all of the details related to 
  * the implemenetation come from there 
  * Other resources : 
  * https://blogs.oracle.com/linux/post/introduction-to-virtio
@@ -58,6 +58,7 @@ void virt_disk_init(){
       printf("Disk not found!\n");
       return;
   }
+  
   //Step 1 : we reset the device
   *R(MMIO_STATUS) = 0;
   
@@ -69,18 +70,15 @@ void virt_disk_init(){
   
   //Step 4 : features configuraton
   uint64_t features = *R(MMIO_DEVICE_FEATURES);
-  printb(&features, 4);
+  // printb(&features, 4);
   features &= ~(1 << VIRTIO_BLK_F_RO);
   features &= ~(1 << VIRTIO_BLK_F_CONFIG_WCE);
   features &= ~(1 << VIRTIO_RING_F_EVENT_IDX);
   features &= ~(1 << VIRTIO_RING_F_INDIRECT_DESC);
   *R(MMIO_DRIVER_FEATURES) = features;
 
-  uint32_t diskFeatures = *R(MMIO_DEVICE_FEATURES);
-  print_queue_configuration(diskFeatures);
-
-  uint32_t driveFeatures = *R(MMIO_DRIVER_FEATURES);
-  print_queue_configuration(driveFeatures);
+  // uint32_t diskFeatures = *R(MMIO_DEVICE_FEATURES);
+  // print_queue_configuration(diskFeatures);
 
   //Step 5: we validate the features by setting the features okay bit to one
   *R(MMIO_STATUS) |= STATUS_FEATURES_OK;
@@ -134,7 +132,10 @@ void virt_disk_init(){
     block_m.desc_avail[i] = 0;
   }
   block_q.available.idx = 0;
-  block_q.available.flags = 0;
+  block_q.available.flags = 
+          VIRTQ_AVAIL_F_NO_INTERRUPT; // no intterupt but might change 
+                                      // later in order to have faster
+                                      // read speeds
   block_m.used_iter = 0;
   return;
 }
@@ -178,14 +179,13 @@ void virt_disk_init(){
  * Similar code implementing this approach
  * can be found in the xv6 project.
  */
-void virt_disk_op(disk_op* oper) {
+int virt_disk_op(disk_op* oper) {
   //We start by looking for three 
   //free descriptors, it is possible 
   //that we cannot find one, thus we can to make sure 
   //the process sleeps until some are liberated 
   uint32_t* desc_list =  get_three_desc();
   // // print_block(oper->data, 512);
-
 
   while(desc_list == 0){
     //Must use a mutex or the mutex 
@@ -198,6 +198,9 @@ void virt_disk_op(disk_op* oper) {
   struct virtio_blk_req *req = (struct virtio_blk_req *)
                           malloc(sizeof(struct virtio_blk_req));
 
+  if (req == 0){
+    return -1;
+  }
   if(oper->type)
     req->type = VIRTIO_BLK_T_OUT; // write the disk
   else
@@ -260,24 +263,22 @@ void virt_disk_op(disk_op* oper) {
   // print_block(oper->data, 512);
   free_list(desc_list);
   free(desc_list);
-  return;
+  return 0;
 }
 
 
 /**
  * @brief Reads data from the virtual block_q.
  */
-void virt_disk_read(disk_op* op){
-  virt_disk_op(op);
-  return;
+int virt_disk_read(disk_op* op){
+  return virt_disk_op(op);
 }
 
 /**
  * @brief Writes data to the virtual block_q.
  */
-void virt_disk_write(disk_op* op){
-  virt_disk_op(op);
-  return;
+int virt_disk_write(disk_op* op){
+  return virt_disk_op(op);
 }
 
 
@@ -305,6 +306,11 @@ void read_virtio_blk_config() {
   printf("Max Write Zeroes Seg: %u\n", config->max_write_zeroes_seg);
   printf("Write Zeroes May Unmap: %u\n", config->write_zeroes_may_unmap);
   printf("-------Disk configuration end------\n");
+}
+
+uint32_t get_disk_capacity() {
+  d_conf *config = (d_conf*) (char*)(VIRTIO0 + 0x100);
+  return (uint32_t)config->capacity;
 }
 
 
@@ -380,5 +386,6 @@ void free_list(uint32_t* list){
 disk_device_t virt_disk = {
     virt_disk_init,
     virt_disk_read,
-    virt_disk_write
+    virt_disk_write,
+    get_disk_capacity
 };

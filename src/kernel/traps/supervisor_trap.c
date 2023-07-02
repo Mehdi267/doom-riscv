@@ -123,9 +123,18 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
   return 0;
 }
 
+#define PLIC_MCLAIM(hart) (0x0c000000L + 0x200004 + (hart)*0x2000)
+#define PLIC_SCLAIM(hart) (0x0c000000L + 0x201004 + (hart)*0x2000)
+
+
 void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 {
-	if (scause & INTERRUPT_CAUSE_FLAG) {
+  // printf("PLIC_MCLAIM =%ld \n", PLIC_MCLAIM(0));
+  // printf("PLIC_SCLAIM =%ld \n", PLIC_SCLAIM(0));
+  if ((scause&0xff) != 7 && ((scause&0xff) != 5) && ((scause&0xff) != 1)){
+    printf("intt super, scause = %ld\n", scause&0xff);
+  }
+  if (scause & INTERRUPT_CAUSE_FLAG) {
 		// Interruption cause
 		uint8_t interrupt_number = scause & ~INTERRUPT_CAUSE_FLAG;
 		switch (scause & ~INTERRUPT_CAUSE_FLAG) {
@@ -134,8 +143,9 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
         	set_supervisor_interrupts(false);
           csr_clear(sip, 0x2);
           handle_stimer_interrupt();
+          break;
       #endif
-      case intr_s_timer: // in case the s timer interrupt has not been delegated to supervisor mode
+      case intr_s_timer: 
 				handle_stimer_interrupt();
 				/**
 				 * We clear the bit in the sip register that was responsible for this interrupt 
@@ -144,8 +154,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 				csr_clear(sip, SIP_STIP);
 				break;
 			case intr_s_external:
-        //printf("scause %ld \n", scause);
-
+        printf("scause %ld \n", scause);
 				//interruption clavier
 				handle_keyboard_interrupt();
 				csr_clear(sip, SIE_SEI); //clear interrupt

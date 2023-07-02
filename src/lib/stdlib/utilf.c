@@ -17,7 +17,7 @@ void print_block(void* data, size_t size){
   unsigned int* ptr_64 = (unsigned int *) data;
   for (int i = 0; i < 512/sizeof(unsigned int); i++) {
     printf("%x ", ptr_64[i]);
-    if ((i) % 16 == 0) {
+    if (((i) % 16 && (i)>0) == 0) {
         printf("\n");
     }
   }

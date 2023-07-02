@@ -6,7 +6,6 @@
 
 #include "process.h"
 #include "memory_api.h"
-#include "../tests/tests.h"
 #include "../timer.h"
 #include "hash.h"
 #include "helperfunc.h"
@@ -18,10 +17,11 @@
 #include "string.h"
 #include "../sync/semaphore_api.h"
 #include "riscv.h"
+#include <assert.h>
 
 int initialize_process_hash_table() {
-  pid_process_hash_table = (hash_t *)malloc(sizeof(hash_t));
-  if (pid_process_hash_table == NULL) {
+  proc_mang_g.pid_process_hash_table = (hash_t *)malloc(sizeof(hash_t));
+  if (proc_mang_g.pid_process_hash_table == NULL) {
     return -1;
   }
   return 0;
@@ -179,47 +179,72 @@ static int declares_debug_processes() {
   return 0;
 }
 
+int init_global_variables(){
+  // Assigning values to the fields of the globalData struct
+  proc_mang_g.pid_process_hash_table = NULL;
+  proc_mang_g.current_running_process_pid = -1;
+  proc_mang_g.pid_iterator = 0;
+  proc_mang_g.nb_proc_running = 0;
+  proc_mang_g.process_id_list = NULL;
+  proc_mang_g.killed_counter = 0;
+  return 0;
+}
+
 
 int initialize_process_workflow(){
-    if (initialize_process_hash_table()<0){
-        return -1;
+  if (init_global_variables()<0){
+    return -1;
+  }
+  if (initialize_process_hash_table()<0){
+      printf("initialize_process_hash_table failed \n");
+      return -1;
+  }
+  if (hash_init_direct(proc_mang_g.pid_process_hash_table)<0){
+      printf("hash_init_direct failed \n");
+      return -1;
+  }
+  if (initialize_share_pages_table()<0){
+      printf("initialize_share_pages_table failed \n");
+      return -1;
+  }
+  if (hash_init_string(shared_memory_hash_table)){
+      printf("hash_init_string failed \n");
+      return -1;
+  }
+  if (init_semaphore_table()<0){
+      printf("init_semaphore_table failed \n");
+      return -1;
+  }
+  if (hash_init_direct(semaphore_table)<0){
+      printf("hash_init_direct failed \n");
+      return -1;
+  }
+  if (setup_main_context() <0){
+      printf("setup_main_context failed \n");
+      return -1;
+  }
+  if (create_idle_process()<0){
+      printf("create_idle_process failed \n");
+      return -1;
+  }
+  #ifdef TESTING
+    if (create_testing_process()<0){
+      printf("create_testing_process failed \n");
+      return -1;
     }
-    if (hash_init_direct(pid_process_hash_table)<0){
-        return -1;
+  #else
+    if (create_shell_program()<0){
+      printf("create_shell_program failed \n");
+      return -1;
     }
-    if (initialize_share_pages_table()<0){
-        return -1;
-    }
-    if (hash_init_string(shared_memory_hash_table)){
-        return -1;
-    }
-    if (init_semaphore_table()<0){
-        return -1;
-    }
-    if (hash_init_direct(semaphore_table)<0){
-        return -1;
-    }
-    if (setup_main_context() <0){;
-        return -1;
-    }
-    if (create_idle_process()<0){
-        return -1;
-    }
-    #ifdef TESTING
-      if (create_testing_process()<0){
-        return -1;
-      }
-    #else
-      if (create_shell_program()<0){
-        return -1;
-      }
-    #endif
-    #ifdef USER_PROCESSES_ON
-      csr_clear(sstatus, MSTATUS_SPP);
-    #endif 
-    //Will only launch the process if the debug mode is set
-    if (declares_debug_processes()<0){
-        return -1;
-    }
-    return 0;
+  #endif
+  #ifdef USER_PROCESSES_ON
+    csr_clear(sstatus, MSTATUS_SPP);
+  #endif 
+  //Will only launch the process if the debug mode is set
+  if (declares_debug_processes()<0){
+    printf("declares_debug_processes failed \n");
+    return -1;
+  }
+  return 0;
 }

@@ -26,19 +26,7 @@
 #include "timer.h"
 #include "traps/trap.h"
 
-// Hash table that associates to every pid the process struct associated to it
-hash_t *pid_process_hash_table = NULL;
-// Id of the process that is currently running this value will be changed
-// dynamically by the scheduler
-int current_running_process_pid = -1;
-// Pid iterator that will be used to associate to every process a unique pid
-int pid_iterator = 0;
-// Counts the currenlty running processes
-int nb_proc_running = 0;
-// Saves all of the used ids of the processess
-id_list_t *process_id_list = NULL;
-// killed counter used to indicate the order at which the process got killed
-int killed_counter = 0;
+struct process_management_global proc_mang_g;
 
 /*
 ** HELPER FUNCTIONS DECLARATIONS
@@ -55,7 +43,7 @@ static int process_name_copy(process *p, const char *name);
 ** MAIN FUNCTIONS
 */
 
-int getpid(void) { return current_running_process_pid; }
+int getpid(void) { return proc_mang_g.current_running_process_pid; }
 
 int getprio(int pid) {
   process *process_pid = ((process *)hash_get(get_process_hash_table(),
@@ -76,7 +64,7 @@ int setpid(int new_pid) {
   if (process_pid == NULL) {
     return -1;
   }
-  current_running_process_pid = new_pid;
+  proc_mang_g.current_running_process_pid = new_pid;
   return new_pid;
 }
 
@@ -185,8 +173,8 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio,
   }
   debug_print_no_arg("----------------Start process---------------\n");
   debug_print("Trying to create a new process with the name  = %s \n", name);
-  if (++nb_proc_running > MAX_NB_PROCESS) {
-    nb_proc_running--;
+  if (++proc_mang_g.nb_proc_running > MAX_NB_PROCESS) {
+    proc_mang_g.nb_proc_running--;
     return -1;
   }
   //-------------------------------Input check--------------
@@ -326,8 +314,8 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
   }
   debug_print_no_arg("----------------Start process---------------\n");
   debug_print("Trying to create a new process with the name  = %s \n", name);
-  if (++nb_proc_running > MAX_NB_PROCESS) {
-    nb_proc_running--;
+  if (++proc_mang_g.nb_proc_running > MAX_NB_PROCESS) {
+    proc_mang_g.nb_proc_running--;
     return -1;
   }
   //-------------------------------Input check--------------
@@ -589,6 +577,7 @@ void show_ps_info() {
     }
   }
 }
+
 
 void show_programs() {
   printf("\n");

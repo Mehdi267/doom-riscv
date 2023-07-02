@@ -38,11 +38,11 @@ void scheduler() {
   // We need to go back to user mode when the scheduler is called
   csr_clear(sstatus, MSTATUS_SPP);
 #endif
-  debug_print_scheduler_no_arg(
-      "\n-----------------Scheduler--------------------\n");
-  debug_print_scheduler(
-      "[scheduler -> %d] Inside the scheduler with pid equal to %d \n",
-      getpid(), getpid());
+  // debug_print_scheduler_no_arg(
+  //     "\n-----------------Scheduler--------------------\n");
+  // debug_print_scheduler(
+  //     "[scheduler -> %d] Inside the scheduler with pid equal to %d \n",
+  //     getpid(), getpid());
 
   // awake process and insert the in activable queue;
   awake_sleeping_process();

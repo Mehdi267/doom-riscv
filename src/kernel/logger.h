@@ -178,9 +178,8 @@
             if (DEBUG_VIRT_TIMER_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
 
-
 #define print_v_disk_no_arg(fmt, ...) \
-        do {if (DEBUG_SEMAPHORE_API_LEVEL){ printf(fmt);} } while (0)
+        do {if (DEBUG_VIRT_TIMER_LEVEL){ printf(fmt);} } while (0)
 
 
 

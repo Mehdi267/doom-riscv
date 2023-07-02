@@ -81,6 +81,8 @@ void spinlock_unlock(int* lock_address);
 //##   Disk operations functions ##
 //######################################################
 
+#define BLOCK_SIZE 512 
+
 typedef enum operation_type {
   READ = 0,
   WRITE = 1,
@@ -93,5 +95,5 @@ typedef struct disk_operation{
   //The location in which we read data into
   //or the location of the data that will be 
   //written to the disk.
-  unsigned char data[512];
+  unsigned char *data;
 } disk_op;

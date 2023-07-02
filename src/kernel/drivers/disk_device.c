@@ -9,6 +9,7 @@ disk_device_t disk_none = {
 		.init = NULL,
 		.read_disk = NULL,
 		.write_disk = NULL,
+    .get_disk_size = NULL
 };
 
 disk_device_t *disk_dev = &disk_none;

@@ -35,28 +35,39 @@ const char *interruption_names[16] = {
 		"reserved"
 };
 
+#define PLIC_MCLAIM(hart) (0x0c000000L + 0x200004 + (hart)*0x2000)
+#define PLIC_SCLAIM(hart) (0x0c000000L + 0x201004 + (hart)*0x2000)
+
 
 void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf)
 {
-	if (mcause & INTERRUPT_CAUSE_FLAG) {
+  if ((mcause & 0xff)  != 7){
+   printf("intt machine, mcause = %ld\n", mcause&0xff);
+  }
+	
+  if (mcause & INTERRUPT_CAUSE_FLAG) {
 		// Interruption cause
 		uint8_t interrupt_number = mcause & ~INTERRUPT_CAUSE_FLAG;
-		switch (mcause & ~INTERRUPT_CAUSE_FLAG) {
+    switch (mcause & ~INTERRUPT_CAUSE_FLAG) {
 			case intr_m_timer:
 				handle_mtimer_interrupt();
 				#ifndef VIRTMACHINE
 				csr_clear(mip, intr_m_timer);
 				#endif
 				break;
-			case intr_s_timer: // in case the s timer interrupt has not been delegated to supervisor mode
+      case intr_s_timer: // in case the s timer interrupt has not been delegated to supervisor mode
 				handle_stimer_interrupt();
 				csr_clear(mip, intr_s_timer);
 				break;
 			case intr_s_external:
+        //This is what gets called when we have a keyboard interrupt
 				//interruption clavier
 				handle_keyboard_interrupt();
-				csr_clear(mip, SIE_SEI); //clear interrupt
+				// csr_clear(mip, SIE_SEI); //clear interrupt
 				break;
+      case intr_m_external:
+        printf("intr_m_external not treated");
+        break;
 			default:
 				die(
 						"machine mode: unhandlable interrupt trap %d : %s @ %p",

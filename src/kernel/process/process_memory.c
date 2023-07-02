@@ -608,7 +608,7 @@ int free_process_memory(process* proc)
     if (proc == NULL){
         return -1;
     }
-    nb_proc_running--;
+    proc_mang_g.nb_proc_running--;
     debug_print_memory("--------Inside free_process_memory, current process: %s\n", getname());
     debug_print_memory("--------Freeing memory for the process/ id -> %d -------- : %s\n", 
                         proc->pid, proc->process_name);
