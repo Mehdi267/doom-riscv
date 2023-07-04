@@ -20,7 +20,7 @@ to detect and utilize other partitions.
 #define MBR_BLOCK 1 //Location of the mbr
 #define NON_ACTIVE_PARTIION 0x00
 #define ACTIVE_PARTITION 0x80
-#define NON_ACTIVE_PARTITION 0x80
+#define NON_ACTIVE_PARTITION 0x00
 #define NB_PARTITIONS 4
 
 
@@ -83,6 +83,21 @@ int setup_test_partition();
 void print_mbr_details();
 
 /**
+ * @brief Print occupied space
+ * @param occu_places 
+ */
+void print_occ_places(uint32_t* occu_places);
+
+/**
+ * @brief print free space
+ * 
+ * @param free_space the free space table
+ * @param num_free_segments the number of segments inside the tables
+ */
+void print_free_spaces(uint32_t* free_space,int num_free_segments);
+
+
+/**
  * @brief Finds the free space on the disk by analyzing the occupied space segments.
  *
  * @param[in] occupiedSpace An array containing the start and end points of occupied space segments.
@@ -102,13 +117,8 @@ void find_free_space(uint32_t* occupiedSpace, int numSegments, uint32_t diskSize
  * @param[in] numFreeSegments The number of free space segments.
  * @return True if the segment is within the free space, false otherwise.
  */
-bool is_segment_in_free_space(uint32_t start, uint32_t size, const uint32_t* freeSpace, int numFreeSegments);
+bool is_segment_in_free_space(uint32_t start, uint32_t size, uint32_t* freeSpace, int numFreeSegments);
 
-/**
- * @brief Prints information about the disk 
- * and current partitions that are present
- */
-void print_partition_status();
 
 /**
  * @brief Finds the occupied space on the disk.
@@ -127,29 +137,6 @@ uint32_t* find_occupied_space();
  */
 bool free_space(uint32_t start, uint32_t size);
 
-/**
- * @brief Creates a partition in the Master Boot Record (MBR).
- *
- * This function creates a new partition in the MBR with the specified start
- * and size, and assigns the given partition type to it.
- *
- * @param start The starting Logical Block Address (LBA) of the partition.
- * @param size The size of the partition in LBAs.
- * @param partition_type The type of the partition.
- * @return 0 if the partition is created successfully, -1 otherwise.
- */
-int create_partition(uint32_t start, uint32_t size, uint8_t partition_type);
-
-/**
- * @brief Deletes a partition from the Master Boot Record (MBR).
- *
- * This function deletes the partition with the specified partition number
- * from the MBR.
- *
- * @param partition_number The number of the partition to delete.
- * @return 0 if the partition is deleted successfully, -1 otherwise.
- */
-int delete_partition(uint8_t partition_number);
 
 
 #endif  

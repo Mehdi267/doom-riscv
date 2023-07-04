@@ -32,7 +32,6 @@ void splash_vga_screen(void)
 		for (int i = 0; i < 1280 * 768; i++){	
 			*(volatile uint32_t *) ((uint32_t *) 0x80000000 + i) = 0x00000000;
 		}
-	#endif
 	uint32_t color[] = {0x00ff0000, 0x00ffff00, 0x00ffff00, 0x00ff0000, 0x00ff00ff, 0x000000ff, 0x00ff0000, 0x00ffff00,
 	                    0x00ffff00, 0x00ff0000, 0x0000ff00};
 	for (int y = 0; y < 11; y++)
@@ -44,6 +43,7 @@ void splash_vga_screen(void)
 			else
 				delta++;
 	}
+  #endif
 }
 
 

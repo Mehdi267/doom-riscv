@@ -89,8 +89,7 @@ typedef enum operation_type {
 } op_type;
 
 typedef struct disk_operation{
-  uint8_t disk_res; //indicates if this op is reserved by the disk
-  uint64_t blockNumber; //the disk sector that we will read from/write to
+  uint32_t blockNumber; //the disk sector that we will read from/write to
   op_type type; //Type of the disk operation(read or write)
   //The location in which we read data into
   //or the location of the data that will be 

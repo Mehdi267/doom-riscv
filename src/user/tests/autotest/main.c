@@ -12,7 +12,7 @@ const char *tests[] = {
         "test3",
         "test4",
         "test5",
-        "test7", //takes too long
+        //"test7", //takes too long
         "test8",
         "test10",
         "test11",

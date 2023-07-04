@@ -13,3 +13,4 @@ src/gdbinit_mehdi
 src/Makefile
 src/xinul_image.img
 virt_disk_bad.d
+temp

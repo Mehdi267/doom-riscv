@@ -22,6 +22,7 @@
 #include "../sync/msgqueue.h"
 #include "../input-output/cons_write.h"
 #include "../input-output/keyboard.h"
+#include "../fs/fs.h"
 #include <string.h>
 
 extern void inc_sepc(void); // defined in supervisor_trap_entry.S
@@ -115,6 +116,18 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
     case SYSC_info_queue:
       info_msgqueues();
       break;
+    case SYSC_display_partions:
+      print_partition_status();
+      break;  
+    case SYSC_create_partition:
+      create_partition(tf->a0, tf->a1, tf->a2);
+      break;  
+    case SYSC_delete_partition:
+      delete_partition(tf->a0);
+      break;    
+    case SYSC_reset_disk:
+      return set_up_mbr();
+      break;    
     default:
       printf("Syscall code does not match any of the defined syscalls");
       blue_screen(tf);
@@ -123,17 +136,9 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
   return 0;
 }
 
-#define PLIC_MCLAIM(hart) (0x0c000000L + 0x200004 + (hart)*0x2000)
-#define PLIC_SCLAIM(hart) (0x0c000000L + 0x201004 + (hart)*0x2000)
 
-
-void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
-{
-  // printf("PLIC_MCLAIM =%ld \n", PLIC_MCLAIM(0));
-  // printf("PLIC_SCLAIM =%ld \n", PLIC_SCLAIM(0));
-  if ((scause&0xff) != 7 && ((scause&0xff) != 5) && ((scause&0xff) != 1)){
-    printf("intt super, scause = %ld\n", scause&0xff);
-  }
+void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
+  // printf("super int %ld\n",scause&0xff);
   if (scause & INTERRUPT_CAUSE_FLAG) {
 		// Interruption cause
 		uint8_t interrupt_number = scause & ~INTERRUPT_CAUSE_FLAG;
@@ -154,7 +159,6 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 				csr_clear(sip, SIP_STIP);
 				break;
 			case intr_s_external:
-        printf("scause %ld \n", scause);
 				//interruption clavier
 				handle_keyboard_interrupt();
 				csr_clear(sip, SIE_SEI); //clear interrupt
@@ -167,7 +171,6 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
 				break;
 		}
 	} else {
-		// TODO ADD SYSTEM CALLS TREATEMENT
     if (scause != 8){
       debug_print("Supervisor Exception scause id = %ld\n", scause);
     }
@@ -192,15 +195,15 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf)
         csr_write(sepc, csr_read(sepc) + 4);
         csr_clear(sstatus, MSTATUS_SPP);
         break;
-      case 13:
+      case CAUSE_FETCH_PAGE_FAULT:
         kill(getpid());
         scheduler();
         break;
-      case 14:
+      case CAUSE_LOAD_PAGE_FAULT:
         kill(getpid());
         scheduler();
         break;
-      case 15:
+      case CAUSE_STORE_PAGE_FAULT:
         kill(getpid());
         scheduler();
         break;

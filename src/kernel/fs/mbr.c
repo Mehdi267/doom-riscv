@@ -1,10 +1,12 @@
 #include "drivers/disk_device.h" //to do disk operations
 #include "mbr.h" 
+#include "fs.h"
 #include "../memory/frame_dist.h" // used to allocate the block
 #include <stdbool.h>
 #include <stdint.h>
 #include "stdio.h"
 #include "string.h"
+#include "../logger.h"
 
 //This value represents the global mdr that 
 //will be used the in the program
@@ -15,7 +17,7 @@ int find_mbr(){
   //block which contains the mbr
   disk_op disk_operation_mbr;
   disk_operation_mbr.blockNumber = MBR_BLOCK;
-  disk_operation_mbr.type = READ;
+  disk_operation_mbr.type = READ;  
   uint16_t data[256];
   disk_operation_mbr.data = (unsigned char*) data;
   // Perform disk read operation on the block taht contains the mbr
@@ -33,6 +35,7 @@ int find_mbr(){
 
 int save_global_mbr(){
   if (global_mdr == 0){
+    print_fs_no_arg("could not save mbr\n");
     return -1;
   }
   disk_op disk_operation_mbr;
@@ -40,12 +43,23 @@ int save_global_mbr(){
   disk_operation_mbr.type = WRITE;
   disk_operation_mbr.data = (unsigned char*) global_mdr;
   // Perform disk read operation on the block taht contains the mbr
-  return disk_dev->write_disk(&disk_operation_mbr);
+  if (disk_dev->write_disk(&disk_operation_mbr)<0){
+    print_fs_no_arg("mbr was not saved succefully\n");
+    return -1;
+  }
+  print_fs_no_arg("mbr saved succefully\n");
+  return 0;
 }
 
 int set_up_mbr(){ 
+  if (global_mdr != 0){
+    release_frame(global_mdr);
+  }
   //We allocate data for the global mbr struct
   global_mdr = get_frame();
+  if (global_mdr == 0){
+    return -1;
+  }
   memset(global_mdr, 0, 512);
   global_mdr->signature = MBR_SIGNATURE;
   if (setup_test_partition()<-1){
@@ -65,22 +79,39 @@ int setup_test_partition(){
   return 0;
 }
 
+void print_occ_places(uint32_t* occu_places){
+  if (occu_places==0){
+    return;
+  }
+  printf("\n-----occ----\n");
+  printf("Occupied space segments:\n");
+  for (int i=0; i<NB_PARTITIONS; i++){
+    if (occu_places[2*i] != 0){
+      printf("[%d-----%d], ",
+                    occu_places[2*i],
+                    occu_places[2*i+1]); 
+    }
+  }
+  printf("\n-----occ end-----\n");
+}
+
+void print_free_spaces(uint32_t* free_space, int num_free_segments){
+  for (int i = 0; i < num_free_segments; i++) {
+        printf("Start: %u, End: %u\n", free_space[2*i], free_space[2*i + 1]);
+    }
+    printf("-----free end ----\n");
+}
+  
+
 void print_partition_status(){
   if (global_mdr ==0){
     printf("No mbr table is in memory");
   }
+  PRINT_GREEN("##########disk############\n");
   print_mbr_details();
   uint32_t* occu_places = find_occupied_space();
   if (occu_places !=0){
-    printf("Occupied space segments:\n");
-    for (int i=0; i<NB_PARTITIONS; i++){
-      if (occu_places[2*i] != 0){
-        printf("[%d-----%d], ",
-                      occu_places[2*i],
-                      occu_places[2*i+1]); 
-      }
-    }
-    printf("\n-----end----\n");
+    print_occ_places(occu_places);
   } else{
     return;
   }
@@ -91,26 +122,27 @@ void print_partition_status(){
                   disk_dev->get_disk_size(), 
                   &free_space, 
                   &num_free_segments);
+  printf("\n-----free----\n");
   printf("Free space segments:\n");
   if (free_space !=0){
-    for (int i = 0; i < num_free_segments; i++) {
-        printf("Start: %u, End: %u\n", free_space[2*i], free_space[2*i + 1]);
-    }
-    printf("---------\n");
+    print_free_spaces(free_space, num_free_segments);
     free(free_space);
   }
   free(occu_places);
+  PRINT_GREEN("##########disk############\n");
 }
 
 void print_mbr_details() {
   if (!global_mdr){return;}
   for (int i = 0; i < NB_PARTITIONS; i++) {
     printf("Partition %d:\n", i + 1);
-    printf("Status: %02X\n", global_mdr->partitionTable[i].status);
-    printf("Start LBA: %u\n", global_mdr->partitionTable[i].startLBA);
-    printf("Size (in LBA): %u\n", global_mdr->partitionTable[i].sizeLBA);
-    printf("Type: %d\n", global_mdr->partitionTable[i].type);
-    printf("-------------------\n");
+    printf("Status: %d\n", global_mdr->partitionTable[i].status);
+    if (global_mdr->partitionTable[i].status != 0){
+      printf("Start LBA: %u\n", global_mdr->partitionTable[i].startLBA);
+      printf("Size (in LBA): %u\n", global_mdr->partitionTable[i].sizeLBA);
+      printf("Type: %d\n", global_mdr->partitionTable[i].type);
+      printf("-------------------\n");
+    }
   }
 }
 
@@ -134,57 +166,63 @@ uint32_t* find_occupied_space() {
 }
 
 void find_free_space(uint32_t* occupiedSpace, int numSegments, uint32_t diskSize, uint32_t** freeSpace, int* numFreeSegments) {
-    if (occupiedSpace == 0 && numFreeSegments == 0 && freeSpace == 0){
-      return;
-    }
-    // Sort the occupied segments in ascending order based on the start LBA
-    for (int i = 0; i < numSegments - 1; i++) {
-        for (int j = 0; j < numSegments - i - 1; j++) {
-            if (occupiedSpace[j * 2] > occupiedSpace[(j + 1) * 2]) {
-                uint32_t tempStart = occupiedSpace[j * 2];
-                uint32_t tempEnd = occupiedSpace[j * 2 + 1];
-                occupiedSpace[j * 2] = occupiedSpace[(j + 1) * 2];
-                occupiedSpace[j * 2 + 1] = occupiedSpace[(j + 1) * 2 + 1];
-                occupiedSpace[(j + 1) * 2] = tempStart;
-                occupiedSpace[(j + 1) * 2 + 1] = tempEnd;
-            }
-        }
-    }
+  if (occupiedSpace == 0 && numFreeSegments == 0 && freeSpace == 0){
+    return;
+  }
+  // Sort the occupied segments in ascending order based on the start LBA
+  for (int i = 0; i < numSegments - 1; i++) {
+      for (int j = 0; j < numSegments - i - 1; j++) {
+          if (occupiedSpace[j * 2] > occupiedSpace[(j + 1) * 2]) {
+              uint32_t tempStart = occupiedSpace[j * 2];
+              uint32_t tempEnd = occupiedSpace[j * 2 + 1];
+              occupiedSpace[j * 2] = occupiedSpace[(j + 1) * 2];
+              occupiedSpace[j * 2 + 1] = occupiedSpace[(j + 1) * 2 + 1];
+              occupiedSpace[(j + 1) * 2] = tempStart;
+              occupiedSpace[(j + 1) * 2 + 1] = tempEnd;
+          }
+      }
+  }
+  //print_occ_places(occupiedSpace);
 
-    // Find the free segments by iterating over the occupied segments
-    *numFreeSegments = 0;
-    *freeSpace = (uint32_t*)malloc(sizeof(uint32_t) * numSegments * 2);
-    uint32_t startLBA = 0;
+  // Find the free segments by iterating over the occupied segments
+  *numFreeSegments = 0;
+  *freeSpace = (uint32_t*)malloc(sizeof(uint32_t) * numSegments * 2);
+  uint32_t startLBA = 0;
 
-    for (int i = 0; i < numSegments; i++) {
-        if (startLBA < occupiedSpace[i * 2]) {
-            (*freeSpace)[*numFreeSegments * 2] = startLBA;
-            (*freeSpace)[*numFreeSegments * 2 + 1] = occupiedSpace[i * 2] - 1;
-            // printf("numFreeSegments %d\n",*numFreeSegments);
-            (*numFreeSegments)++;
-        }
-        startLBA = occupiedSpace[i * 2 + 1] + 1;
-    }
+  for (int i = 0; i < numSegments; i++) {
+      if (startLBA < occupiedSpace[i * 2]) {
+          (*freeSpace)[*numFreeSegments * 2] = startLBA;
+          (*freeSpace)[*numFreeSegments * 2 + 1] = occupiedSpace[i * 2] - 1;
+          // printf("numFreeSegments %d\n",*numFreeSegments);
+          (*numFreeSegments)++;
+      }
+      startLBA = occupiedSpace[i * 2 + 1] + 1;
+  }
 
-    // Check for free space at the end of the disk
-    if (startLBA < diskSize) {
-        (*freeSpace)[*numFreeSegments * 2] = startLBA;
-        (*freeSpace)[*numFreeSegments * 2 + 1] = diskSize - 1;
-        (*numFreeSegments)++;
-    }
+  // Check for free space at the end of the disk
+  if (startLBA < diskSize) {
+      (*freeSpace)[*numFreeSegments * 2] = startLBA;
+      (*freeSpace)[*numFreeSegments * 2 + 1] = diskSize - 1;
+      (*numFreeSegments)++;
+  }
+  //print_free_spaces(*freeSpace,* numFreeSegments);
 }
 
 
-bool is_segment_in_free_space(uint32_t start, uint32_t size, const uint32_t* freeSpace, int numFreeSegments) {
-    if (freeSpace<0 || numFreeSegments ==0){
-      return -1;
-    }
-    for (int i = 0; i < numFreeSegments; i++) {
-        if (start >= freeSpace[i * 2] && (start + size - 1) <= freeSpace[i * 2 + 1]) {
-            return true;
-        }
-    }
-    return false;
+bool is_segment_in_free_space(uint32_t start, uint32_t size, uint32_t* free_space, int numFreeSegments) {
+  if (free_space<0 || numFreeSegments ==0){
+    return -1;
+  }
+  //printf("########is_segment_in_free_space#####\n");
+  //print_free_spaces(free_space, numFreeSegments);
+  for (int i = 0; i < numFreeSegments; i++) {
+      if (start >= free_space[i * 2] && (start + size - 1) <= free_space[i * 2 + 1]) {
+          debug_print_v_fs("Matching segments for start: %u, size: %u\n", start, size);
+          debug_print_v_fs("Matching segment: Start: %u, End: %u\n", free_space[i * 2], free_space[i * 2 + 1]);
+          return true;
+      }
+  }
+  return false;
 }
 
 bool free_space(uint32_t start, uint32_t size){
@@ -209,7 +247,7 @@ bool free_space(uint32_t start, uint32_t size){
     free(occu_places);
     return false;
   }
-  bool res = is_segment_in_free_space(start, size, free_space, NB_PARTITIONS);
+  bool res = is_segment_in_free_space(start, size, free_space, num_free_segments);
   free(occu_places);
   free(free_space);
   return res;
@@ -217,6 +255,11 @@ bool free_space(uint32_t start, uint32_t size){
 
 int create_partition(uint32_t start, uint32_t size, uint8_t partition_type){
   //We start by checking that an empty partition exists
+  if (partition_type != EXT2_PARTITION 
+      && partition_type != TEST_PARTITION){
+        PRINT_RED("Partition type is not valid");
+        return -1;
+  }
   if (!global_mdr){return -1;}
   int empty_partition = -1;
   for (int i = 0; i < NB_PARTITIONS; i++) {
@@ -226,11 +269,11 @@ int create_partition(uint32_t start, uint32_t size, uint8_t partition_type){
     }
   }
   if (empty_partition == -1){
-    printf("There aren't any free partitions");
+    PRINT_RED("There aren't any free partitions");
     return -1;
   } 
   if (free_space(start, size) == false){
-    printf("The specified space is not avaliable");
+    PRINT_RED("The specified space is not avaliable");
     return -1;
   }
   //The desired space is avaliable and 
@@ -238,25 +281,39 @@ int create_partition(uint32_t start, uint32_t size, uint8_t partition_type){
   if (partition_type == EXT2_PARTITION){
     if (size < MIN_EXT2_SIZE){
       printf("Size is too small for the ext 2 file system");
+      return -1;
     }
   } 
-  global_mdr->partitionTable[empty_partition].status = ACTIVE_PARTITION;  
-  global_mdr->partitionTable[empty_partition].type = partition_type;//test partition
-  global_mdr->partitionTable[empty_partition].startLBA = start;
-  global_mdr->partitionTable[empty_partition].sizeLBA = size;
-  return 0;
+  if (empty_partition != -1){
+    print_fs_no_arg("Creating a new partition \n");
+    debug_print_v_fs("empty_partition = %d\n",empty_partition);
+    debug_print_v_fs("start %d\n",start); 
+    debug_print_v_fs("size %d\n",size); 
+    debug_print_v_fs("partition_type %d\n",partition_type); 
+    global_mdr->partitionTable[empty_partition].status = ACTIVE_PARTITION;   
+    global_mdr->partitionTable[empty_partition].type = partition_type;//test partition
+    global_mdr->partitionTable[empty_partition].startLBA = start;
+    global_mdr->partitionTable[empty_partition].sizeLBA = size;
+    save_global_mbr();
+    debug_print_v_fs("partition %d was created\n",empty_partition);
+    printf("\033[0;32mPartition was created succefully\033[0m\n"); 
+    configure_ext2_file_system(empty_partition);
+    return 0;
+  }
+  return -1;
 }
 
 int delete_partition(uint8_t partiton_number){
-  if (1 <= partiton_number && partiton_number < NB_PARTITIONS){
-    printf("partition number must be between 1 and 4");
+  if (!(1 < partiton_number && partiton_number <= NB_PARTITIONS)){
+    PRINT_RED("partition number must be between 1 and 4");
     return -1;
   }
   if (global_mdr == 0){
     printf("mbr was not found");
     return -1;
   }
-  global_mdr->partitionTable[partiton_number].status = NON_ACTIVE_PARTITION;  
+  global_mdr->partitionTable[partiton_number-1].status = NON_ACTIVE_PARTITION;  
+  printf("\033[0;32mPartition was deleted succefully\033[0m\n"); 
   return 0;
 }
 

@@ -37,6 +37,7 @@ void delete_last() {
  * has been disabled with 'cons_echo'.
  */
 void handle_keyboard_interrupt() {
+  // printf("Keyboard intterupt \n");
   char c = kgetchar();
   if (is_printable(c)) {
     kaddtobuffer(c);
@@ -81,6 +82,7 @@ void handle_keyboard_interrupt() {
     if (console_dev->echo)
       console_dev->putchar('\n'); // echo
   }
+  // printf("Keyboard intterupt end\n");
   process *next = queue_out(&blocked_io_process_queue, process, next_prev);
   if (next) {
     next->state = ACTIVATABLE;

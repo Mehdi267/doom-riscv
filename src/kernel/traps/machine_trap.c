@@ -35,16 +35,9 @@ const char *interruption_names[16] = {
 		"reserved"
 };
 
-#define PLIC_MCLAIM(hart) (0x0c000000L + 0x200004 + (hart)*0x2000)
-#define PLIC_SCLAIM(hart) (0x0c000000L + 0x201004 + (hart)*0x2000)
 
-
-void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf)
-{
-  if ((mcause & 0xff)  != 7){
-   printf("intt machine, mcause = %ld\n", mcause&0xff);
-  }
-	
+void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf){
+  // printf("machine int %ld\n",mcause&0xff);
   if (mcause & INTERRUPT_CAUSE_FLAG) {
 		// Interruption cause
 		uint8_t interrupt_number = mcause & ~INTERRUPT_CAUSE_FLAG;
@@ -63,10 +56,11 @@ void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf)
         //This is what gets called when we have a keyboard interrupt
 				//interruption clavier
 				handle_keyboard_interrupt();
-				// csr_clear(mip, SIE_SEI); //clear interrupt
+				csr_clear(mip, SIE_SEI); //clear interrupt
 				break;
       case intr_m_external:
-        printf("intr_m_external not treated");
+        printf("intr_m_external not treated\n");
+				csr_clear(mip, MIP_MEIP); //clear interrupt
         break;
 			default:
 				die(

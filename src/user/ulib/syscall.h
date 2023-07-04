@@ -8,7 +8,7 @@
  */
 #ifndef ___SYSCALL_H___
 #define ___SYSCALL_H___
-
+#include "stdint.h"
 typedef __SIZE_TYPE__ size_t;
 
 /*******************************************************************************
@@ -95,4 +95,10 @@ extern void show_ps_info();
 extern void show_programs();
 extern void info_queue();
 extern void sleep(long int nbr_sec);
+
+extern void display_partions();
+extern int create_partition(uint32_t start, uint32_t size, uint8_t partition_type);
+extern int delete_partition(uint8_t partition_number);
+extern int reset_disk();
+
 #endif

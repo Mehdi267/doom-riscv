@@ -11,7 +11,7 @@ typedef struct {
     /* Superblock Structure */
     uint32_t s_inodes_count;                // Total number of inodes
     uint32_t s_blocks_count;                // Total number of blocks
-    uint32_t s_r_blocks_count;              // Number of reserved blocks
+    uint32_t s_r_blocks_count;              // Number of reserved blocks for super use
     uint32_t s_free_blocks_count;           // Number of free blocks
 
     /* Disk Organization */
@@ -70,7 +70,7 @@ typedef struct {
     uint32_t s_default_mount_options;       // Default mount options
     uint32_t s_first_meta_bg;               // First metablock block group
     uint8_t unused[760];                    // Unused - reserved for future revisions
-} Superblock;
+} super_block;
 
 
 #endif

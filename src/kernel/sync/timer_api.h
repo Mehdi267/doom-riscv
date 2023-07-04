@@ -5,6 +5,7 @@
 
 
 extern uint64_t counter;
+
 /**
  * @brief return the frequency of the clock and the number of clock oscillations
  * between affecting the pointers passed in parameter

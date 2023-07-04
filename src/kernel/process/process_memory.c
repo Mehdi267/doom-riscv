@@ -226,7 +226,9 @@ int add_frame_to_process(process* proc_conf, page_t page_type){
                     }
                     proc_conf->shared_pages->tail_shared_page->lvl0_index = lvl0_iterator->usage;
                     proc_conf->shared_pages->tail_shared_page->lvl1_index = lvl0_iterator->index;
-                    proc_conf->shared_pages->tail_shared_page->lvl2_index = USERSPACE; //This value is constant but we might make depend on which source dictetory we choose 
+                    proc_conf->shared_pages->tail_shared_page->lvl2_index = USERSPACE;//This value is constant but we 
+                                                                                      //might make it depend on a specific 
+                                                                                      //location in the table
                     proc_conf->shared_pages->tail_shared_page->page_table = lvl0_iterator->table;
                 }
                 lvl0_iterator->usage++;

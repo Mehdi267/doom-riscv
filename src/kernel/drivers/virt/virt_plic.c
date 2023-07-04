@@ -55,7 +55,7 @@
   // Set the priority threshold for interrupt handling.
   // In this case, we set the priority to 0 to ensure that all interrupts are raised.
   // The following line enables interrupts only for core 0 in machine mode.
-  *((uint32_t*) (VIRT_PLIC_TARGET)) = 0; // Machine mode priority
+  //*((uint32_t*) (VIRT_PLIC_TARGET)) = 0; // Machine mode priority(not needed)
   *((uint32_t*) (VIRT_PLIC_TARGET + 0x1000)) = 0; // Supervisor mode priority
 }
 

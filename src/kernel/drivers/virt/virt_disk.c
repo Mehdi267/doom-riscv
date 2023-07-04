@@ -184,8 +184,11 @@ int virt_disk_op(disk_op* oper) {
   //free descriptors, it is possible 
   //that we cannot find one, thus we can to make sure 
   //the process sleeps until some are liberated 
+  if (oper == 0){
+    print_v_disk_no_arg("disk pointer is null");
+  }
+  debug_print_v_disk("Doing a disk operation of type %d\n", oper->type);
   uint32_t* desc_list =  get_three_desc();
-  // // print_block(oper->data, 512);
 
   while(desc_list == 0){
     //Must use a mutex or the mutex 
@@ -241,8 +244,7 @@ int virt_disk_op(disk_op* oper) {
   block_q.desc[desc_list[2]].len = 1;
   block_q.desc[desc_list[2]].flags = VIRTQ_DESC_F_WRITE;
   block_q.desc[desc_list[2]].next = 0;
-
-  oper->disk_res = 1;
+  
   // tell the device the first index in our chain of descriptors.
   block_q.available.ring[block_q.available.idx % NUMQ] = desc_list[0];
 

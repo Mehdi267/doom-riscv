@@ -75,7 +75,7 @@
 /**
  * @brief the following macro are used when running the tests
  */
-#define DEBUG_TESTING_LEVEL 1 // Indicates if debug type is active
+#define DEBUG_TESTING_LEVEL 0 // Indicates if debug type is active
 
 #define debug_print_tests(fmt, ...)                                            \
   do {                                                                         \
@@ -153,33 +153,32 @@
         do {if (DEBUG_SEMAPHORE_API_LEVEL){ printf(fmt);} } while (0)
 
 /**
- * @brief the following macro are used to debug the timer for the 
- * virt qemu machine 
- */
-#define DEBUG_VIRT_TIMER_LEVEL 0 //Indicates if debug type is active
-
-#define debug_print_virt_timer(fmt, ...) \
-        do {if (DEBUG_VIRT_TIMER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-            if (DEBUG_VIRT_TIMER_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
-                                __LINE__, __func__, __VA_ARGS__);} } while (0)
-
-
-#define print_virt_timer_no_arg(fmt, ...) \
-        do {if (DEBUG_SEMAPHORE_API_LEVEL){ printf(fmt);} } while (0)
-
-/**
  * @brief the following macro are used to debug the  disk driver 
  * virt qemu machine 
  */
-#define DEBUG_VIRT_TIMER_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_VIRT_DISK_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_v_disk(fmt, ...) \
-        do {if (DEBUG_VIRT_TIMER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-            if (DEBUG_VIRT_TIMER_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
-                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+    do {if (DEBUG_VIRT_DISK_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+        if (DEBUG_VIRT_DISK_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+                            __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 #define print_v_disk_no_arg(fmt, ...) \
-        do {if (DEBUG_VIRT_TIMER_LEVEL){ printf(fmt);} } while (0)
+        do {if (DEBUG_VIRT_DISK_LEVEL){ printf(fmt);} } while (0)
+
+/**
+ * @brief the following macro are used to display the  
+ * debug messages of the file system the file system 
+ */
+#define DEBUG_VIRT_FS_LEVEL 0 //Indicates if debug type is active
+
+#define debug_print_v_fs(fmt, ...) \
+        do {if (DEBUG_VIRT_FS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_VIRT_FS_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+#define print_fs_no_arg(fmt, ...) \
+        do {if (DEBUG_VIRT_FS_LEVEL){ printf(fmt);} } while (0)
 
 
 

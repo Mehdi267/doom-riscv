@@ -33,11 +33,11 @@ include toolchain.config
 # Machine
 #
 
-#MACHINE ?= virt
+MACHINE ?= virt
 #MACHINE ?= sifive_u
 #MACHINE ?= spike
 #MACHINE ?= zybo
-MACHINE ?= cep
+#MACHINE ?= cep
 
 #
 # Hardware plateforme

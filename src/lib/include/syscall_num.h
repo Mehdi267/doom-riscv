@@ -54,11 +54,14 @@
 
 //Information 
 #define SYSC_show_ps_info       40
-
 #define SYSC_show_programs      41
-
 #define SYSC_info_queue         42
 
-#define NB_SYSCALLS             43
+#define SYSC_display_partions   43
+#define SYSC_create_partition   44
+#define SYSC_delete_partition   45
+#define SYSC_reset_disk         46
+
+#define NB_SYSCALLS             50
 
 #endif
