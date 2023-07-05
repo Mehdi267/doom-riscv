@@ -9,13 +9,15 @@ int main() {
   int option = 0;
   char input[256];
 
-  while (option != 5) {
+  while (option != 7) {
     printf("Choose an option:\n");
     printf("1. Print partition status\n");
     printf("2. Create a partition\n");
     printf("3. Delete a partition\n");
     printf("4. Reset disk\n");
-    printf("5. Exit\n");
+    printf("5. Sync\n");
+    printf("6. Clear disk cache\n");
+    printf("7. Exit\n");
     printf("Enter option number: ");
     cons_read(input, sizeof(input));
     option = atoi(input);
@@ -59,7 +61,18 @@ int main() {
               }
           }
       }
-    } else if (option == 5) {
+    } 
+    else if (option == 5) {
+      if (sync()<0){
+        PRINT_RED("SYNC FAILED\n");
+      }
+    }
+    else if (option == 6){
+      if (clear_disk_cache()<0){
+        PRINT_RED("clear_disk_cache FAILED\n");
+      }
+    }
+    else if (option == 7) {
       printf("Exiting...\n");
       return 0;
     } else {

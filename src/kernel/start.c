@@ -30,6 +30,11 @@ int kernel_start() {
       puts("error while setting up the file system");
       exit(-1);
     }
+    if (mount_root_file_system()){
+      puts("error while setting up the file system");
+      exit(-1);
+    }
+    load_and_print_superblock();
   #endif
   //kernel_drivers_tests(0);
   splash_screen();

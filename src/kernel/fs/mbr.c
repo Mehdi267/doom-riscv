@@ -10,7 +10,7 @@
 
 //This value represents the global mdr that 
 //will be used the in the program
-mbr_t *global_mdr;
+mbr_t *global_mbr;
 
 int find_mbr(){
   //Read the fist disk 
@@ -19,13 +19,13 @@ int find_mbr(){
   disk_operation_mbr.blockNumber = MBR_BLOCK;
   disk_operation_mbr.type = READ;  
   uint16_t data[256];
-  disk_operation_mbr.data = (unsigned char*) data;
+  disk_operation_mbr.data = (char*) data;
   // Perform disk read operation on the block taht contains the mbr
   disk_dev->read_disk(&disk_operation_mbr);
   if (data[255] == MBR_SIGNATURE) {
     //Mbr was found we can now access partitions
-    global_mdr = get_frame();
-    memcpy(global_mdr,(void*)data,512);
+    global_mbr = get_frame();
+    memcpy(global_mbr,(void*)data,512);
     return 0;
   }
   else{
@@ -34,14 +34,14 @@ int find_mbr(){
 }
 
 int save_global_mbr(){
-  if (global_mdr == 0){
+  if (global_mbr == 0){
     print_fs_no_arg("could not save mbr\n");
     return -1;
   }
   disk_op disk_operation_mbr;
   disk_operation_mbr.blockNumber = MBR_BLOCK;
   disk_operation_mbr.type = WRITE;
-  disk_operation_mbr.data = (unsigned char*) global_mdr;
+  disk_operation_mbr.data = (char*) global_mbr;
   // Perform disk read operation on the block taht contains the mbr
   if (disk_dev->write_disk(&disk_operation_mbr)<0){
     print_fs_no_arg("mbr was not saved succefully\n");
@@ -52,16 +52,16 @@ int save_global_mbr(){
 }
 
 int set_up_mbr(){ 
-  if (global_mdr != 0){
-    release_frame(global_mdr);
+  if (global_mbr != 0){
+    release_frame(global_mbr);
   }
   //We allocate data for the global mbr struct
-  global_mdr = get_frame();
-  if (global_mdr == 0){
+  global_mbr = get_frame();
+  if (global_mbr == 0){
     return -1;
   }
-  memset(global_mdr, 0, 512);
-  global_mdr->signature = MBR_SIGNATURE;
+  memset(global_mbr, 0, 512);
+  global_mbr->signature = MBR_SIGNATURE;
   if (setup_test_partition()<-1){
     return -1;
   }
@@ -69,13 +69,13 @@ int set_up_mbr(){
 }
 
 int setup_test_partition(){
-  if(global_mdr ==0){
+  if(global_mbr ==0){
     return -1;
   }
-  global_mdr->partitionTable[0].status = ACTIVE_PARTITION;
-  global_mdr->partitionTable[0].type = TEST_PARTITION;//test partition
-  global_mdr->partitionTable[0].startLBA = 2;
-  global_mdr->partitionTable[0].sizeLBA = 32;
+  global_mbr->partitionTable[0].status = ACTIVE_PARTITION;
+  global_mbr->partitionTable[0].type = TEST_PARTITION;//test partition
+  global_mbr->partitionTable[0].startLBA = 2;
+  global_mbr->partitionTable[0].sizeLBA = 32;
   return 0;
 }
 
@@ -104,7 +104,7 @@ void print_free_spaces(uint32_t* free_space, int num_free_segments){
   
 
 void print_partition_status(){
-  if (global_mdr ==0){
+  if (global_mbr ==0){
     printf("No mbr table is in memory");
   }
   PRINT_GREEN("##########disk############\n");
@@ -133,25 +133,25 @@ void print_partition_status(){
 }
 
 void print_mbr_details() {
-  if (!global_mdr){return;}
+  if (!global_mbr){return;}
   for (int i = 0; i < NB_PARTITIONS; i++) {
     printf("Partition %d:\n", i + 1);
-    printf("Status: %d\n", global_mdr->partitionTable[i].status);
-    if (global_mdr->partitionTable[i].status != 0){
-      printf("Start LBA: %u\n", global_mdr->partitionTable[i].startLBA);
-      printf("Size (in LBA): %u\n", global_mdr->partitionTable[i].sizeLBA);
-      printf("Type: %d\n", global_mdr->partitionTable[i].type);
+    printf("Status: %d\n", global_mbr->partitionTable[i].status);
+    if (global_mbr->partitionTable[i].status != 0){
+      printf("Start LBA: %u\n", global_mbr->partitionTable[i].startLBA);
+      printf("Size (in LBA): %u\n", global_mbr->partitionTable[i].sizeLBA);
+      printf("Type: %d\n", global_mbr->partitionTable[i].type);
       printf("-------------------\n");
     }
   }
 }
 
 uint32_t* find_occupied_space() {
-  if (!global_mdr){return 0;}
+  if (!global_mbr){return 0;}
   //four segment contaning the used space
   uint32_t* occupied_space = (uint32_t*)malloc(8*sizeof(uint32_t));
   for (int i = 0; i < NB_PARTITIONS; i++) {
-    struct PartitionEntry* partition = &global_mdr->partitionTable[i];
+    struct PartitionEntry* partition = &global_mbr->partitionTable[i];
     if (partition->status != 0){
       uint32_t startLBA = partition->startLBA;
       uint32_t endLBA = startLBA + partition->sizeLBA;
@@ -260,10 +260,10 @@ int create_partition(uint32_t start, uint32_t size, uint8_t partition_type){
         PRINT_RED("Partition type is not valid");
         return -1;
   }
-  if (!global_mdr){return -1;}
+  if (!global_mbr){return -1;}
   int empty_partition = -1;
   for (int i = 0; i < NB_PARTITIONS; i++) {
-    if (global_mdr->partitionTable[i].status == 0x0){
+    if (global_mbr->partitionTable[i].status == 0x0){
       empty_partition = i;
       break;
     }
@@ -290,10 +290,10 @@ int create_partition(uint32_t start, uint32_t size, uint8_t partition_type){
     debug_print_v_fs("start %d\n",start); 
     debug_print_v_fs("size %d\n",size); 
     debug_print_v_fs("partition_type %d\n",partition_type); 
-    global_mdr->partitionTable[empty_partition].status = ACTIVE_PARTITION;   
-    global_mdr->partitionTable[empty_partition].type = partition_type;//test partition
-    global_mdr->partitionTable[empty_partition].startLBA = start;
-    global_mdr->partitionTable[empty_partition].sizeLBA = size;
+    global_mbr->partitionTable[empty_partition].status = ACTIVE_PARTITION;   
+    global_mbr->partitionTable[empty_partition].type = partition_type;//test partition
+    global_mbr->partitionTable[empty_partition].startLBA = start;
+    global_mbr->partitionTable[empty_partition].sizeLBA = size;
     save_global_mbr();
     debug_print_v_fs("partition %d was created\n",empty_partition);
     printf("\033[0;32mPartition was created succefully\033[0m\n"); 
@@ -308,11 +308,11 @@ int delete_partition(uint8_t partiton_number){
     PRINT_RED("partition number must be between 1 and 4");
     return -1;
   }
-  if (global_mdr == 0){
+  if (global_mbr == 0){
     printf("mbr was not found");
     return -1;
   }
-  global_mdr->partitionTable[partiton_number-1].status = NON_ACTIVE_PARTITION;  
+  global_mbr->partitionTable[partiton_number-1].status = NON_ACTIVE_PARTITION;  
   printf("\033[0;32mPartition was deleted succefully\033[0m\n"); 
   return 0;
 }

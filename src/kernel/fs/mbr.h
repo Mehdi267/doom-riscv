@@ -43,7 +43,7 @@ typedef struct MBR {
         uint8_t endCHS[3];         // End of the partition in disk geometry(not used)
         uint32_t startLBA;         // Starting logical block address (LBA) of the partition
         uint32_t sizeLBA;          // Size of the partition in logical blocks
-    } partitionTable[4];           // Partition table entries (4 entries for MBR)
+    } partitionTable[NB_PARTITIONS];           // Partition table entries (4 entries for MBR)
     uint16_t signature;            // MBR signature (0x55AA)
 } mbr_t;
 
@@ -52,7 +52,7 @@ typedef struct MBR {
 /**
  * @brief Global MBR instance used in the program.
  */
-extern mbr_t *global_mdr;
+extern mbr_t *global_mbr;
 
 /**
  * @brief Find and read the MBR from the disk.

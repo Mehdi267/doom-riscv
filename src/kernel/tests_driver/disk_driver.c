@@ -22,7 +22,7 @@ int disk_driver_test(void *arg) {
   disk_op op_write_1;
   op_write_1.blockNumber = 2;
   op_write_1.type = WRITE;
-  op_write_1.data = (unsigned char*)malloc(BLOCK_SIZE);
+  op_write_1.data = (char*)malloc(BLOCK_SIZE);
   memset(op_write_1.data, 0xFF, BLOCK_SIZE);
   // print_block(op_write_1.data, BLOCK_SIZE);
   
@@ -53,7 +53,7 @@ int disk_driver_test(void *arg) {
   disk_op op_write_2;
   op_write_2.blockNumber = 2;
   op_write_2.type = WRITE;
-  op_write_2.data = (unsigned char*)malloc(BLOCK_SIZE);
+  op_write_2.data = (char*)malloc(BLOCK_SIZE);
   memcpy(op_write_2.data, op_read_1.data, BLOCK_SIZE);
   // print_block(op_write_2.data, BLOCK_SIZE);
   

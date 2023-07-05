@@ -5,6 +5,7 @@
 #include "ext2.h"
 #include "stdio.h"
 #include "string.h"
+#include "disk_buffer.h"
 
 /*
   Source: https://www.nongnu.org/ext2-doc/ext2.pdf
@@ -33,8 +34,8 @@
   The remaining space is reserved for data blocks.
 */
 int configure_ext2_file_system(uint8_t partition){
-  uint32_t start = global_mdr->partitionTable[partition].startLBA;
-  uint32_t size = global_mdr->partitionTable[partition].sizeLBA;
+  uint32_t start = global_mbr->partitionTable[partition].startLBA;
+  uint32_t size = global_mbr->partitionTable[partition].sizeLBA;
   configure_root_file_system(
     EXT2_PARTITION,//partition type number
     SUPER_BLOCK_LOC,//super block location
@@ -42,9 +43,9 @@ int configure_ext2_file_system(uint8_t partition){
     partition
   );
   save_boot_record(start+BOOT_RECORD_LOC);
-  PRINT_GREEN("BOOT RECORD SAVED");
+  PRINT_GREEN("Boot record saved");
   superblock_conf(start+SUPER_BLOCK_LOC, size); 
-  PRINT_GREEN("SUPER BLOCK SAVED");
+  PRINT_GREEN("Super block saved");
   return 0;
 }
 
@@ -118,3 +119,46 @@ int superblock_conf(uint32_t block_loc,
   super.s_uuid[0] = 22; // random value
   return save_fs_block((char*)&super, sizeof(super_block), block_loc);
 }
+
+
+
+void print_super_block(super_block* sb){
+  if (sb == 0){
+    return;
+  }
+  printf("s_inodes_count = %d\n", sb->s_inodes_count);                // Total number of inodes
+  printf("s_blocks_count = %d\n", sb->s_blocks_count);                // Total number of blocks
+  printf("s_r_blocks_count = %d\n", sb->s_r_blocks_count);              // Number of reserved blocks for super use
+  printf("s_free_blocks_count = %d\n", sb->s_free_blocks_count);           // Number of free blocks
+
+  printf("s_free_inodes_count = %d\n", sb->s_free_inodes_count);           // Number of free inodes
+  printf("s_first_data_block = %d\n", sb->s_first_data_block);            // Block number of first data block
+  printf("s_log_block_size = %d\n", sb->s_log_block_size);              // Block size (log2)
+  printf("s_log_frag_size = %d\n", sb->s_log_frag_size);               // Fragment size (log2)
+  printf("s_blocks_per_group = %d\n", sb->s_blocks_per_group);            // Blocks per group
+  printf("s_frags_per_group = %d\n", sb->s_frags_per_group);             // Fragments per group
+  printf("s_inodes_per_group = %d\n", sb->s_inodes_per_group);            // Inodes per group
+  printf("s_mtime = %d\n", sb->s_mtime);                       // Mount time
+  printf("s_wtime = %d\n", sb->s_wtime);                       // Write time
+  printf("s_mnt_count = %d\n", sb->s_mnt_count);                   // Mount count
+  printf("s_max_mnt_count = %d\n", sb->s_max_mnt_count);               // Maximal mount count
+  printf("s_magic = %d\n", sb->s_magic);                       // Magic signature
+  printf("s_state = %d\n", sb->s_state);                       // File system state
+  printf("s_errors = %d\n", sb->s_errors);                      // Behaviour when detecting errors
+  printf("s_minor_rev_level = %d\n", sb->s_minor_rev_level);             // Minor revision level
+  printf("s_lastcheck = %d\n", sb->s_lastcheck);                   // Last check time
+  printf("s_checkinterval = %d\n", sb->s_checkinterval);               // Check interval
+  printf("s_creator_os = %d\n", sb->s_creator_os);                  // OS ID
+  printf("s_rev_level = %d\n", sb->s_rev_level);                   // Revision level
+  printf("s_def_resuid = %d\n", sb->s_def_resuid);                  // Default uid for reserved blocks
+  printf("s_def_resgid = %d\n", sb->s_def_resgid);                  // Default gid for reserved blocks
+
+  printf("s_first_ino = %d\n", sb->s_first_ino);                   // First non-reserved inode
+  printf("s_inode_size = %d\n", sb->s_inode_size);                  // Size of inode structure
+  printf("s_block_group_nr = %d\n", sb->s_block_group_nr);              // Block group number of this superblock
+  printf("s_feature_compat = %d\n", sb->s_feature_compat);              // Compatible feature set flags
+  printf("s_feature_incompat = %d\n", sb->s_feature_incompat);            // Incompatible feature set flags
+  printf("s_feature_ro_compat = %d\n", sb->s_feature_ro_compat);           // Readonly-compatible feature set flags
+}
+
+

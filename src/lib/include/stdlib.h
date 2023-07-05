@@ -94,5 +94,5 @@ typedef struct disk_operation{
   //The location in which we read data into
   //or the location of the data that will be 
   //written to the disk.
-  unsigned char *data;
+  char *data;
 } disk_op;

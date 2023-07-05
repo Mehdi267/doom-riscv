@@ -57,10 +57,14 @@
 #define SYSC_show_programs      41
 #define SYSC_info_queue         42
 
+//Mbr sys calls
 #define SYSC_display_partions   43
 #define SYSC_create_partition   44
 #define SYSC_delete_partition   45
 #define SYSC_reset_disk         46
+//File system sys calls
+#define SYSC_sync               47
+#define SYSC_clear_disk_cache   48
 
 #define NB_SYSCALLS             50
 

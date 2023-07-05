@@ -1,4 +1,5 @@
 #include "stdint.h"
+#include "super_block.h"
 
 #ifndef EXT2_H 
 #define EXT2_H
@@ -47,4 +48,10 @@ int save_boot_record(uint32_t boot_loc);
  * @return int 
  */
 int superblock_conf(uint32_t block_loc, uint32_t disk_size);
+
+/**
+ * @brief prints the super block given as funtion argument
+ * @param super the super block
+ */
+void print_super_block(super_block* super);
 #endif

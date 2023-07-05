@@ -64,21 +64,6 @@ int delete_partition(uint8_t partition_number);
  */
 int set_up_mbr();
 
-/**
- * @brief Saves the data equal to the size of block used in the 
- * the file system
- * 
- * @param data 
- * @param size size of data must be between 
- * 0 and the size of the block
- * @param block_number the memory block in which we 
- * will store the data
- * @return int 
- */
-int save_fs_block(char* data,
-                  uint32_t data_size,
-                  uint32_t block_number
-                  );
 
 /**
  * @brief configures ext2 file system
@@ -99,5 +84,41 @@ int configure_ext2_file_system(uint8_t partition);
  * @return int 
  */
 int configure_root_file_system(uint8_t fs_type,uint32_t superblock_loc,uint32_t block_size,uint8_t partition);
+
+
+
+/**
+ * @brief Mounts the first encountered ext2 file system
+ * @return int function status
+ */
+int mount_root_file_system();
+
+/**
+ * @brief Mounts the file system located in the partition
+ * given as function argument
+ * @param partition the partition where the file system is located
+ * @return int function status
+ */
+int mount_custom_fs(uint8_t partition);
+
+/**
+ * @brief Loads the current mounted root file system' super block
+ * and prints it 
+ */
+void load_and_print_superblock();
+
+/**
+ * @brief saves all of the current 
+ * blocks that are on the cache into memory
+ * @return int 
+ */
+extern int sync();
+
+/**
+ * @brief saves all of the current 
+ * blocks that are on the cache into memory
+ * @return int 
+ */
+extern int free_cache_list();
 
 #endif

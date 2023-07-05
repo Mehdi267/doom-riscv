@@ -127,6 +127,12 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
       break;    
     case SYSC_reset_disk:
       return set_up_mbr();
+      break; 
+    case SYSC_sync:
+      return sync();
+      break;    
+    case SYSC_clear_disk_cache:
+      return free_cache_list();
       break;    
     default:
       printf("Syscall code does not match any of the defined syscalls");

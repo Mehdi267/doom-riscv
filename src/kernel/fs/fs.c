@@ -1,10 +1,13 @@
 #include "fs.h" //pointless
 #include "stdio.h" //to do prints
 #include "mbr.h" //to handle mbr init and usage
+#include "disk_buffer.h"
 #include "stdlib.h" //disk cache struct and other constants
 #include <stdint.h> //uint
 #include <string.h> // memset
 #include "drivers/disk_device.h" //to do disk operations
+#include "ext2.h"
+#include "super_block.h"
 
 int set_up_file_system() {
   printf("Setting up file system\n");
@@ -17,6 +20,51 @@ int set_up_file_system() {
   }
   print_partition_status();
   return 0;
+}
+
+int mount_custom_fs(uint8_t partition){
+  if (!(partition >=1 && partition <= NB_PARTITIONS)){
+    PRINT_RED("Partition number must be between 1 and NB_PARTITIONS(4)");
+    return -1;
+  }
+  if (global_mbr == 0){
+    return -1;
+  }
+  if (global_mbr->partitionTable[partition].type != EXT2_PARTITION){
+    return -1;
+  }
+  return configure_root_file_system(
+    EXT2_PARTITION,//partition type number
+    SUPER_BLOCK_LOC,//super block location
+    EXT2_BLOCK_SIZE,  partition);
+}
+
+int mount_root_file_system(){
+  if (global_mbr == 0){
+    return -1;
+  }
+  for (int i = 0; i < NB_PARTITIONS; i++){
+    if(global_mbr->partitionTable[i].type == EXT2_PARTITION){
+      PRINT_GREEN("Ext2 file system was found\n");
+      return configure_root_file_system(
+        EXT2_PARTITION,//partition type number
+        SUPER_BLOCK_LOC,//super block location
+        EXT2_BLOCK_SIZE,
+        i
+      );
+    }
+  }
+  PRINT_RED("No ext2 file system was found\n");
+  return -1;
+}
+
+void load_and_print_superblock(){
+  if (root_file_system == 0){
+    return;
+  }
+  char* data = disk_read_block(
+          root_file_system->superblock_loc);
+  print_super_block((super_block*) data);
 }
 
 file_system_t* root_file_system;
@@ -34,50 +82,14 @@ int configure_root_file_system(
       //No space
       return -1;
     }
-  } 
+  }else{
+    sync();
+    free_cache_list();
+  }
   root_file_system->fs_type = fs_type; 
   root_file_system->superblock_loc = superblock_loc; 
   root_file_system->block_size = block_size; 
   root_file_system->partition = partition; 
-  return -1;
-}
-
-
-
-int save_fs_block(char* data,
-                  uint32_t data_size,
-                  uint32_t block_number
-                  ){
-  if (data == 0 || data_size > root_file_system->block_size){
-    return -1;
-  }
-  int res;
-  uint32_t frag_size = data_size%BLOCK_SIZE;
-  uint32_t number_disk_b = root_file_system->block_size/BLOCK_SIZE;
-  char final_block[BLOCK_SIZE];
-  memset(final_block,0,BLOCK_SIZE);
-  memcpy(final_block,
-        data+data_size-frag_size,
-        frag_size);
-  disk_op op_write; 
-  for (uint32_t i = 0; i < number_disk_b; i++){
-    op_write.blockNumber = block_number+i;
-    op_write.type = WRITE;
-    if (i != number_disk_b-1){
-      op_write.data = (unsigned char *)data+i*BLOCK_SIZE;
-    }
-    else{
-      op_write.data = (unsigned char *)final_block;
-    }
-    if (disk_dev->write_disk(&op_write)<0){
-      printf("A save operation failed");
-      res = -1;
-    }
-  }
-  return res;
-}
-
-
-char** disk_read_block(uint32_t fs_block_number){
   return 0;
 }
+

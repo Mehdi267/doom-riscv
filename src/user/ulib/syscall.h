@@ -101,4 +101,7 @@ extern int create_partition(uint32_t start, uint32_t size, uint8_t partition_typ
 extern int delete_partition(uint8_t partition_number);
 extern int reset_disk();
 
+extern int sync();
+extern int clear_disk_cache();
+
 #endif
