@@ -7,10 +7,12 @@
 #include "string.h"
 #include "fs.h"
 #include "mbr.h"
+#include "logger.h"
 
 c_elt* global_cache_buf = 0; 
 
 char* read_block_c(uint32_t disk_block_number){
+  debug_print_v_fs("[df]Reading relative disk block %d\n", disk_block_number);
   c_elt* cache_elt = look_up_c_elt(disk_block_number);
   if (cache_elt == 0){
     cache_elt = fetch_block(disk_block_number);
@@ -27,6 +29,7 @@ int write_block(uint32_t disk_block_number,
                   size_t data_length,
                   write_type type
                   ){
+  debug_print_v_fs("[df]Write block called into %d\n", disk_block_number);
   if (data == 0 || data_length > EXT2_BLOCK_SIZE){
     return -1;
   }
@@ -57,13 +60,14 @@ c_elt* look_up_c_elt(uint32_t disk_block_number){
     return 0;
   }
   c_elt* global_cache_iter = global_cache_buf;
-  while(global_cache_iter){
+  while(global_cache_iter != 0){
     if (global_cache_iter->blockNumber == disk_block_number){
+      debug_print_v_fs("[df]element blk %d was found in cache",
+             disk_block_number);
       return global_cache_iter;
     }
     global_cache_iter = global_cache_iter->next_c;
   }
-
   return 0;
 }
 
@@ -72,12 +76,16 @@ c_elt* fetch_block(uint32_t disk_block_number){
   if (elt == 0){
     return NULL;
   }
+  debug_print_v_fs("[df]###fetching relat block %d from memory \n", 
+              disk_block_number);
   elt->blockNumber = disk_block_number;
   disk_op disk_fetch;
   int blk_ratio = root_file_system->block_size/BLOCK_SIZE;
   for (int i = 0; i<blk_ratio; i++){
     disk_fetch.blockNumber = global_mbr->partitionTable[root_file_system->partition]
-            .startLBA+disk_block_number*blk_ratio+i;
+      .startLBA+disk_block_number*blk_ratio+i;
+    debug_print_v_fs("[df]Reading disk block %d from memory \n", 
+              disk_fetch.blockNumber);
     disk_fetch.type = READ;  
     disk_fetch.data = elt->data + i*BLOCK_SIZE;
     elt->disk_res = 1;
@@ -100,11 +108,16 @@ int sync_elt(c_elt* cache_elt){
   if(cache_elt == 0){
     return -1;
   }
+  print_fs_no_arg("[df]sync_elt was called on cache");
+  debug_print_v_fs(" buffer containing block number = %d\n", 
+            cache_elt->blockNumber);
   disk_op disk_wr;
   int blk_ratio = root_file_system->block_size/BLOCK_SIZE;
   for (int i = 0; i<blk_ratio; i++){
     disk_wr.blockNumber = global_mbr->partitionTable[root_file_system->partition]
             .startLBA+cache_elt->blockNumber*blk_ratio+i;
+    debug_print_v_fs("[df]Saving disk block %d into memory\n", 
+              disk_wr.blockNumber);
     disk_wr.type = WRITE;  
     disk_wr.data = cache_elt->data + i*BLOCK_SIZE;
     if (disk_dev->write_disk(&disk_wr)<0){
@@ -117,6 +130,9 @@ int sync_elt(c_elt* cache_elt){
 }
 
 int sync(){
+  load_and_print_superblock();
+  load_and_print_desc_table();
+  print_fs_no_arg("[df]sync method was called\n");
   if (global_cache_buf ==0){
     return 0;
   }
@@ -155,6 +171,7 @@ int free_cache_list(){
     }  
   }
   free(buf_iter);
+  global_cache_buf = 0;
   return 0;
 }
 
@@ -168,6 +185,7 @@ int save_fs_block(char* data,
     printf("disk save failed");
     return -1;
   }
+  debug_print_v_fs("[df]Saving fs block %d into memory \n", relative_b_nb);
   if (write_block(relative_b_nb, data,
       data_size, WRITE_THROUGH)<0){
     printf("A save operation failed");
@@ -180,3 +198,14 @@ char* disk_read_block(uint32_t relative_b_n){
   return read_block_c(relative_b_n);
 }
 
+void printLinkedList(c_elt* elt) {
+  while (elt != NULL) {
+    printf("Disk Res: %u\n", elt->disk_res);
+    printf("Block Number: %u\n", elt->blockNumber);
+    printf("Dirty: %s\n", elt->dirty ? "true" : "false");
+    printf("Usage: %u\n", elt->usage);
+    printf("Data: %s\n", elt->data);
+    printf("\n");
+    elt = elt->next_c;
+  }
+}

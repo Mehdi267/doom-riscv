@@ -187,7 +187,7 @@ int virt_disk_op(disk_op* oper) {
   if (oper == 0){
     print_v_disk_no_arg("disk pointer is null");
   }
-  debug_print_v_disk("Doing a disk operation of type %d\n", oper->type);
+  debug_print_v_disk("[disk]Doing a disk operation of type %s\n", oper->type ? "WRITE":"READ" );
   uint32_t* desc_list =  get_three_desc();
 
   while(desc_list == 0){
@@ -250,18 +250,18 @@ int virt_disk_op(disk_op* oper) {
 
   // tell the device another avail ring entry is available.
   block_q.available.idx += 1; 
-  debug_print_v_disk("newly set statut value = %d \n", block_m.desc_statut[desc_list[0]]);
-  debug_print_v_disk("used ring idx; before operation = %d\n",block_q.used.idx);
+  debug_print_v_disk("[disk]newly set statut value = %d \n", block_m.desc_statut[desc_list[0]]);
+  debug_print_v_disk("[disk]used ring idx; before operation = %d\n",block_q.used.idx);
   *R(MMIO_QUEUE_NOTIFY) = 0;
   while(block_m.desc_statut[desc_list[0]] == 0xff){
-    debug_print_v_disk("statut desc loop = %d \n", block_m.desc_statut[desc_list[0]]);
+    // debug_print_v_disk("[disk]statut desc loop = %d \n", block_m.desc_statut[desc_list[0]]);
   }
-  debug_print_v_disk("Statut desc = %d \n", block_m.desc_statut[desc_list[0]]);
-  debug_print_v_disk("Used ring idx = %d ; desc id =  %d / len = %d\n",
-                  block_q.used.idx, 
-                  block_q.used.ring[block_q.used.idx-1].id, 
-                  block_q.used.ring[block_q.used.idx-1].len);
-
+  debug_print_v_disk("[disk]Statut desc loop exit = %d \n", block_m.desc_statut[desc_list[0]]);
+  debug_print_v_disk("[disk]Used ring idx = %d" ,
+                  block_q.used.idx);
+  debug_print_v_disk(" desc id =  %d / len = %d\n",
+                  block_q.used.ring[block_q.used.idx-1%NUMQ].id, 
+                  block_q.used.ring[block_q.used.idx-1%NUMQ].len);
   // print_block(oper->data, 512);
   free_list(desc_list);
   free(desc_list);

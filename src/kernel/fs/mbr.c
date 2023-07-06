@@ -62,7 +62,7 @@ int set_up_mbr(){
   }
   memset(global_mbr, 0, 512);
   global_mbr->signature = MBR_SIGNATURE;
-  if (setup_test_partition()<-1){
+  if (setup_test_partition() < 0){
     return -1;
   }
   return save_global_mbr();
@@ -286,10 +286,10 @@ int create_partition(uint32_t start, uint32_t size, uint8_t partition_type){
   } 
   if (empty_partition != -1){
     print_fs_no_arg("Creating a new partition \n");
-    debug_print_v_fs("empty_partition = %d\n",empty_partition);
-    debug_print_v_fs("start %d\n",start); 
-    debug_print_v_fs("size %d\n",size); 
-    debug_print_v_fs("partition_type %d\n",partition_type); 
+    debug_print_v_fs("[mbr]empty_partition = %d\n",empty_partition);
+    debug_print_v_fs("[mbr]start %d\n",start); 
+    debug_print_v_fs("[mbr]size %d\n",size); 
+    debug_print_v_fs("[mbr]partition_type %d\n",partition_type); 
     global_mbr->partitionTable[empty_partition].status = ACTIVE_PARTITION;   
     global_mbr->partitionTable[empty_partition].type = partition_type;//test partition
     global_mbr->partitionTable[empty_partition].startLBA = start;
@@ -297,7 +297,9 @@ int create_partition(uint32_t start, uint32_t size, uint8_t partition_type){
     save_global_mbr();
     debug_print_v_fs("partition %d was created\n",empty_partition);
     printf("\033[0;32mPartition was created succefully\033[0m\n"); 
-    configure_ext2_file_system(empty_partition);
+    if (partition_type == EXT2_PARTITION){
+      configure_ext2_file_system(empty_partition);
+    }
     return 0;
   }
   return -1;

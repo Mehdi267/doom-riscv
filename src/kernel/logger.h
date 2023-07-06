@@ -30,7 +30,7 @@
 
 #define debug_print_scheduler(fmt, ...) \
         do {if (DEBUG_SCHEDULER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-            if (DEBUG_SCHEDULER_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+            if (DEBUG_SCHEDULER_LEVEL == 2){ printf("\033[0;32mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 #define debug_print_scheduler_no_arg(fmt, ...) \
@@ -50,7 +50,7 @@
       printf(fmt, __VA_ARGS__);                                                \
     }                                                                          \
     if (DEBUG_PROCESS_LEVEL == 2) {                                            \
-      printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, __LINE__,          \
+      printf("\033[0;32mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, __LINE__,          \
              __func__, __VA_ARGS__);                                           \
     }                                                                          \
   } while (0)
@@ -67,7 +67,7 @@
       printf(fmt, __VA_ARGS__);                                                \
     }                                                                          \
     if (DEBUG_EXIT_METHODS_LEVEL == 2) {                                       \
-      printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, __LINE__,          \
+      printf("\033[0;32mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, __LINE__,          \
              __func__, __VA_ARGS__);                                           \
     }                                                                          \
   } while (0)
@@ -83,7 +83,7 @@
       printf(fmt, __VA_ARGS__);                                                \
     }                                                                          \
     if (DEBUG_TESTING_LEVEL == 2) {                                            \
-      printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, __LINE__,          \
+      printf("\033[0;32mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, __LINE__,          \
              __func__, __VA_ARGS__);                                           \
     }                                                                          \
   } while (0)
@@ -103,7 +103,7 @@
 
 #define debug_print_memory(fmt, ...) \
         do {if (DEBUG_MEMORY_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-            if (DEBUG_MEMORY_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+            if (DEBUG_MEMORY_LEVEL == 2){ printf("\033[0;32mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 #define print_memory_no_arg(fmt, ...) \
@@ -117,7 +117,7 @@
 
 #define debug_print_memory_api(fmt, ...) \
         do {if (DEBUG_MEMORY_API_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-            if (DEBUG_MEMORY_API_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+            if (DEBUG_MEMORY_API_LEVEL == 2){ printf("\033[0;32mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 #define print_memory_api_no_arg(fmt, ...) \
@@ -130,7 +130,7 @@
 
 #define debug_print_sem(fmt, ...) \
         do {if (DEBUG_SEMAPHORE_API_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-            if (DEBUG_SEMAPHORE_API_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+            if (DEBUG_SEMAPHORE_API_LEVEL == 2){ printf("\033[0;32mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 #define print_sem_api_no_arg(fmt, ...) \
@@ -145,7 +145,7 @@
 
 #define debug_print_virt_timer(fmt, ...) \
         do {if (DEBUG_VIRT_TIMER_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-            if (DEBUG_VIRT_TIMER_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+            if (DEBUG_VIRT_TIMER_LEVEL == 2){ printf("\033[0;32mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 
@@ -156,11 +156,11 @@
  * @brief the following macro are used to debug the  disk driver 
  * virt qemu machine 
  */
-#define DEBUG_VIRT_DISK_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_VIRT_DISK_LEVEL 1 //Indicates if debug type is active
 
 #define debug_print_v_disk(fmt, ...) \
     do {if (DEBUG_VIRT_DISK_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-        if (DEBUG_VIRT_DISK_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+        if (DEBUG_VIRT_DISK_LEVEL == 2){ printf("\033[0;32mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, \
                             __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 #define print_v_disk_no_arg(fmt, ...) \
@@ -170,11 +170,11 @@
  * @brief the following macro are used to display the  
  * debug messages of the file system the file system 
  */
-#define DEBUG_VIRT_FS_LEVEL 0 //Indicates if debug type is active
+#define DEBUG_VIRT_FS_LEVEL 1 //Indicates if debug type is active
 
 #define debug_print_v_fs(fmt, ...) \
         do {if (DEBUG_VIRT_FS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-            if (DEBUG_VIRT_FS_LEVEL == 2){ printf("File/Line/Func [%s][%d][%s]: " fmt, __FILE__, \
+            if (DEBUG_VIRT_FS_LEVEL == 2){ printf("\033[0;32mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 #define print_fs_no_arg(fmt, ...) \

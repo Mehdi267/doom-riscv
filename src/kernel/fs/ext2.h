@@ -54,4 +54,10 @@ int superblock_conf(uint32_t block_loc, uint32_t disk_size);
  * @param super the super block
  */
 void print_super_block(super_block* super);
+
+/**
+ * @brief Prints BlockGroupDescriptor details 
+ * @param bgd the BlockGroupDescriptor data
+ */
+void printBlockGroupDescriptor(BlockGroupDescriptor* bgd);
 #endif

@@ -8,7 +8,7 @@
 typedef struct file_system_struct {
   uint8_t fs_type;
   uint32_t superblock_loc;
-  uint32_t disk_size;
+  uint32_t desc_table_loc;
   uint32_t block_size;
   uint32_t fs_size;
   uint8_t partition;
@@ -83,7 +83,11 @@ int configure_ext2_file_system(uint8_t partition);
  * file system is being stored
  * @return int 
  */
-int configure_root_file_system(uint8_t fs_type,uint32_t superblock_loc,uint32_t block_size,uint8_t partition);
+int configure_root_file_system(uint8_t fs_type,
+                              uint32_t superblock_loc,
+                              uint32_t desc_table,
+                              uint32_t block_size,
+                              uint8_t partition);
 
 
 
@@ -106,6 +110,12 @@ int mount_custom_fs(uint8_t partition);
  * and prints it 
  */
 void load_and_print_superblock();
+
+/**
+ * @brief Loads the current mounted root file system' block desc
+ * block and prints it 
+ */
+void load_and_print_desc_table();
 
 /**
  * @brief saves all of the current 

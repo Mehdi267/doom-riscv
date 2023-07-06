@@ -36,6 +36,7 @@ int mount_custom_fs(uint8_t partition){
   return configure_root_file_system(
     EXT2_PARTITION,//partition type number
     SUPER_BLOCK_LOC,//super block location
+    BLOCK_TABLE_BLOCK,
     EXT2_BLOCK_SIZE,  partition);
 }
 
@@ -49,6 +50,7 @@ int mount_root_file_system(){
       return configure_root_file_system(
         EXT2_PARTITION,//partition type number
         SUPER_BLOCK_LOC,//super block location
+        BLOCK_TABLE_BLOCK,
         EXT2_BLOCK_SIZE,
         i
       );
@@ -67,11 +69,22 @@ void load_and_print_superblock(){
   print_super_block((super_block*) data);
 }
 
+void load_and_print_desc_table(){
+  if (root_file_system == 0){
+    return;
+  }
+  char* data = disk_read_block(
+          root_file_system->desc_table_loc);
+  printBlockGroupDescriptor((BlockGroupDescriptor*) data);
+}
+
+
 file_system_t* root_file_system;
 
 int configure_root_file_system(
   uint8_t fs_type,
   uint32_t superblock_loc,
+  uint32_t desc_table_loc,
   uint32_t block_size,
   uint8_t partition
   ){
@@ -88,6 +101,7 @@ int configure_root_file_system(
   }
   root_file_system->fs_type = fs_type; 
   root_file_system->superblock_loc = superblock_loc; 
+  root_file_system->desc_table_loc = desc_table_loc; 
   root_file_system->block_size = block_size; 
   root_file_system->partition = partition; 
   return 0;

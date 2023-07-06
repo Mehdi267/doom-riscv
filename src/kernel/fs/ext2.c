@@ -34,18 +34,21 @@
   The remaining space is reserved for data blocks.
 */
 int configure_ext2_file_system(uint8_t partition){
-  uint32_t start = global_mbr->partitionTable[partition].startLBA;
+  if (global_mbr == 0){
+    return -1;
+  }
   uint32_t size = global_mbr->partitionTable[partition].sizeLBA;
   configure_root_file_system(
     EXT2_PARTITION,//partition type number
     SUPER_BLOCK_LOC,//super block location
+    BLOCK_TABLE_BLOCK,
     EXT2_BLOCK_SIZE,
     partition
   );
-  save_boot_record(start+BOOT_RECORD_LOC);
-  PRINT_GREEN("Boot record saved");
-  superblock_conf(start+SUPER_BLOCK_LOC, size); 
-  PRINT_GREEN("Super block saved");
+  save_boot_record(BOOT_RECORD_LOC);
+  PRINT_GREEN("Boot record saved\n");
+  superblock_conf(SUPER_BLOCK_LOC, size); 
+  PRINT_GREEN("Super block saved\n");
   return 0;
 }
 
@@ -59,10 +62,11 @@ int save_boot_record(uint32_t boot_loc){
 
 int superblock_conf(uint32_t block_loc, 
                     uint32_t disk_size){
-
+  PRINT_GREEN("Configuring super block\n");
   //The number of inodes is equal to 10% of the 
   //size of the partition
-  uint32_t number_of_inodes = (disk_size/10)/INODE_SIZE;
+  int blk_ratio = root_file_system->block_size/BLOCK_SIZE;
+  uint32_t number_of_inodes = (disk_size*BLOCK_SIZE/10)/INODE_SIZE;
   uint32_t nb_blocks_inodes = (number_of_inodes*INODE_SIZE)
                                   /root_file_system->block_size;
   if ((nb_blocks_inodes*root_file_system->block_size 
@@ -72,12 +76,21 @@ int superblock_conf(uint32_t block_loc,
   }
   uint32_t nb_block_inode_bitmap = nb_blocks_inodes/ 
                                   root_file_system->block_size;
-  uint32_t nb_block_data_bitmap = (disk_size 
+  if (nb_blocks_inodes%root_file_system->block_size > 0)
+  {nb_block_inode_bitmap++;}
+  uint32_t nb_block_data_bitmap = (disk_size/blk_ratio
                                   - RESERVED_BLOCKS //Root and super user blocks 
                                   - nb_block_inode_bitmap
                                   - nb_blocks_inodes)
                                   /root_file_system->block_size;
-  uint32_t nb_blocks_data = disk_size - (
+  if ((disk_size/blk_ratio
+      - RESERVED_BLOCKS 
+      - nb_block_inode_bitmap
+      - nb_blocks_inodes)
+      %root_file_system->block_size>0){
+    nb_block_data_bitmap++;
+  }
+  uint32_t nb_blocks_data = disk_size/blk_ratio - (
                               nb_block_data_bitmap
                             + nb_blocks_inodes
                             + nb_block_inode_bitmap
@@ -88,6 +101,7 @@ int superblock_conf(uint32_t block_loc,
   super.s_blocks_count = nb_blocks_data;                
   super.s_r_blocks_count = 0; //not used
   super.s_free_blocks_count = nb_blocks_data;
+  super.s_free_inodes_count = number_of_inodes;
   super.s_first_data_block = SUPER_BLOCK_LOC;
   super.s_log_block_size = 2;
   super.s_log_frag_size = 0;//Not used
@@ -104,7 +118,7 @@ int superblock_conf(uint32_t block_loc,
   super.s_errors = EXT2_ERRORS_CONTINUE;
   super.s_minor_rev_level = 0;//not used
   super.s_lastcheck = 0;//not used
-  super.s_checkinterval =0;//not used
+  super.s_checkinterval = 0;//not used
   super.s_creator_os = EXT2_OS_LINUX; //posix linux ish
 
   super.s_rev_level = 0;// Not used
@@ -117,7 +131,23 @@ int superblock_conf(uint32_t block_loc,
   super.s_feature_compat = 0; // none of the features that we described are being used
   super.s_feature_incompat = 0xffff; // Incompatible feature set flags
   super.s_uuid[0] = 22; // random value
-  return save_fs_block((char*)&super, sizeof(super_block), block_loc);
+  if(save_fs_block((char*)&super, sizeof(super_block), block_loc)<0){
+    PRINT_RED("fs superblock failed to save\n");
+    return -1;
+  }
+  BlockGroupDescriptor blk_des;
+  blk_des.bg_block_bitmap = BLOCK_TABLE_BLOCK+1;
+  blk_des.bg_inode_bitmap = blk_des.bg_block_bitmap+
+                            nb_block_data_bitmap;
+  blk_des.bg_inode_table = blk_des.bg_inode_bitmap + 1;  
+  blk_des.bg_free_blocks_count = nb_blocks_data;
+  blk_des.bg_free_inodes_count = nb_blocks_inodes;
+  blk_des.bg_used_dirs_count = 0;
+  if(save_fs_block((char*)&blk_des, sizeof(BlockGroupDescriptor), block_loc+1)<0){
+    PRINT_RED("fs superblock failed to save\n");
+    return -1;
+  }
+  return 0;
 }
 
 
@@ -126,6 +156,7 @@ void print_super_block(super_block* sb){
   if (sb == 0){
     return;
   }
+  printf("-----------super block------------\n");
   printf("s_inodes_count = %d\n", sb->s_inodes_count);                // Total number of inodes
   printf("s_blocks_count = %d\n", sb->s_blocks_count);                // Total number of blocks
   printf("s_r_blocks_count = %d\n", sb->s_r_blocks_count);              // Number of reserved blocks for super use
@@ -159,6 +190,25 @@ void print_super_block(super_block* sb){
   printf("s_feature_compat = %d\n", sb->s_feature_compat);              // Compatible feature set flags
   printf("s_feature_incompat = %d\n", sb->s_feature_incompat);            // Incompatible feature set flags
   printf("s_feature_ro_compat = %d\n", sb->s_feature_ro_compat);           // Readonly-compatible feature set flags
+  printf("-----------super block end------------\n");
 }
 
-
+void printBlockGroupDescriptor(BlockGroupDescriptor* bgd) {
+  if (bgd == 0){
+    return;
+  }
+  printf("----------Block Group Descriptor:----\n");
+  printf("Block Bitmap: %u\n", bgd->bg_block_bitmap);
+  printf("Inode Bitmap: %u\n", bgd->bg_inode_bitmap);
+  printf("Inode Table: %u\n", bgd->bg_inode_table);
+  printf("Free Blocks Count: %hu\n", bgd->bg_free_blocks_count);
+  printf("Free Inodes Count: %hu\n", bgd->bg_free_inodes_count);
+  printf("Used Directories Count: %hu\n", bgd->bg_used_dirs_count);
+  printf("Padding: %hu\n", bgd->bg_pad);
+  printf("Reserved: ");
+  for (int i = 0; i < 12; i++) {
+    printf("%u ", bgd->bg_reserved[i]);
+  }
+  printf("\n----------Block Group end:----\n");
+  printf("\n");
+}

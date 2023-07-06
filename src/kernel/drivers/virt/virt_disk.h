@@ -158,11 +158,12 @@ static struct virt_queue {
   struct virtq_used used;        /**< A ring of used descriptor heads with free-running index */
 } block_q;
 
+
 //######################################################
 //##   disk management and operations ##
 //######################################################
 
-static struct disk_management {
+struct disk_management {
   //Indicates how many descriptors 
   //have been checked in the used locations, 
   //this value is used for our personal record 
