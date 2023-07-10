@@ -7,6 +7,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "../logger.h"
+#include "disk_buffer.h"
 
 //This value represents the global mdr that 
 //will be used the in the program
@@ -34,6 +35,7 @@ int find_mbr(){
 }
 
 int save_global_mbr(){
+  print_fs_no_arg("[df]save_global_mbr method was called\n");
   if (global_mbr == 0){
     print_fs_no_arg("could not save mbr\n");
     return -1;
@@ -42,16 +44,18 @@ int save_global_mbr(){
   disk_operation_mbr.blockNumber = MBR_BLOCK;
   disk_operation_mbr.type = WRITE;
   disk_operation_mbr.data = (char*) global_mbr;
-  // Perform disk read operation on the block taht contains the mbr
+  // Perform disk read operation on the block that contains the mbr
   if (disk_dev->write_disk(&disk_operation_mbr)<0){
     print_fs_no_arg("mbr was not saved succefully\n");
     return -1;
   }
+  PRINT_GREEN("mbr saved succefully\n");
   print_fs_no_arg("mbr saved succefully\n");
   return 0;
 }
 
 int set_up_mbr(){ 
+  print_fs_no_arg("[df]set_up_mbr method was called\n");
   if (global_mbr != 0){
     release_frame(global_mbr);
   }
@@ -60,22 +64,28 @@ int set_up_mbr(){
   if (global_mbr == 0){
     return -1;
   }
+  sync();
+  free_cache_list();
   memset(global_mbr, 0, 512);
   global_mbr->signature = MBR_SIGNATURE;
-  if (setup_test_partition() < 0){
+  if (setup_test_partition(EXT2_PARTITION) < 0){
     return -1;
   }
+  print_fs_no_arg("[df]set_up_mbr method was finished\n");
   return save_global_mbr();
 }
 
-int setup_test_partition(){
+int setup_test_partition(uint8_t partition_type){
   if(global_mbr ==0){
     return -1;
   }
   global_mbr->partitionTable[0].status = ACTIVE_PARTITION;
-  global_mbr->partitionTable[0].type = TEST_PARTITION;//test partition
+  global_mbr->partitionTable[0].type = partition_type;//test partition
   global_mbr->partitionTable[0].startLBA = 2;
-  global_mbr->partitionTable[0].sizeLBA = 32;
+  global_mbr->partitionTable[0].sizeLBA = TEST_EXT2_PARTITION_SIZE;
+  if (partition_type == EXT2_PARTITION){
+      configure_ext2_file_system(0);
+  }
   return 0;
 }
 
@@ -140,7 +150,7 @@ void print_mbr_details() {
     if (global_mbr->partitionTable[i].status != 0){
       printf("Start LBA: %u\n", global_mbr->partitionTable[i].startLBA);
       printf("Size (in LBA): %u\n", global_mbr->partitionTable[i].sizeLBA);
-      printf("Type: %d\n", global_mbr->partitionTable[i].type);
+      printf("Type: %s\n", global_mbr->partitionTable[i].type == EXT2_PARTITION ? "EXT2" : "TEST");
       printf("-------------------\n");
     }
   }
@@ -227,7 +237,7 @@ bool is_segment_in_free_space(uint32_t start, uint32_t size, uint32_t* free_spac
 
 bool free_space(uint32_t start, uint32_t size){
   if (start + size > disk_dev->get_disk_size()){
-    printf("Space is too large");
+    PRINT_RED("Space is too large\n");
     return false;
   }
   uint32_t* occu_places = find_occupied_space();
@@ -305,9 +315,20 @@ int create_partition(uint32_t start, uint32_t size, uint8_t partition_type){
   return -1;
 }
 
+int get_partition_size(uint8_t partiton_number){
+  if (!(0 <= partiton_number && partiton_number < NB_PARTITIONS)){
+    PRINT_RED("partition number must be between 1 and 4\n");
+    return -1;
+  }
+  if (global_mbr == 0 ){
+    return 0;
+  }
+  return global_mbr->partitionTable[partiton_number].sizeLBA;
+}
+
 int delete_partition(uint8_t partiton_number){
   if (!(1 < partiton_number && partiton_number <= NB_PARTITIONS)){
-    PRINT_RED("partition number must be between 1 and 4");
+    PRINT_RED("partition number must be between 1 and 4\n");
     return -1;
   }
   if (global_mbr == 0){

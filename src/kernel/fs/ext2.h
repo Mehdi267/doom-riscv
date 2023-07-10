@@ -33,6 +33,7 @@
 //this is the value of the first inode that we can use
 //The first 10 inodes are reserved for special use
 #define EXT2_GOOD_OLD_FIRST_INO 11
+
 /**
  * @brief Saves the master boot record into the disk
  * @param boot_loc the location as to where we can save the boot record
@@ -50,14 +51,72 @@ int save_boot_record(uint32_t boot_loc);
 int superblock_conf(uint32_t block_loc, uint32_t disk_size);
 
 /**
+ * @brief Allocates in the inode bit map the reserved inodes
+ * ids
+ * @return int function status 
+ */
+int configure_reserved_inodes();
+
+/**
+ * @brief Allocates in the data bit map the reserved data blocks
+ * which is only the first data block now(it is reserved 
+ * because i might need it later)
+ * @return int function status 
+ */
+int configure_reserved_data();
+
+/**
+ * @brief configures the root inode in ext2 file system
+ * @return int function status
+ */
+int configure_root_inode();
+
+/**
  * @brief prints the super block given as funtion argument
  * @param super the super block
  */
 void print_super_block(super_block* super);
 
 /**
- * @brief Prints BlockGroupDescriptor details 
- * @param bgd the BlockGroupDescriptor data
+ * @brief Prints block_group_descriptor details 
+ * @param bgd the block_group_descriptor data
  */
-void printBlockGroupDescriptor(BlockGroupDescriptor* bgd);
-#endif
+void printblock_group_descriptor(block_group_descriptor* bgd);
+
+/**
+ * @brief Get the super block.
+ *
+ * This function returns a pointer to the super block.
+ *
+ * @return A pointer to the super block.
+ */
+super_block* get_super_block();
+
+/**
+ * @brief Get the block group descriptor table.
+ *
+ * This function returns a pointer to the block group descriptor table.
+ *
+ * @return A pointer to the block group descriptor table.
+ */
+block_group_descriptor* get_desc_table();
+
+/**
+ * @brief Save the super block.
+ *
+ * This function saves the super block to the disk.
+ *
+ * @return 0 if successful, -1 if an error occurred.
+ */
+int save_super_block();
+
+/**
+ * @brief Save the block group descriptor table.
+ *
+ * This function saves the block group descriptor table to the disk.
+ *
+ * @return 0 if successful, -1 if an error occurred.
+ */
+int save_blk_desc_table();
+
+#endif /* INODE_H */

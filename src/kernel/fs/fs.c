@@ -8,6 +8,10 @@
 #include "drivers/disk_device.h" //to do disk operations
 #include "ext2.h"
 #include "super_block.h"
+#include "hash.h"
+#include "logger.h"
+file_system_t* root_file_system;
+
 
 int set_up_file_system() {
   printf("Setting up file system\n");
@@ -62,6 +66,7 @@ int mount_root_file_system(){
 
 void load_and_print_superblock(){
   if (root_file_system == 0){
+    PRINT_RED("[print]No super block was found\n");
     return;
   }
   char* data = disk_read_block(
@@ -71,15 +76,21 @@ void load_and_print_superblock(){
 
 void load_and_print_desc_table(){
   if (root_file_system == 0){
+    PRINT_RED("[print]No desc block was found\n");
     return;
   }
   char* data = disk_read_block(
           root_file_system->desc_table_loc);
-  printBlockGroupDescriptor((BlockGroupDescriptor*) data);
+  printblock_group_descriptor((block_group_descriptor*) data);
 }
 
+void print_fs_details(){
+  sync();
+  free_cache_list();
+  load_and_print_superblock();
+  load_and_print_desc_table();
+}
 
-file_system_t* root_file_system;
 
 int configure_root_file_system(
   uint8_t fs_type,
@@ -88,14 +99,27 @@ int configure_root_file_system(
   uint32_t block_size,
   uint8_t partition
   ){
+  print_fs_no_arg("[fs]configure_root_file_system was called\n");
   if (root_file_system == 0){
     root_file_system = (file_system_t*)
                       malloc(sizeof(file_system_t));
     if (root_file_system == 0){
       //No space
+      PRINT_RED("No space when alloc root fs");
       return -1;
     }
   }else{
+    print_fs_no_arg("[fs]root_file_system was found\n");
+    if (root_file_system->super_block != 0){
+      free(root_file_system->super_block);
+    } 
+    if (root_file_system->desc_table != 0){
+      free(root_file_system->desc_table);
+    }
+    if (root_file_system->inode_hash_table != 0){
+      hash_destroy(root_file_system->inode_hash_table);
+    }
+    free_inode_list(root_file_system->inode_list);
     sync();
     free_cache_list();
   }
@@ -103,7 +127,15 @@ int configure_root_file_system(
   root_file_system->superblock_loc = superblock_loc; 
   root_file_system->desc_table_loc = desc_table_loc; 
   root_file_system->block_size = block_size; 
-  root_file_system->partition = partition; 
+  root_file_system->partition = partition;
+  root_file_system->super_block = 0; 
+  root_file_system->desc_table = 0;
+  root_file_system->inode_list = 0;
+  root_file_system->inode_hash_table = (hash_t *)malloc(sizeof(hash_t));
+  if (root_file_system->inode_hash_table == 0){
+    return -1;
+  }
+  hash_init_direct(root_file_system->inode_hash_table);
   return 0;
 }
 

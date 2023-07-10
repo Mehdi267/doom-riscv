@@ -65,6 +65,7 @@
 //File system sys calls
 #define SYSC_sync               47
 #define SYSC_clear_disk_cache   48
+#define SYSC_print_fs_details   49
 
 #define NB_SYSCALLS             50
 

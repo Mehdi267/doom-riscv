@@ -62,7 +62,7 @@ c_elt* look_up_c_elt(uint32_t disk_block_number){
   c_elt* global_cache_iter = global_cache_buf;
   while(global_cache_iter != 0){
     if (global_cache_iter->blockNumber == disk_block_number){
-      debug_print_v_fs("[df]element blk %d was found in cache",
+      debug_print_v_fs("[df]element blk %d was found in cache\n",
              disk_block_number);
       return global_cache_iter;
     }
@@ -76,7 +76,13 @@ c_elt* fetch_block(uint32_t disk_block_number){
   if (elt == 0){
     return NULL;
   }
-  debug_print_v_fs("[df]###fetching relat block %d from memory \n", 
+  if (disk_block_number*
+      root_file_system->block_size/
+      BLOCK_SIZE > get_partition_size(
+      root_file_system->partition)){
+    return 0;
+  }
+  debug_print_v_fs("[df]###fetching relative block %d from disk \n", 
               disk_block_number);
   elt->blockNumber = disk_block_number;
   disk_op disk_fetch;
@@ -84,7 +90,7 @@ c_elt* fetch_block(uint32_t disk_block_number){
   for (int i = 0; i<blk_ratio; i++){
     disk_fetch.blockNumber = global_mbr->partitionTable[root_file_system->partition]
       .startLBA+disk_block_number*blk_ratio+i;
-    debug_print_v_fs("[df]Reading disk block %d from memory \n", 
+    debug_print_v_fs("[df]Reading disk block %d from disk \n", 
               disk_fetch.blockNumber);
     disk_fetch.type = READ;  
     disk_fetch.data = elt->data + i*BLOCK_SIZE;
@@ -116,7 +122,7 @@ int sync_elt(c_elt* cache_elt){
   for (int i = 0; i<blk_ratio; i++){
     disk_wr.blockNumber = global_mbr->partitionTable[root_file_system->partition]
             .startLBA+cache_elt->blockNumber*blk_ratio+i;
-    debug_print_v_fs("[df]Saving disk block %d into memory\n", 
+    debug_print_v_fs("[df]Saving disk block %d into disk\n", 
               disk_wr.blockNumber);
     disk_wr.type = WRITE;  
     disk_wr.data = cache_elt->data + i*BLOCK_SIZE;
@@ -130,8 +136,6 @@ int sync_elt(c_elt* cache_elt){
 }
 
 int sync(){
-  load_and_print_superblock();
-  load_and_print_desc_table();
   print_fs_no_arg("[df]sync method was called\n");
   if (global_cache_buf ==0){
     return 0;
@@ -150,7 +154,8 @@ int sync(){
 }
 
 int free_cache_list(){
-  if (global_cache_buf ==0){
+  print_fs_no_arg("[df]free_cache_list method was called\n");
+  if (global_cache_buf == 0){
     return 0;
   }
   c_elt* buf_iter = global_cache_buf;
@@ -187,7 +192,7 @@ int save_fs_block(char* data,
   }
   debug_print_v_fs("[df]Saving fs block %d into memory \n", relative_b_nb);
   if (write_block(relative_b_nb, data,
-      data_size, WRITE_THROUGH)<0){
+      data_size, WRITE_BACK)<0){
     printf("A save operation failed");
     return -1;
   }

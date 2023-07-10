@@ -1,5 +1,8 @@
 #include "stdint.h"
+#include "super_block.h"
+#include "hash.h"
 #include <stdint.h>
+#include "inode.h"
 
 #ifndef FS_H 
 #define FS_H
@@ -12,6 +15,10 @@ typedef struct file_system_struct {
   uint32_t block_size;
   uint32_t fs_size;
   uint8_t partition;
+  super_block* super_block;
+  block_group_descriptor* desc_table;
+  hash_t* inode_hash_table;
+  inode_elt* inode_list;
 } file_system_t;
 
 /**
@@ -130,5 +137,8 @@ extern int sync();
  * @return int 
  */
 extern int free_cache_list();
+
+
+extern void print_fs_details();
 
 #endif

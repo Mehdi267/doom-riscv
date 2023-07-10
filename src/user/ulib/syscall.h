@@ -103,5 +103,5 @@ extern int reset_disk();
 
 extern int sync();
 extern int clear_disk_cache();
-
+extern void print_fs_details();
 #endif

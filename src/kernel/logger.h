@@ -156,7 +156,7 @@
  * @brief the following macro are used to debug the  disk driver 
  * virt qemu machine 
  */
-#define DEBUG_VIRT_DISK_LEVEL 1 //Indicates if debug type is active
+#define DEBUG_VIRT_DISK_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_v_disk(fmt, ...) \
     do {if (DEBUG_VIRT_DISK_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \

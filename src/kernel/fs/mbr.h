@@ -9,7 +9,8 @@ The MBR is utilized here to determine the layout of disk(and entering the kernel
 Although this implementation does not mirror the exact behavior of a real MBR,
 we will use it to designate the location of the file system.
 
-A reserved partition of 32 sectors will be allocated for testing purposes,
+A reserved partition of size equal to the variable TEST_EXT2_PARTITION_SIZE sectors will 
+be allocated for testing purposes,
 and three additional partitions can be utilized to host different file systems.
 By default, we will mount the second partition, but we may introduce functionality
 to detect and utilize other partitions.
@@ -26,6 +27,7 @@ to detect and utilize other partitions.
 
 #define TEST_PARTITION 0x01 
 #define EXT2_PARTITION 0x83
+#define TEST_EXT2_PARTITION_SIZE 1000
 #define MIN_EXT2_SIZE 100 // the limit is added in order
                           // to make sure that the ex1t file system 
                           // can have a basic number of blocks
@@ -75,7 +77,7 @@ int set_up_mbr();
  * @brief Set up a test partition in the global MBR.
  * @return 0 if the test partition is set up successfully, -1 if the global MBR is not initialized.
  */
-int setup_test_partition();
+int setup_test_partition(uint8_t partition_type);
 
 /**
  * @brief Prints mbr details
@@ -137,6 +139,14 @@ uint32_t* find_occupied_space();
  */
 bool free_space(uint32_t start, uint32_t size);
 
+
+/**
+ * @brief Get the partition size of the partition number
+ * given as function argument
+ * @param partiton_number 
+ * @return int 
+ */
+int get_partition_size(uint8_t partiton_number);
 
 
 #endif  
