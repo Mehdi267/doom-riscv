@@ -119,4 +119,17 @@ int save_super_block();
  */
 int save_blk_desc_table();
 
+/**
+ * @brief Loads the super block from disk
+ * and saves it the root_file_system global variable
+ * @return int funtion status 
+ */
+int config_super_block();
+
+/**
+ * @brief Loads the block group descriptor table from disk
+ * and saves it the root_file_system global variable
+ * @return int funtion status 
+ */
+int config_blk_desc_table();
 #endif /* INODE_H */

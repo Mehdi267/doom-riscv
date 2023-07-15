@@ -35,7 +35,7 @@
   The remaining space is reserved for data blocks.
 */
 int configure_ext2_file_system(uint8_t partition){
-  print_fs_no_arg("[ext2]configure_ext2_file_system method was called\n");
+  print_fs_no_arg("[ext2]conf ext2 method was called\n");
   if (global_mbr == 0){
     print_fs_no_arg("[ext2] global mbr not found\n");
     return -1;
@@ -48,10 +48,10 @@ int configure_ext2_file_system(uint8_t partition){
     EXT2_BLOCK_SIZE,
     partition
   )<0){
-    PRINT_RED("[ext2]configure_root_file_system FAILED\n");
+    PRINT_RED("[ext2]conf root fs FAILED\n");
     return -1;
   }
-  PRINT_GREEN("[ext2]configure_root_file_system success\n");
+  PRINT_GREEN("[ext2]conf root fs success\n");
   if (save_boot_record(BOOT_RECORD_LOC)<0){
     PRINT_RED("[EXT2] save_boot_record failed\n");
     return -1;
@@ -71,14 +71,17 @@ int configure_ext2_file_system(uint8_t partition){
     PRINT_RED("[EXT2] configure_reserved_data failed\n");
     return -1;
   }
+  print_fs_details();
   if (configure_root_inode()<0){
     PRINT_RED("[EXT2] configure_root_inode failed\n");
     return -1;
   }
   PRINT_GREEN("Root directory was built\n");
-  print_fs_no_arg("[ext2]configure_ext2_file_system finished\n");
+  print_fs_no_arg("[ext2]conf finished\n");
   return 0;
 }
+
+
 
 int configure_reserved_data(){
   block_group_descriptor* desc_table = get_desc_table();
@@ -95,7 +98,7 @@ int configure_reserved_inodes(){
   uint32_t inode_bitmap_b = desc_table->bg_inode_bitmap;
   char* block_inode = disk_read_block(inode_bitmap_b);
   *(block_inode) = 0xff;
-  *(block_inode+1) = 0x3;
+  *(block_inode+1) = 0x0f;
   return save_fs_block(block_inode,
            root_file_system->block_size, 
            inode_bitmap_b);
@@ -119,7 +122,7 @@ int configure_root_inode(){
   inode->i_file_acl = 0;         
   inode->i_dir_acl = 0;          
   inode->i_faddr = 0;
-  if (put_inode(inode, 0) < 0){
+  if (put_inode(inode, 0, RELEASE_INODE) < 0){
     return -1;
   }
   block_group_descriptor* desc_table = 
@@ -183,7 +186,7 @@ int superblock_conf(uint32_t block_loc,
   debug_print_v_fs("[ext2]super->s_free_blocks_count = %d\n", super->s_free_blocks_count);
   super->s_free_inodes_count = number_of_inodes;
   debug_print_v_fs("[ext2]super->s_free_inodes_count = %d\n", super->s_free_inodes_count);
-  super->s_first_data_block = SUPER_BLOCK_LOC;
+  super->s_first_data_block = disk_size/blk_ratio-nb_blocks_data;
   debug_print_v_fs("[ext2]super->s_first_data_block = %d\n", super->s_first_data_block);
   super->s_log_block_size = 2;
   debug_print_v_fs("[ext2]super->s_log_block_size = %d\n", super->s_log_block_size);
@@ -262,12 +265,22 @@ int superblock_conf(uint32_t block_loc,
   if(save_fs_block((char*)blk_des,
      sizeof(block_group_descriptor),
       block_loc+1)<0){
-    PRINT_RED("fs superblock failed to save\n");
+    PRINT_RED("fs block_group_descriptor failed to save\n");
     return -1;
+  }
+  char empty_block[root_file_system->block_size];
+  memset(empty_block,0,root_file_system->block_size);
+  for (int blk=blk_des->bg_block_bitmap;
+        blk<blk_des->bg_inode_table; blk++){
+    if(save_fs_block((char*)empty_block,
+      root_file_system->block_size,
+        blk)<0){
+      PRINT_RED("Failed to save a bit map\n");
+      return -1;
+    }
   }
   return 0;
 }
-
 
 
 super_block* get_super_block(){
@@ -284,25 +297,73 @@ block_group_descriptor* get_desc_table(){
   return root_file_system->desc_table;
 }
 
+
+
+int config_super_block(){
+  print_fs_no_arg("\033[0;32m--conf super block--\033[0;0m\n");
+  if (root_file_system != 0&& root_file_system->super_block == 0){
+    char* block = 
+        disk_read_block(root_file_system->superblock_loc);
+    if (block == 0){
+      return -1;
+    }
+    root_file_system->super_block = (super_block*) 
+        malloc(sizeof(super_block));
+    if (root_file_system->super_block == 0){
+      return -1;
+    }
+    memcpy(root_file_system->super_block, 
+      block, sizeof(super_block));
+    print_fs_no_arg("\033[0;32m--conf super block end--\033[0m\n");
+    return 0;
+  }
+  return -1;
+}
+
+int config_blk_desc_table(){
+  print_fs_no_arg("\033[0;32m--conf desc table--\n\033[0;0m");
+  if (root_file_system != 0&& root_file_system->desc_table == 0){
+    char* block = 
+          disk_read_block(root_file_system->desc_table_loc);
+    if (block == 0){
+      return -1;
+    }
+    root_file_system->desc_table = (block_group_descriptor*) 
+        malloc(sizeof(block_group_descriptor));
+    if (root_file_system->super_block == 0){
+      return -1;
+    }
+    memcpy(root_file_system->desc_table, 
+        block, sizeof(block_group_descriptor));
+    print_fs_no_arg("\033[0;32m--conf desc table end--\033[0;0m\n");
+    return 0;
+  }
+  return -1;
+}
+
 int save_super_block(){
+  print_fs_no_arg("\033[0;33m--saving super block--\033[0;0m\n");
   if (root_file_system->super_block !=0){
-    if(save_fs_block((char*)&root_file_system->super_block,
+    if(save_fs_block((char*)root_file_system->super_block,
         sizeof(super_block),
         root_file_system->superblock_loc)<0){
       return -1;
     }
+    print_fs_no_arg("\033[0;33m--saving super block end--\033[0m\n");
     return 0;
   }
   return -1;
 }
 
 int save_blk_desc_table(){
+    print_fs_no_arg("\033[0;35m--saving desc table--\033[0;0m\n");
   if (root_file_system->desc_table !=0){
-    if(save_fs_block((char*)&root_file_system->desc_table,
+    if(save_fs_block((char*)root_file_system->desc_table,
         sizeof(block_group_descriptor),
         root_file_system->desc_table_loc)<0){
       return -1;
     }
+    print_fs_no_arg("\033[0;35m--saving desc table end--\033[0;0m\n");
     return 0;
   }
   return -1;

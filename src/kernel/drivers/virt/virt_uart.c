@@ -47,19 +47,18 @@ static void ns16550a_init()
   uart[UART_IER] = 1;
 }
 
-static int ns16550a_getchar()
-{
-    if (uart[UART_LSR] & UART_LSR_DA) {
-        return uart[UART_RBR];
-    } else {
-        return -1;
-    }
+static int ns16550a_getchar(){
+  if (uart[UART_LSR] & UART_LSR_DA) {
+      return uart[UART_RBR];
+  } else {
+      return -1;
+  }
 }
 
 static int ns16550a_putchar(int ch)
 {
-    while ((uart[UART_LSR] & UART_LSR_RI) == 0);
-    return uart[UART_THR] = ch & 0xff;
+  // while ((uart[UART_LSR] & UART_LSR_RI) == 0);
+  return uart[UART_THR] = ch & 0xff;
 }
 
 console_device_t console_ns16550a = {

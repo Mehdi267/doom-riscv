@@ -17,6 +17,12 @@ void test_find_free_space();
  */
 void test_is_segment_in_free_space();
 
+/**
+ * @brief Test inodes and many other things
+ * check the file header for more details
+ */
+void test_ext2_fs();
+
 #endif
 
 

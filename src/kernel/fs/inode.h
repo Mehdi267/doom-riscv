@@ -78,7 +78,7 @@ typedef struct {
 #define L_DIRECT 12 //size limits
 #define NB_ONE_INDIRECT_BLOCKS 1
 #define INDIRECT_BLOCKS_INDEX 13
-#define L_ONE_INDIRECT 524
+#define L_ONE_INDIRECT 525
 #define NB_DOUBLE_INDIRECT_BLOCKS 1
 #define L_DOUBLE_INDIRECT 262668
 #define NB_TRIPLE_INDIRECT_BLOCKS 1 
@@ -95,6 +95,7 @@ typedef enum file_type{
   EXT2_FT_FIFO = 5, //Buffer File
   EXT2_FT_SOCK = 6, //Socket File
   EXT2_FT_SYMLINK = 7, //Symbolic Link
+  EXT2_FT_FREE = 8, //Place holder 
 } file_t;
 
 typedef struct Linked_directory_entry_basic {
@@ -125,6 +126,11 @@ typedef struct Linked_directory_entry {
  */
 inode_t* get_inode(uint32_t inode_number);
 
+typedef enum put_operation_type{
+  RELEASE_INODE = 0, 
+  SAVE_INODE = 1, 
+} put_op;
+
 /**
  * @brief Return an i-node that is no longer needed.
  *
@@ -135,7 +141,12 @@ inode_t* get_inode(uint32_t inode_number);
  * is in the inode table
  * @returns int operation status 
  */
-int put_inode(inode_t* inode, uint32_t inode_number);
+int put_inode(inode_t* inode, uint32_t inode_number, put_op op_type);
+
+
+
+
+
 
 /**
  * @brief Allocate a new i-node for a new file.
@@ -152,8 +163,10 @@ inode_t* alloc_inode();
  * This function releases an i-node when a file is removed, making it available for reuse.
  *
  * @param[in] inode The i-node to be released.
+ * @param[in] inode_number The number of 
+ * the i-node to be released.
  */
-void free_inode(uint32_t inode_number);
+int free_inode(inode_t* inode, uint32_t inode_number);
 
 /**
  * @brief Duplicate an i-node.
@@ -190,14 +203,24 @@ inode_elt* get_inode_t_elt(inode_t* inode);
 /**
  * @brief Get a empty data block for the data region of the 
  * file system
- * @return uint32_t the id of the dat block
+ * @return uint32_t the id of the data block
  */
 uint32_t get_data_block();
 
 /**
- * @brief Free up the data block in the data bit map
- * @param data_block the id of the data block
- * @return int function status  
+ * @brief Get the inode number from the inode that 
+ * was provided in the function argument
+ * @param inode inode for which would the inode number
+ * @return uint32_t inode number
+ */
+uint32_t get_inode_number(inode_t* inode);
+
+/**
+ * @brief deallocate the block with the number equal
+ * to the block_number given in the parameter
+ * @param block_number the block number 
+ * that we would like to free
+ * @return int function status 
  */
 int free_data_block(uint32_t data_block);
 
@@ -256,4 +279,62 @@ int save_dir_entry( dir_entry* entry,
  * @return int funcion status
  */
 int free_inode_list(inode_elt* list);
+
+/**
+ * @brief Print all of the files that are present in 
+ * the directory inode that was given as a function argument
+ * @param dir the directory inode
+ */
+void print_dir_list(inode_t* dir);
+
+/**
+ * @brief prints basic entry with no filename
+ * @param entry 
+ */
+void print_dir_entry_basic(dir_entry_basic* entry);
+
+/**
+ * @brief prints entry with filename
+ * @param entry 
+ */
+void print_dir_entry(dir_entry_basic* entry);
+
+/**
+ * @brief Prints the dir entry object with the filename
+ * printed from the pointer;
+ * @param entry 
+ */
+void print_dir_entry_obj(dir_entry* entry);
+
+/**
+ * @brief Prints the current inode cache details
+ * @param list inode list
+ */
+void print_cache_details(inode_elt* list);
+
+/**
+ * @brief Looks for an inode in the directory inode 
+ * given as function argument
+ * @param dir the directory that contains the inodes
+ * @param name name of the inode that we are looking for
+ * @param name_len length of the name
+ * @return uint32_t 0 of the inode was not found
+ * and the inode number if it was found
+ */
+uint32_t look_for_inode_dir(inode_t* dir, 
+        char* name,
+        uint32_t name_len);
+
+/**
+ * @brief Removes the inode for the direcotry 
+ * inode that has the name given as argument 
+ * @param dir the directory inode
+ * @param name the name of the inode
+ * @param name_len the length of the name of the inode
+ * @return uint32_t status
+ */
+int remove_inode_dir(inode_t* dir, 
+        char* name,
+        uint32_t name_len);
+
 #endif

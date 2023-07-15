@@ -138,7 +138,18 @@ extern int sync();
  */
 extern int free_cache_list();
 
-
+/**
+ * @brief Print the super block 
+ * and the desc table block
+ */
 extern void print_fs_details();
+
+/**
+ * @brief Clears the test partition 
+ * and mounts it as the root file system
+ * this function will be called when we run tests 
+ * @return int function status
+ */
+extern int clear_and_mount_test_part();
 
 #endif

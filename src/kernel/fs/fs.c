@@ -10,8 +10,7 @@
 #include "super_block.h"
 #include "hash.h"
 #include "logger.h"
-file_system_t* root_file_system;
-
+file_system_t* root_file_system = 0;
 
 int set_up_file_system() {
   printf("Setting up file system\n");
@@ -26,6 +25,16 @@ int set_up_file_system() {
   return 0;
 }
 
+int clear_and_mount_test_part(){
+  if (setup_test_partition(EXT2_PARTITION)<-1){
+    return -1;
+  }
+  if (mount_custom_fs(0)){
+    return -1;
+  }
+  return 0;
+}
+
 int mount_custom_fs(uint8_t partition){
   if (!(partition >=1 && partition <= NB_PARTITIONS)){
     PRINT_RED("Partition number must be between 1 and NB_PARTITIONS(4)");
@@ -37,11 +46,20 @@ int mount_custom_fs(uint8_t partition){
   if (global_mbr->partitionTable[partition].type != EXT2_PARTITION){
     return -1;
   }
-  return configure_root_file_system(
+  if (configure_root_file_system(
     EXT2_PARTITION,//partition type number
     SUPER_BLOCK_LOC,//super block location
     BLOCK_TABLE_BLOCK,
-    EXT2_BLOCK_SIZE,  partition);
+    EXT2_BLOCK_SIZE,  partition)<0){
+      return -1;
+  }
+  if (config_super_block()){
+    return -1;
+  }
+  if (config_blk_desc_table()){
+    return -1;
+  }
+  return 0;
 }
 
 int mount_root_file_system(){
@@ -51,13 +69,21 @@ int mount_root_file_system(){
   for (int i = 0; i < NB_PARTITIONS; i++){
     if(global_mbr->partitionTable[i].type == EXT2_PARTITION){
       PRINT_GREEN("Ext2 file system was found\n");
-      return configure_root_file_system(
+      if (configure_root_file_system(
         EXT2_PARTITION,//partition type number
         SUPER_BLOCK_LOC,//super block location
         BLOCK_TABLE_BLOCK,
-        EXT2_BLOCK_SIZE,
-        i
-      );
+        EXT2_BLOCK_SIZE,  
+        i)<0){
+          return -1;
+      }
+      if (config_super_block()){
+        return -1;
+      }
+      if (config_blk_desc_table()){
+        return -1;
+      }
+      return 0;
     }
   }
   PRINT_RED("No ext2 file system was found\n");
@@ -85,8 +111,6 @@ void load_and_print_desc_table(){
 }
 
 void print_fs_details(){
-  sync();
-  free_cache_list();
   load_and_print_superblock();
   load_and_print_desc_table();
 }
@@ -136,6 +160,7 @@ int configure_root_file_system(
     return -1;
   }
   hash_init_direct(root_file_system->inode_hash_table);
+  PRINT_GREEN("File system was configured\n");
   return 0;
 }
 

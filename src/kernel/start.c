@@ -26,15 +26,29 @@ int kernel_start() {
     exit(-1);
   }
   #ifdef VIRTMACHINE
-    if (set_up_file_system() < 0) {
-      puts("error while setting up the file system");
-      exit(-1);
-    }
-    if (mount_root_file_system()< 0){
-      PRINT_RED("error while setting up the file system");
-    }
-    load_and_print_superblock();
-    load_and_print_desc_table();
+    #ifdef TESTING
+      if (set_up_file_system() < 0) {
+        puts("error while setting up the file system");
+        exit(-1);
+      }
+      if (clear_and_mount_test_part()< 0){
+        PRINT_RED("error clearing and mounting route directory");
+      }
+      print_fs_details();
+      test_ext2_fs();
+      print_fs_details();
+    #else 
+      if (set_up_file_system() < 0) {
+        puts("error while setting up the file system");
+        exit(-1);
+      }
+      if (mount_root_file_system()< 0){
+        PRINT_RED("error while mounting file system");
+      }
+      // print_fs_details();
+      test_ext2_fs();
+      print_fs_details();
+    #endif
   #endif
   //kernel_drivers_tests(0);
   splash_screen();

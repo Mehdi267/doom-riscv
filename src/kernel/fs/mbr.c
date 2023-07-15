@@ -4,6 +4,7 @@
 #include "../memory/frame_dist.h" // used to allocate the block
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "stdio.h"
 #include "string.h"
 #include "../logger.h"
@@ -11,7 +12,7 @@
 
 //This value represents the global mdr that 
 //will be used the in the program
-mbr_t *global_mbr;
+mbr_t *global_mbr = 0;
 
 int find_mbr(){
   //Read the fist disk 
@@ -25,7 +26,7 @@ int find_mbr(){
   disk_dev->read_disk(&disk_operation_mbr);
   if (data[255] == MBR_SIGNATURE) {
     //Mbr was found we can now access partitions
-    global_mbr = get_frame();
+    global_mbr = (mbr_t*) malloc(sizeof(mbr_t));
     memcpy(global_mbr,(void*)data,512);
     return 0;
   }
@@ -60,7 +61,7 @@ int set_up_mbr(){
     release_frame(global_mbr);
   }
   //We allocate data for the global mbr struct
-  global_mbr = get_frame();
+  global_mbr = (mbr_t*) malloc(sizeof(mbr_t));
   if (global_mbr == 0){
     return -1;
   }
