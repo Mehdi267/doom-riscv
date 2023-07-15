@@ -46,8 +46,8 @@ int kernel_start() {
         PRINT_RED("error while mounting file system");
       }
       // print_fs_details();
-      test_ext2_fs();
-      print_fs_details();
+      // test_ext2_fs();
+      // print_fs_details();
     #endif
   #endif
   //kernel_drivers_tests(0);

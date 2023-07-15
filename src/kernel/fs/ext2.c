@@ -255,7 +255,7 @@ int superblock_conf(uint32_t block_loc,
   debug_print_v_fs("[ext2]blk_des->bg_inode_table = %d\n", blk_des->bg_inode_table);
   blk_des->bg_free_blocks_count = nb_blocks_data;
   debug_print_v_fs("[ext2]blk_des->bg_free_blocks_count = %d\n", blk_des->bg_free_blocks_count);
-  blk_des->bg_free_inodes_count = nb_blocks_inodes;
+  blk_des->bg_free_inodes_count = number_of_inodes;
   debug_print_v_fs("[ext2]blk_des->bg_free_inodes_count = %d\n", blk_des->bg_free_inodes_count);
   blk_des->bg_used_dirs_count = 0;
   debug_print_v_fs("[ext2]blk_des->bg_used_dirs_count = %d\n", blk_des->bg_used_dirs_count);

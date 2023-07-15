@@ -45,7 +45,7 @@ int free_inode_list(inode_elt* list){
 }
 
 int add_inode_list(inode_t* address, uint32_t inode_id){
-  debug_print_inode("[IN]Inode list n %d is being added to cache\n", inode_id);
+  debug_print_inode("[IN]Inode list num %d is being added to cache\n", inode_id);
   inode_elt* table_elt = (inode_elt*) malloc(sizeof(inode_elt));
   if (table_elt == 0){
     return -1;
@@ -71,13 +71,13 @@ int add_inode_list(inode_t* address, uint32_t inode_id){
       //No error because we have backup
       PRINT_RED("node table elt was not placed in hash table\n");
   }
-  debug_print_inode("[IN]Inode n %d was added to cache\n",
+  debug_print_inode("[IN]Inode num %d was added to cache\n",
        inode_id);
   return 0;
 }
 
 int remove_inode_list(uint32_t inode_id, inode_t* inode_address){
-  debug_print_inode("[IN]Inode list n %d is being removed to cache\n", inode_id);
+  debug_print_inode("[IN]Inode list num %d is being removed from cache\n", inode_id);
   inode_elt* node = NULL;
   if (inode_address == 0){
     node = get_inode_t_elt(get_inode_from_node_id(inode_id));
@@ -100,9 +100,11 @@ int remove_inode_list(uint32_t inode_id, inode_t* inode_address){
       node_previous->next_inode = node_next;
     }
   }
-  hash_del(root_file_system->inode_hash_table, 
-          (void*)inode_address);
+  // hash_del(root_file_system->inode_hash_table, 
+  //         (void*)inode_address);
+  free(inode_address);
   free(node);
+  debug_print_inode("[IN]Inode list num %d was removed from cache and freed\n", inode_id);
   return 0;
 }
 
@@ -175,7 +177,7 @@ inode_elt* get_inode_t_elt(inode_t* inode){
 }
 
 uint32_t get_inode_number(inode_t* inode){
-  print_inode_no_arg("[IN]Looking for inode number\n");
+  print_inode_no_arg("[IN]Looking for inode an number\n");
   inode_elt* node_elt = hash_get(root_file_system->inode_hash_table,
               (void*)inode,
               NULL);
@@ -184,7 +186,8 @@ uint32_t get_inode_number(inode_t* inode){
     //Table node not found
     return 0;
   }
-  print_inode_no_arg("[IN]Inode number was found in hash table\n");
+  debug_print_inode("[IN]Inode number %d was found in hash table\n", 
+            node_elt->inode_id);
   return node_elt->inode_id;
 }
 
@@ -258,10 +261,14 @@ inode_t* alloc_inode(){
   print_inode_no_arg("\033[0;33m[IN]Allocate a new inode\n\033[0;0m");
   block_group_descriptor* desc_table = get_desc_table();
   super_block* super = (super_block*) get_super_block();
-  if (desc_table == 0 ){
+  if (super == 0 || desc_table == 0 ){
     return 0;
   }
-  uint32_t inode_number = 0;
+  if (super->s_free_inodes_count == 0 || 
+      desc_table->bg_free_inodes_count == 0){
+        return 0;
+  }
+  uint32_t inode_number = 0; 
   for (int blk_iter = desc_table->bg_inode_bitmap;
     blk_iter<desc_table->bg_inode_table; blk_iter++){
     char* block_inode = disk_read_block(blk_iter);
@@ -271,7 +278,7 @@ inode_t* alloc_inode(){
     }
     int free_inode = alloc_bit_bitmap(block_inode);
     if (free_inode != -1){
-      debug_print_inode("[IN]Found free node n %d in relative block\n", free_inode);
+      debug_print_inode("[IN]Found free node num %d in relative block\n", free_inode);
       *(block_inode+free_inode/8) |= (1<<free_inode%8);
       if (save_fs_block(block_inode,
            root_file_system->block_size, 
@@ -291,6 +298,9 @@ inode_t* alloc_inode(){
       return 0;
     }
   }
+  if (inode_number == 0){
+    return 0;
+  }
   inode_t* inode = (inode_t*)malloc(sizeof(inode_t));
   if (inode == 0){
     PRINT_RED("No space for inode");
@@ -306,25 +316,35 @@ inode_t* alloc_inode(){
 }
 
 int free_inode(inode_t* inode, uint32_t inode_number){
-  print_inode_no_arg("\033[0;36m[IN]Freeing an inode\n\033[0;0m");
+  debug_print_inode("\033[0;36m[IN]Freeing an inode %d\n\033[0;0m", inode_number);
   block_group_descriptor* desc_table = get_desc_table();
   super_block* super = (super_block*) get_super_block();
-  if (inode_number == 0 || super ==0 || desc_table == 0){
+  if (inode == 0 || inode_number == 0 || super ==0 || desc_table == 0){
     return -1;
   }
+  if (inode->i_mode == EXT2_S_IFDIR){
+    PRINT_RED("inode is a directory");
+    return 0;
+  }
+  uint32_t disk_blks = inode->i_blocks;
   debug_print_inode("\033[0;36m[IN]inode->i_blocks = %d\n\033[0;0m", inode->i_blocks);
-  if (inode->i_blocks<L_DIRECT){
-    for (int i = 0; i<inode->i_blocks; i++){
+  if (disk_blks<L_DIRECT){
+    uint32_t direct = disk_blks>L_DIRECT ? L_DIRECT : inode->i_blocks;
+    for (int i = 0; i<direct; i++){
       if (free_data_block(inode->i_block[i])<0){
         return -1;
       }
     }
   }
-  if (inode->i_blocks<L_ONE_INDIRECT){
+  if (disk_blks > L_DIRECT &&
+      disk_blks < L_ONE_INDIRECT){
     char* indirect_block_data = disk_read_block(
                                   super->s_first_data_block+
                                   inode->i_block[INDIRECT_BLOCKS_INDEX]);
-    for (int i = 0; i<inode->i_blocks-L_DIRECT-1; i++){
+    if (indirect_block_data == 0){
+      return -1;
+    }
+    for (int i = 0; i<disk_blks-L_DIRECT-1; i++){
       if (free_data_block(
           *((uint32_t*)indirect_block_data+i))){
           return -1;
@@ -334,8 +354,22 @@ int free_inode(inode_t* inode, uint32_t inode_number){
       return -1;
     }
   }
-  super->s_free_inodes_count--;
-  desc_table->bg_free_inodes_count--;
+  uint32_t inode_bitmap = desc_table->bg_inode_bitmap + 
+                            inode_number/(8*root_file_system->block_size);
+  char* inode_bitmap_data = disk_read_block(inode_bitmap);
+  if (inode_bitmap == 0){
+    return -1;
+  }
+  *(inode_bitmap_data+(inode_number%(root_file_system->block_size*8))/8) 
+                &= 0xff - (1<<inode_number%8);
+  if (save_fs_block(inode_bitmap_data,
+          root_file_system->block_size, 
+          inode_bitmap) < 0){
+    return -1;
+  }
+  super->s_free_inodes_count++;
+  desc_table->bg_free_inodes_count++;
+  remove_inode_list(inode_number, inode);
   save_super_block();
   save_blk_desc_table();
   return 0;
@@ -503,7 +537,7 @@ int add_inode_directory(inode_t* dir,
           debug_print_inode("[IN]Final rec_lec = %d\n",dir_entry.rec_len);
           print_dir_entry_obj(&dir_entry);
           pos += list_elt->rec_len;
-          debug_print_inode("\033[0;35m[IN]Adding inode to dir blks n %d actual blk %d\n\033[0;0m", 
+          debug_print_inode("\033[0;35m[IN]Adding inode to dir blks num %d actual blk %d\n\033[0;0m", 
           blk, dir->i_block[blk]);
           hit = true;
         }
@@ -523,7 +557,7 @@ int add_inode_directory(inode_t* dir,
     }
     //WE see if we can add a new direct block
     if (dir->i_blocks<L_DIRECT){
-      debug_print_inode("[IN]Could not find loc in direct blk, n blk %d\n",dir->i_blocks); 
+      debug_print_inode("[IN]Could not find loc in direct blk, num blk %d\n",dir->i_blocks); 
       print_inode_no_arg("[IN]Creating a new direct blk\n"); 
       if (add_data_block_inode(dir)<0){
         return -1;
@@ -573,7 +607,7 @@ uint32_t look_for_inode_dir(inode_t* dir,
     char* limit = block_data+root_file_system->block_size
         -(addition);
     while (((char*)list_elt)<limit){
-        // print_dir_entry(list_elt);
+        print_dir_entry(list_elt);
         if (list_elt->file_type != EXT2_FT_FREE 
             && name_len == list_elt->name_len 
             &&memcmp((char*)list_elt+SIZE_DIR_NO_NAME, 
@@ -694,7 +728,9 @@ uint32_t get_data_block(){
   print_fs_no_arg("\033[0;32m[IN]Getting data block\n\033[0;m");
   block_group_descriptor* desc_table = get_desc_table();
   super_block* super = (super_block*) get_super_block();
-  if (desc_table == 0 || super == 0 ){
+  if (desc_table == 0 || super == 0 
+        || super->s_free_blocks_count == 0
+        || desc_table->bg_free_blocks_count == 0){
     return 0;
   }
   uint32_t block_number = 0;
@@ -707,7 +743,7 @@ uint32_t get_data_block(){
     }
     int free_block = alloc_bit_bitmap(block_data_bitmap);
     if (free_block != -1){
-      debug_print_inode("[IN]Found data block n %d in relative bitmap\n", free_block);
+      debug_print_inode("[IN]Found data block num %d in relative bitmap\n", free_block);
       *(block_data_bitmap+free_block/8) |= (1<<free_block%8);
       if (save_fs_block(block_data_bitmap,
            root_file_system->block_size, 
@@ -758,7 +794,8 @@ int free_data_block(uint32_t data_block){
   if (data_bitmap == 0){
     return -1;
   }
-  *(data_bitmap+data_block/8) &= 0xff - (1<<data_block%8);
+  *(data_bitmap+(data_block%(root_file_system->block_size*8))/8) &= 
+              0xff - (1<<data_block%8);
   super->s_free_blocks_count--;
   desc_table->bg_free_blocks_count--;
   save_super_block();

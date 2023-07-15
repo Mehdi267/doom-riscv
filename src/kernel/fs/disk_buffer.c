@@ -30,7 +30,8 @@ int write_block(uint32_t disk_block_number,
                   write_type type
                   ){
   debug_print_v_fs("[df]Write block called into %d\n", disk_block_number);
-  if (data == 0 || data_length > EXT2_BLOCK_SIZE){
+  if (data == 0 || data_length > 
+            root_file_system->block_size){
     return -1;
   }
   c_elt* cache_elt = look_up_c_elt(disk_block_number);
@@ -76,10 +77,11 @@ c_elt* fetch_block(uint32_t disk_block_number){
   if (elt == 0){
     return NULL;
   }
-  if (disk_block_number*
+  if (root_file_system != 0 && disk_block_number*
       root_file_system->block_size/
       BLOCK_SIZE > get_partition_size(
       root_file_system->partition)){
+    free(elt);
     return 0;
   }
   debug_print_v_fs("[df]###fetching relative block %d from disk \n", 

@@ -144,10 +144,6 @@ typedef enum put_operation_type{
 int put_inode(inode_t* inode, uint32_t inode_number, put_op op_type);
 
 
-
-
-
-
 /**
  * @brief Allocate a new i-node for a new file.
  *
@@ -158,9 +154,9 @@ int put_inode(inode_t* inode, uint32_t inode_number, put_op op_type);
 inode_t* alloc_inode();
 
 /**
- * @brief Release an i-node when a file is removed.
- *
- * This function releases an i-node when a file is removed, making it available for reuse.
+ * @brief Release an i-node when a file is removed(deleted).
+ * This function releases an i-node when a file is removed,
+ * making the inode available for reuse.
  *
  * @param[in] inode The i-node to be released.
  * @param[in] inode_number The number of 

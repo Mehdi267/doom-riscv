@@ -160,7 +160,7 @@
 
 #define debug_print_v_disk(fmt, ...) \
     do {if (DEBUG_VIRT_DISK_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-        if (DEBUG_VIRT_DISK_LEVEL == 2){ printf("\033[0;32mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, \
+        if (DEBUG_VIRT_DISK_LEVEL == 2){ printf("\033[0;32m[%s][%d][%s]: \033[0;m" fmt, __FILE__, \
                             __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 #define print_v_disk_no_arg(fmt, ...) \
@@ -170,11 +170,11 @@
  * @brief the following macro are used to display the  
  * debug messages of the file system the file system 
  */
-#define DEBUG_VIRT_FS_LEVEL 2 //Indicates if debug type is active
+#define DEBUG_VIRT_FS_LEVEL 1 //Indicates if debug type is active
 
 #define debug_print_v_fs(fmt, ...) \
         do {if (DEBUG_VIRT_FS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
-            if (DEBUG_VIRT_FS_LEVEL == 2){ printf("\033[44mFile/Line/Func [%s][%d][%s]: \033[0;m" fmt, __FILE__, \
+            if (DEBUG_VIRT_FS_LEVEL == 2){ printf("\033[44m[%s][%d][%s]: \033[0;m" fmt, __FILE__, \
                                 __LINE__, __func__, __VA_ARGS__);} } while (0)
 
 #define print_fs_no_arg(fmt, ...) \
@@ -186,7 +186,7 @@
  * @brief the following macro are used to display the  
  * debug messages of the file system the file system 
  */
-#define DEBUG_INODE_LEVEL 2 //Indicates if debug type is active
+#define DEBUG_INODE_LEVEL 1 //Indicates if debug type is active
 
 #define debug_print_inode(fmt, ...) \
         do {if (DEBUG_INODE_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
