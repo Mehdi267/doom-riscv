@@ -205,17 +205,17 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
         csr_clear(sstatus, MSTATUS_SPP);
         break;
       case CAUSE_FETCH_PAGE_FAULT:
-        PRINT_RED("Killing process = (CAUSE_FETCH_PAGE_FAULT)\n");
+        // PRINT_RED("Killing process = (CAUSE_FETCH_PAGE_FAULT)\n");
         kill(getpid());
         scheduler();
         break;
       case CAUSE_LOAD_PAGE_FAULT:
-        PRINT_RED("Killing proces = (CAUSE_LOAD_PAGE_FAULTs)\n");
+        // PRINT_RED("Killing proces = (CAUSE_LOAD_PAGE_FAULTs)\n");
         kill(getpid());
         scheduler();
         break;
       case CAUSE_STORE_PAGE_FAULT:
-        PRINT_RED("Killing process = (CAUSE_STORE_PAGE_FAULT)\n");
+        // PRINT_RED("Killing process = (CAUSE_STORE_PAGE_FAULT)\n");
         kill(getpid());
         scheduler();
         break;

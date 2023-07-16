@@ -104,10 +104,9 @@ char* disk_read_block(uint32_t relative_b_n);
 int free_cache_list();
 
 /**
- * @brief Prints the detail 
- * of the currently mounted file system
- * 
+ * @brief Prints the details of the current cache buffer
+ * @param elt the list of the cache buffer
  */
-void print_fs_details();
+void printLinkedList(c_elt* elt);
 
 #endif

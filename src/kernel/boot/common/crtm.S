@@ -27,7 +27,7 @@ _start:
   slli   t0, t0, STACK_SHIFT # shift left logic immediate  src, dest, 10: t0 = t0<<10
   la     sp, stacks + STACK_SIZE # sp = stacks + 1kb
   add    sp, sp, t0 # moving sp to the correct stack according to mhartid
-
+  
   # On place dans mscratch le haut de la pile machine trap
   # elle sera réutilisée lors d'une interruption machine
   la     t1, mtrap_stacks + STACK_SIZE

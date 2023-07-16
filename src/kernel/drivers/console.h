@@ -35,7 +35,7 @@ static inline int kgetchar()
 
 static inline int kputchar(int ch)
 {
-	/* if(console_dev->echo) */
+  /* if(console_dev->echo) */
 	return console_dev->putchar(ch);
 	/* return 0; */
 }

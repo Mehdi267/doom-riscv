@@ -20,6 +20,7 @@
 #include "tests_fs/tests_fs.h"
 
 int kernel_start() {
+  print_mem_symbols();
   printf("\nStarting Kernel\n");
   if (set_up_virtual_memory() < 0) {
     puts("error while setting up virtual memory");
@@ -45,9 +46,9 @@ int kernel_start() {
       if (mount_root_file_system()< 0){
         PRINT_RED("error while mounting file system");
       }
-      // print_fs_details();
-      // test_ext2_fs();
-      // print_fs_details();
+      print_fs_details();
+      test_ext2_fs();
+      print_fs_details();
     #endif
   #endif
   //kernel_drivers_tests(0);

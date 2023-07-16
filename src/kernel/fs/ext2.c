@@ -133,9 +133,14 @@ int configure_root_inode(){
 
 int save_boot_record(uint32_t boot_loc){
   //Master boot record
-  char block[EXT2_BLOCK_SIZE];
+  char* block =(char*) malloc(EXT2_BLOCK_SIZE);
   memset(block, 0, EXT2_BLOCK_SIZE);
-  return save_fs_block(block, EXT2_BLOCK_SIZE, boot_loc);
+  if (save_fs_block(block, EXT2_BLOCK_SIZE, boot_loc)<0){
+    free(block);
+    return -1;
+  }
+  free(block);
+  return 0;
 };
 
 int superblock_conf(uint32_t block_loc, 

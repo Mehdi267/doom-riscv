@@ -11,6 +11,7 @@
 #include "string.h"
 #include "mem.h"
 #include "stdio.h"
+#include "stdlib.h"
 
 #define HASH_MINSIZE 8
 
@@ -29,7 +30,7 @@ enum slot_mode {
 static int hash_initialize(hash_t *map, long size)
 {
         long i;
-        hash_slot_t *table = mem_alloc(size * sizeof(hash_slot_t));
+        hash_slot_t *table = malloc(size * sizeof(hash_slot_t));
         if (table == NULL)
                 return -1;
 
@@ -130,7 +131,8 @@ static int hash_update(hash_t *map)
                 return -1;
 
         hash_copy(map, old_table, old_size);
-        mem_free(old_table, old_size * sizeof(hash_slot_t));
+        // mem_free(old_table, old_size * sizeof(hash_slot_t));
+        free(old_table);
         return 0;
 }
 
@@ -149,8 +151,9 @@ int hash_init(hash_t *map, hash_func_t hfunc, hash_compare_t cmp)
 
 void hash_destroy(hash_t *map)
 {
-        int size = map->mask+1;
-        mem_free(map->table, size * sizeof(hash_slot_t));
+        // int size = map->mask+1;
+        // mem_free(map->table, size * sizeof(hash_slot_t));
+        free(map->table);
         map->fill  = 0;
         map->count = 0;
         map->mask  = 0;

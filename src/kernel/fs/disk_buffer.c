@@ -13,23 +13,28 @@ c_elt* global_cache_buf = 0;
 
 char* read_block_c(uint32_t disk_block_number){
   debug_print_v_fs("[df]Reading relative disk block %d\n", disk_block_number);
+  // printf("******fetch block********\n");
+  // printLinkedList(global_cache_buf);
+  // printf("******fetch block end********\n");
   c_elt* cache_elt = look_up_c_elt(disk_block_number);
   if (cache_elt == 0){
     cache_elt = fetch_block(disk_block_number);
     if (cache_elt == 0){
-      return 0;
+      return 0; 
     }
   }
   cache_elt->usage++;
   return cache_elt->data;
 }
-
 int write_block(uint32_t disk_block_number, 
                   char* data,
                   size_t data_length,
                   write_type type
                   ){
-  debug_print_v_fs("[df]Write block called into %d\n", disk_block_number);
+  // printf("******write BEFORE block********\n");
+  // printLinkedList(global_cache_buf);
+  // printf("******write BEFORE block end********\n");
+  debug_print_v_fs("[df]Write block called on block %d\n", disk_block_number);
   if (data == 0 || data_length > 
             root_file_system->block_size){
     return -1;
@@ -52,6 +57,9 @@ int write_block(uint32_t disk_block_number,
       return -1;
     }
   }
+  // printf("******write AFTER block********\n");
+  // printLinkedList(global_cache_buf);
+  // printf("******write AFTER block end********\n");
   return 0;
 }
 
@@ -101,7 +109,7 @@ c_elt* fetch_block(uint32_t disk_block_number){
     elt->disk_res = 0;
   }
   // Perform disk read operation on the block taht contains the mbr
-
+  elt->next_c = NULL;
   if(global_cache_buf == 0){
     global_cache_buf = elt;
     global_cache_buf->next_c = NULL;
@@ -109,10 +117,16 @@ c_elt* fetch_block(uint32_t disk_block_number){
     elt->next_c = global_cache_buf;
     global_cache_buf = elt;
   }
+  // // printf("###########block addidtion#######\n");
+  // // printLinkedList(global_cache_buf);
+  // // printf("###########block addidtion end#######\n");
   return elt;
 }
 
 int sync_elt(c_elt* cache_elt){
+  // // printf("******sync BEFORE block********\n");
+  // // printLinkedList(global_cache_buf);
+  // // printf("******sync BEFORE block end********\n");
   if(cache_elt == 0){
     return -1;
   }
@@ -134,6 +148,9 @@ int sync_elt(c_elt* cache_elt){
     cache_elt->disk_res = 0;
   }
   cache_elt->dirty = 0;
+  // // printf("******sync AFTER block********\n");
+  // // printLinkedList(global_cache_buf);
+  // // printf("******sync AFTER block end********\n");
   return 0;
 }
 
@@ -199,7 +216,7 @@ int save_fs_block(char* data,
     return -1;
   }
   return 0;
-}
+} 
 
 char* disk_read_block(uint32_t relative_b_n){
   return read_block_c(relative_b_n);
@@ -211,7 +228,8 @@ void printLinkedList(c_elt* elt) {
     printf("Block Number: %u\n", elt->blockNumber);
     printf("Dirty: %s\n", elt->dirty ? "true" : "false");
     printf("Usage: %u\n", elt->usage);
-    printf("Data: %s\n", elt->data);
+    printf("Data: %p\n", elt->data);
+    printf("Next: %p\n", elt->next_c);
     printf("\n");
     elt = elt->next_c;
   }

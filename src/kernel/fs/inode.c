@@ -234,12 +234,14 @@ int alloc_bit_bitmap(char* block){
   if (block ==0 ){
     return -1;
   }
-  uint64_t mask_max = 0xffffffff;
+  uint64_t mask_max = 0xffffffffffffffff;
   for (int i = 0; i<root_file_system->block_size/sizeof(uint64_t); i++){
     char* iter_address = block+i*sizeof(uint64_t);
     // printf("iter_address %p\n", iter_address);
     uint64_t mask_op = mask_max&*((uint64_t*)(iter_address));
-    if (mask_op < 0xffffffff){
+    // printb(&mask_op, 8);
+    if (mask_op < 0xffffffffffffffff){
+      // printf("Inside \n");
       //We found an empty node
       uint64_t mask = 1; 
       for (int j = 0; j < 64; ++j) {
@@ -247,7 +249,7 @@ int alloc_bit_bitmap(char* block){
         // printf("looking for bit j = %d\n",j);
         if ((mask_op & mask) == 0) {
             // Found the first zero bit
-            return j+i*sizeof(uint64_t);
+            return j+i*8*sizeof(uint64_t);
         }
         // Shift the mask to the next bit position
         mask <<= 1;
@@ -279,7 +281,7 @@ inode_t* alloc_inode(){
     int free_inode = alloc_bit_bitmap(block_inode);
     if (free_inode != -1){
       debug_print_inode("[IN]Found free node num %d in relative block\n", free_inode);
-      *(block_inode+free_inode/8) |= (1<<free_inode%8);
+      *(block_inode+free_inode/8) |= (1<<(free_inode%8));
       if (save_fs_block(block_inode,
            root_file_system->block_size, 
            blk_iter) < 0){
@@ -312,6 +314,8 @@ inode_t* alloc_inode(){
   save_blk_desc_table();
   add_inode_list(inode, 
                 inode_number);
+  debug_print_inode("\033[0;33m[IN]Inode num %d was allocated \n\033[0;0m", 
+        inode_number);
   return inode;
 }
 
@@ -641,7 +645,7 @@ int remove_inode_dir(inode_t* dir,
   }
   //search direct blocks
   else {
-    //We look for elemnts in the present direct blocks
+    //We look for elements in the present direct blocks
     for (int blk = 0; blk<dir->i_blocks; blk++){
       uint32_t pos = 0;
       char* block_data = disk_read_block(
@@ -796,8 +800,8 @@ int free_data_block(uint32_t data_block){
   }
   *(data_bitmap+(data_block%(root_file_system->block_size*8))/8) &= 
               0xff - (1<<data_block%8);
-  super->s_free_blocks_count--;
-  desc_table->bg_free_blocks_count--;
+  super->s_free_blocks_count++;
+  desc_table->bg_free_blocks_count++;
   save_super_block();
   save_blk_desc_table();
   return save_fs_block(data_bitmap,

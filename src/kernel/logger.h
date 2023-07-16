@@ -170,7 +170,7 @@
  * @brief the following macro are used to display the  
  * debug messages of the file system the file system 
  */
-#define DEBUG_VIRT_FS_LEVEL 1 //Indicates if debug type is active
+#define DEBUG_VIRT_FS_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_v_fs(fmt, ...) \
         do {if (DEBUG_VIRT_FS_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -186,7 +186,7 @@
  * @brief the following macro are used to display the  
  * debug messages of the file system the file system 
  */
-#define DEBUG_INODE_LEVEL 1 //Indicates if debug type is active
+#define DEBUG_INODE_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_inode(fmt, ...) \
         do {if (DEBUG_INODE_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \

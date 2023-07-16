@@ -21,7 +21,6 @@ Stress tests for all of the above
 #include <stdio.h>
 
 int basic_test(){
-  load_and_print_superblock();
   super_block* super = (super_block*) get_super_block();
   uint32_t free_data_block_count = super->s_free_blocks_count;
   uint32_t free_inode_count = super->s_free_inodes_count;
@@ -136,7 +135,7 @@ int basic_test(){
     get_inode(EXT2_GOOD_OLD_FIRST_INO),
     "file155",
     7);
-  printf("looking file that does not exist, inode number found : %d\n",inode_number1);
+  printf("looking file that does not exist, inode number found : %d\n",inode_number_no);
   assert(inode_number_no == 0);
   
 
@@ -196,13 +195,55 @@ int basic_test(){
   return 0;
 }
 
+int gdb_variable = 0;
+
 int stress_test(){
   super_block* super = (super_block*) get_super_block();
+  uint32_t free_data_block_count = super->s_free_blocks_count;
+  uint32_t free_inode_count = super->s_free_inodes_count;
   uint32_t number_of_free_files = 
         super->s_free_inodes_count;
+  char filename[8];
+  uint32_t file_ids[number_of_free_files];
+  for(int file_iter = 0; file_iter <number_of_free_files; file_iter++){
+    gdb_variable++;
+    printf("i = %d, max = %d\n", file_iter, number_of_free_files);
+    inode_t* file = alloc_inode();
+    sprintf(filename, "file%c", file_iter);
+    file_ids[file_iter] = get_inode_number(file);
+    if (put_inode(file, 
+        get_inode_number(file),
+        SAVE_INODE)<0){
+          return -1;
+    }
+    if (add_inode_directory(get_inode(EXT2_GOOD_OLD_FIRST_INO), 
+      get_inode_number(file),
+      EXT2_FT_REG_FILE,filename,8)<0){
+        return -1;
+    }
+  }
+  PRINT_GREEN("Created files and added them");
   for(int i = 0; i <number_of_free_files; i++){
-    // inode_t* file1 = alloc_inode();
-  } 
+    sprintf(filename, "file%c", i);
+    assert(file_ids[i] ==  look_for_inode_dir(
+      get_inode(EXT2_GOOD_OLD_FIRST_INO),
+      filename,
+      8));
+  }
+  for(int i = 0; i <number_of_free_files; i++){
+    sprintf(filename, "file%c", i);
+      if (remove_inode_dir(
+        get_inode(EXT2_GOOD_OLD_FIRST_INO), 
+      filename,
+      8)<0){
+      printf("remove file failed \n");
+      return -1;
+    }
+  }
+  assert(free_inode_count == 
+        super->s_free_inodes_count);
+  assert(free_data_block_count == 
+        super->s_free_blocks_count);
   return 0;
 }
 
@@ -210,6 +251,13 @@ int stress_test(){
 void test_ext2_fs(){
   if (basic_test()<0){
     PRINT_RED("Basic test failed\n");
+  }else{
+    PRINT_GREEN("Basic test passed\n");
   }
-  PRINT_GREEN("Test inode passed\n");
+  print_cache_details(root_file_system->inode_list);
+  PRINT_GREEN("###############################\n");
+  if (stress_test()<0){
+    PRINT_RED("Stress test failed\n");
+  }
+  PRINT_GREEN("Test inode exit\n");
 }

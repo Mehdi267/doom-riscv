@@ -12,8 +12,8 @@
 .equ REGBYTES, 8
 .equ MAX_HARTS,    1
 .equ SAVE_REGS,    16
-.equ STACK_SIZE,   1024
-.equ STACK_SHIFT,  10
+.equ STACK_SIZE,   524288
+.equ STACK_SHIFT,  19
 .equ CONTEXT_SIZE, (SAVE_REGS * REGBYTES)
 
 .globl _text_start

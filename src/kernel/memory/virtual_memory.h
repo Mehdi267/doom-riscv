@@ -85,4 +85,6 @@ typedef struct page_table_link_list {
     int index;
 } page_table_link_list_t;
 
+extern int print_mem_symbols();
+
 #endif
