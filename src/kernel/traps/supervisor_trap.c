@@ -23,6 +23,7 @@
 #include "../input-output/cons_write.h"
 #include "../input-output/keyboard.h"
 #include "../fs/fs.h"
+#include <stdbool.h>
 #include <string.h>
 
 extern void inc_sepc(void); // defined in supervisor_trap_entry.S
@@ -148,6 +149,13 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
 
 void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
   // printf("super int %ld\n",scause&0xff);
+    
+  bool user = false;
+  if (((csr_read(sstatus) & MSTATUS_SPP) == 0)){
+			debug_print_no_arg("Int comming from user mode");
+    user = true;
+  }
+  
   if (scause & INTERRUPT_CAUSE_FLAG) {
 		// Interruption cause
 		uint8_t interrupt_number = scause & ~INTERRUPT_CAUSE_FLAG;
@@ -205,20 +213,26 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
         csr_clear(sstatus, MSTATUS_SPP);
         break;
       case CAUSE_FETCH_PAGE_FAULT:
-        // PRINT_RED("Killing process = (CAUSE_FETCH_PAGE_FAULT)\n");
-        kill(getpid());
-        scheduler();
-        break;
+        if (user){
+          PRINT_RED("Killing process = (CAUSE_FETCH_PAGE_FAULT)\n");
+          kill(getpid());
+          scheduler();
+          break;
+        }
       case CAUSE_LOAD_PAGE_FAULT:
-        // PRINT_RED("Killing proces = (CAUSE_LOAD_PAGE_FAULTs)\n");
-        kill(getpid());
-        scheduler();
-        break;
+        if (user){
+          PRINT_RED("Killing proces = (CAUSE_LOAD_PAGE_FAULTs)\n");
+          kill(getpid());
+          scheduler();
+          break;
+        }
       case CAUSE_STORE_PAGE_FAULT:
-        // PRINT_RED("Killing process = (CAUSE_STORE_PAGE_FAULT)\n");
-        kill(getpid());
-        scheduler();
-        break;
+        if (user){
+          PRINT_RED("Killing process = (CAUSE_STORE_PAGE_FAULT)\n");
+          kill(getpid());
+          scheduler();
+          break;
+        }
 			default:
         //The cause is treated we exit immediately
 				blue_screen(tf);

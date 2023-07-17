@@ -8,7 +8,7 @@
 #include "string.h"
 #include "stdio.h"
 #include "logger.h"
-
+#include <assert.h>
 
 void print_cache_details(inode_elt* list){
   print_inode_no_arg("-----[INODE CACHE DETAILS]---\n");
@@ -16,7 +16,12 @@ void print_cache_details(inode_elt* list){
     return ;
   }
   inode_elt* list_iter = list;
+  int i = 0;
   while(list_iter != NULL){
+    i++;
+    if (i == 420){
+      break;
+    }
     debug_print_inode("address = %p\n", list_iter->address);
     debug_print_inode("inode_id = %d\n", list_iter->inode_id);
     debug_print_inode("inode_usage = %d\n", list_iter->inode_usage);
@@ -56,21 +61,23 @@ int add_inode_list(inode_t* address, uint32_t inode_id){
   table_elt->previous_inode = NULL;
   table_elt->next_inode = NULL;
   if (root_file_system->inode_list == 0){
+    printf("AAAAAAAAAAAAA\n");
     root_file_system->inode_list = table_elt;
   }
   else{
+    printf("BBBBBBB\n");
     table_elt->next_inode = root_file_system->inode_list;
-    root_file_system->inode_list->previous_inode 
+    root_file_system->inode_list->previous_inode
       = table_elt;
     root_file_system->inode_list = table_elt; 
   }
-  if (hash_set(
-    root_file_system->inode_hash_table,
-    (void*)address,
-    (void*)table_elt) < 0){
-      //No error because we have backup
-      PRINT_RED("node table elt was not placed in hash table\n");
-  }
+  // if (hash_set(
+  //   root_file_system->inode_hash_table,
+  //   (void*)address,
+  //   (void*)table_elt) < 0){
+  //     //No error because we have backup
+  //     PRINT_RED("node table elt was not placed in hash table\n");
+  // }
   debug_print_inode("[IN]Inode num %d was added to cache\n",
        inode_id);
   return 0;
@@ -79,6 +86,7 @@ int add_inode_list(inode_t* address, uint32_t inode_id){
 int remove_inode_list(uint32_t inode_id, inode_t* inode_address){
   debug_print_inode("[IN]Inode list num %d is being removed from cache\n", inode_id);
   inode_elt* node = NULL;
+  //We need to find the node in the linked list
   if (inode_address == 0){
     node = get_inode_t_elt(get_inode_from_node_id(inode_id));
   }
@@ -88,9 +96,12 @@ int remove_inode_list(uint32_t inode_id, inode_t* inode_address){
   if (node == 0){
     return -1;
   }
+  assert(node->inode_id == inode_id);
   inode_elt* node_next = node->next_inode;
   inode_elt* node_previous = node->previous_inode;
-  if (node == root_file_system->inode_list && node_next == NULL && node_previous == NULL){
+  if (node == root_file_system->inode_list 
+        && node_next == NULL 
+        && node_previous == NULL){
     root_file_system->inode_list = NULL;
   }else{
     if (node_next != NULL){
@@ -100,7 +111,7 @@ int remove_inode_list(uint32_t inode_id, inode_t* inode_address){
       node_previous->next_inode = node_next;
     }
   }
-  // hash_del(root_file_system->inode_hash_table, 
+  // // hash_del(root_file_system->inode_hash_table, 
   //         (void*)inode_address);
   free(inode_address);
   free(node);
@@ -122,7 +133,7 @@ inode_t* get_inode(uint32_t inode_number){
     return 0;
   }
   //We look for the node in the cache
-  inode_elt* node =  get_inode_t_elt(get_inode_from_node_id(inode_number));
+  inode_elt* node =  get_inode_t_elt_from_id(inode_number);
   if (node != 0){
     print_inode_no_arg("\033[0;32m[IN]get inode found in cache\033[0;0m\n");
     node->inode_usage++;
@@ -156,7 +167,20 @@ inode_t* get_inode_from_node_id(uint32_t node_id){
   inode_elt* elt_iter = root_file_system->inode_list;
   while (elt_iter != 0){
     if (elt_iter->inode_id == node_id){
+      print_inode_no_arg("[IN]Node id was found in cache, returning inode\n");
       return elt_iter->address;
+    }
+    elt_iter = elt_iter->next_inode;
+  }
+  return 0;
+}
+
+inode_elt* get_inode_t_elt_from_id(uint32_t node_id){
+  inode_elt* elt_iter = root_file_system->inode_list;
+  while (elt_iter != 0){
+    if (elt_iter->inode_id == node_id){
+      print_inode_no_arg("[IN]Node id was found in cache, returning inode\n");
+      return elt_iter;
     }
     elt_iter = elt_iter->next_inode;
   }
@@ -168,19 +192,31 @@ inode_elt* get_inode_t_elt(inode_t* inode){
   if(root_file_system == 0){
     return 0;
   }
-  if (root_file_system->inode_hash_table == 0){
+  // if (root_file_system->inode_hash_table == 0){
+  //   return 0;
+  // }
+  // return hash_get(root_file_system->inode_hash_table,
+  //             (void*)inode,
+  //             NULL);
+  if (root_file_system->inode_list == 0){
     return 0;
   }
-  return hash_get(root_file_system->inode_hash_table,
-              (void*)inode,
-              NULL);
+  inode_elt* list_iter = root_file_system->inode_list;
+  while (list_iter != 0){
+    if (list_iter->address == inode){
+      return list_iter;
+    }
+    list_iter=list_iter->next_inode;
+  }
+  return 0;
 }
 
 uint32_t get_inode_number(inode_t* inode){
   print_inode_no_arg("[IN]Looking for inode an number\n");
-  inode_elt* node_elt = hash_get(root_file_system->inode_hash_table,
-              (void*)inode,
-              NULL);
+  // inode_elt* node_elt = hash_get(root_file_system->inode_hash_table,
+  //             (void*)inode,
+  //             NULL);
+  inode_elt* node_elt = get_inode_t_elt(inode);
   if (node_elt == 0){
     print_inode_no_arg("[IN]Inode number not found\n");
     //Table node not found
@@ -323,8 +359,12 @@ int free_inode(inode_t* inode, uint32_t inode_number){
   debug_print_inode("\033[0;36m[IN]Freeing an inode %d\n\033[0;0m", inode_number);
   block_group_descriptor* desc_table = get_desc_table();
   super_block* super = (super_block*) get_super_block();
-  if (inode == 0 || inode_number == 0 || super ==0 || desc_table == 0){
+  if (inode_number == 0 || super ==0 || desc_table == 0){
     return -1;
+  }
+  if (inode == 0){
+    inode = get_inode(inode_number);
+    if (inode == 0){return -1;}
   }
   if (inode->i_mode == EXT2_S_IFDIR){
     PRINT_RED("inode is a directory");
@@ -468,18 +508,20 @@ int add_inode_directory(inode_t* dir,
   file_t type,
   char* name,
   size_t name_size){
+  super_block* super = (super_block*) get_super_block();
+  if (dir == 0 || super == 0 || inode_number == 0 || name_size <0){
+    PRINT_RED("[IN][add_inode_directory] An element is null\n");
+    return -1;
+  }
   print_inode_no_arg("\033[0;35m[IN]Adding an inode to a dir\n\033[0;0m");
   debug_print_inode("[IN]dir->blocks = %d\n",dir->i_blocks);
   debug_print_inode("[IN]inode_number = %d\n",inode_number);
   debug_print_inode("[IN]type = %d\n",type);
   debug_print_inode("[IN]name = %s\n",name);
   debug_print_inode("[IN]name_size = %ld\n",name_size);  
-  super_block* super = (super_block*) get_super_block();
-  if (dir == 0 || super == 0 || inode_number == 0 || name_size <0){
-    return -1;
-  }
   if (dir->i_mode != EXT2_S_IFDIR){
-    PRINT_RED("inode is not a directory");
+    PRINT_RED("%s\n", __func__); 
+    PRINT_RED("inode is not a directory\n");
     return -1;
   }
   dir_entry dir_entry;
@@ -539,7 +581,7 @@ int add_inode_directory(inode_t* dir,
           }
           dir_entry.rec_len = old_rec_len - dir_entry.rec_len;
           debug_print_inode("[IN]Final rec_lec = %d\n",dir_entry.rec_len);
-          print_dir_entry_obj(&dir_entry);
+          //print_dir_entry_obj(&dir_entry);
           pos += list_elt->rec_len;
           debug_print_inode("\033[0;35m[IN]Adding inode to dir blks num %d actual blk %d\n\033[0;0m", 
           blk, dir->i_block[blk]);
@@ -580,10 +622,12 @@ uint32_t look_for_inode_dir(inode_t* dir,
   if (dir == 0 || name == 0 || name_len == 0){
     return -1;
   }
-  debug_print_inode("\033[0;35m[IN]Looking for inode with name %s\n\033[0;0m", name);
+  debug_print_inode("\033[0;35m[IN]Looking for inode with name %s, len = %d\n\033[0;0m",
+         name, name_len);
   super_block* super = (super_block*) get_super_block();
   if (dir->i_mode != EXT2_S_IFDIR){
-    PRINT_RED("inode is not a directory");
+    PRINT_RED("%s\n", __func__); 
+    PRINT_RED("inode is not a directory\n");
     return -1;
   }
   if (dir->i_blocks == 0){
@@ -610,8 +654,13 @@ uint32_t look_for_inode_dir(inode_t* dir,
     }
     char* limit = block_data+root_file_system->block_size
         -(addition);
+    // int i =0;
     while (((char*)list_elt)<limit){
-        print_dir_entry(list_elt);
+        // i++;
+        // if (i== 50){
+        //   break;
+        // }
+        // print_dir_entry(list_elt);
         if (list_elt->file_type != EXT2_FT_FREE 
             && name_len == list_elt->name_len 
             &&memcmp((char*)list_elt+SIZE_DIR_NO_NAME, 
@@ -636,7 +685,8 @@ int remove_inode_dir(inode_t* dir,
   debug_print_inode("\033[0;35m[IN]Deleting inode with name %s\n\033[0;0m", name);
   super_block* super = (super_block*) get_super_block();
   if (dir->i_mode != EXT2_S_IFDIR){
-    PRINT_RED("inode is not a directory");
+    PRINT_RED("%s\n", __func__); 
+    PRINT_RED("inode is not a directory\n");
     return -1;
   }
   if (dir->i_blocks == 0){
@@ -705,11 +755,19 @@ int remove_inode_dir(inode_t* dir,
           if (delete){
             debug_print_inode("\033[0;35m[IN]Freeing data block %d\n\033[0;0m", 
                   dir->i_block[blk]);
-            if (free_data_block(dir->i_block[blk])<0){
-                return -1;
-              }
-            dir->i_blocks--;
-            dir->i_block[blk] = 0;
+            if (blk ==dir->i_blocks - 1){
+              if (free_data_block(dir->i_block[blk])<0){
+                  return -1;
+                }
+              dir->i_blocks--;
+              dir->i_block[blk] = 0;
+            }
+            else{
+              list_elt->file_type = EXT2_FT_FREE;
+              list_elt->name_len = 1;
+              list_elt->rec_len = 
+                  root_file_system->block_size - SIZE_DIR_NO_NAME+1;
+            }
             return 0;
           }
           return save_fs_block(block_data,
@@ -838,7 +896,12 @@ void print_dir_list(inode_t* dir){
     }
     char* limit = block_data+root_file_system->block_size
         -(addition);
+    //int i =0;
     while (((char*)list_elt)<limit){
+      // i++;
+      //   if (i == 500){
+      //     break;
+      //   }
       if (list_elt->file_type != EXT2_FT_FREE){
         printf("------------\n");
         printf("inode_n %d\n",list_elt->inode_n);

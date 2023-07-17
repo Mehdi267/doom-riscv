@@ -203,40 +203,71 @@ int stress_test(){
   uint32_t free_inode_count = super->s_free_inodes_count;
   uint32_t number_of_free_files = 
         super->s_free_inodes_count;
-  char filename[8];
+  #define FILE_NAME_SIZE 32
+  char filename[FILE_NAME_SIZE];
   uint32_t file_ids[number_of_free_files];
   for(int file_iter = 0; file_iter <number_of_free_files; file_iter++){
     gdb_variable++;
     printf("i = %d, max = %d\n", file_iter, number_of_free_files);
     inode_t* file = alloc_inode();
-    sprintf(filename, "file%c", file_iter);
     file_ids[file_iter] = get_inode_number(file);
     if (put_inode(file, 
         get_inode_number(file),
         SAVE_INODE)<0){
           return -1;
     }
-    if (add_inode_directory(get_inode(EXT2_GOOD_OLD_FIRST_INO), 
-      get_inode_number(file),
-      EXT2_FT_REG_FILE,filename,8)<0){
-        return -1;
-    }
   }
-  PRINT_GREEN("Created files and added them");
-  for(int i = 0; i <number_of_free_files; i++){
-    sprintf(filename, "file%c", i);
-    assert(file_ids[i] ==  look_for_inode_dir(
+  PRINT_GREEN("Created files and i am now adding them to the directory\n");
+  print_cache_details(root_file_system->inode_list);
+  for(int file_iter = 0; file_iter <number_of_free_files; file_iter++){
+    sprintf(filename, "file%d", file_iter);
+    uint32_t name_size = file_iter == 0 ? 5 : 4;
+    uint32_t num = file_iter;
+    while (num != 0){
+      num = num / 10;
+      name_size += 1;
+    }
+    if (add_inode_directory(get_inode(EXT2_GOOD_OLD_FIRST_INO), 
+        file_ids[file_iter],
+        EXT2_FT_REG_FILE,filename,
+        name_size)<0){
+          return -1;
+      }
+  }
+  PRINT_GREEN("Created files and added them\n");
+  for(int file_iter = 0; file_iter <number_of_free_files; file_iter++){
+    uint32_t name_size = file_iter == 0 ? 5 : 4;
+    uint32_t num = file_iter;
+    while (num != 0){
+      num = num / 10;
+      name_size += 1;
+    }
+    sprintf(filename, "file%d", file_iter);
+    assert(file_ids[file_iter] ==  look_for_inode_dir(
       get_inode(EXT2_GOOD_OLD_FIRST_INO),
       filename,
-      8));
+      name_size));
   }
-  for(int i = 0; i <number_of_free_files; i++){
-    sprintf(filename, "file%c", i);
+  PRINT_GREEN("All files were located, deleting directories\n");
+  for(int file_iter = 0; file_iter <number_of_free_files; file_iter++){
+    uint32_t name_size = file_iter == 0 ? 5 : 4;
+    uint32_t num = file_iter;
+    while (num != 0){
+      num = num / 10;
+      name_size += 1;
+    }
+    sprintf(filename, "file%d", file_iter);
       if (remove_inode_dir(
         get_inode(EXT2_GOOD_OLD_FIRST_INO), 
       filename,
-      8)<0){
+      name_size)<0){
       printf("remove file failed \n");
+      return -1;
+    }
+  }
+  for(int file_iter = 0; file_iter <number_of_free_files; file_iter++){
+    print_cache_details(root_file_system->inode_list);
+    if (free_inode(NULL,file_ids[file_iter])<0){
       return -1;
     }
   }

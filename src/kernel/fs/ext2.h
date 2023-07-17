@@ -33,6 +33,7 @@
 //this is the value of the first inode that we can use
 //The first 10 inodes are reserved for special use
 #define EXT2_GOOD_OLD_FIRST_INO 11
+#define NUMBER_OF_RESERVED_INODES 12
 
 /**
  * @brief Saves the master boot record into the disk

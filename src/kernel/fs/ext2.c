@@ -88,6 +88,15 @@ int configure_reserved_data(){
   uint32_t block_bitmap = desc_table->bg_block_bitmap;
   char* data_bitmap = disk_read_block(block_bitmap);
   *(data_bitmap) = 0x01;
+  super_block* super = (super_block*) get_super_block();
+  super->s_free_blocks_count--;
+  desc_table->bg_free_blocks_count--;
+  if (save_super_block()<0){
+    return -1;
+  }
+  if (save_blk_desc_table()<0){
+    return -1;
+  }
   return save_fs_block(data_bitmap,
            root_file_system->block_size, 
            block_bitmap);
@@ -99,6 +108,15 @@ int configure_reserved_inodes(){
   char* block_inode = disk_read_block(inode_bitmap_b);
   *(block_inode) = 0xff;
   *(block_inode+1) = 0x0f;
+  super_block* super = (super_block*) get_super_block();
+  super->s_free_inodes_count -= NUMBER_OF_RESERVED_INODES;
+  desc_table->bg_free_inodes_count -= NUMBER_OF_RESERVED_INODES;
+  if (save_super_block()<0){
+    return -1;
+  }
+  if (save_blk_desc_table()<0){
+    return -1;
+  }
   return save_fs_block(block_inode,
            root_file_system->block_size, 
            inode_bitmap_b);

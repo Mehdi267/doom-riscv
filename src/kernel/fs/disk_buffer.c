@@ -95,19 +95,20 @@ c_elt* fetch_block(uint32_t disk_block_number){
   debug_print_v_fs("[df]###fetching relative block %d from disk \n", 
               disk_block_number);
   elt->blockNumber = disk_block_number;
-  disk_op disk_fetch;
+  disk_op* disk_fetch = (disk_op*) malloc(sizeof(disk_op));
   int blk_ratio = root_file_system->block_size/BLOCK_SIZE;
   for (int i = 0; i<blk_ratio; i++){
-    disk_fetch.blockNumber = global_mbr->partitionTable[root_file_system->partition]
+    disk_fetch->blockNumber = global_mbr->partitionTable[root_file_system->partition]
       .startLBA+disk_block_number*blk_ratio+i;
     debug_print_v_fs("[df]Reading disk block %d from disk \n", 
-              disk_fetch.blockNumber);
-    disk_fetch.type = READ;  
-    disk_fetch.data = elt->data + i*BLOCK_SIZE;
+              disk_fetch->blockNumber);
+    disk_fetch->type = READ;  
+    disk_fetch->data = elt->data + i*BLOCK_SIZE;
     elt->disk_res = 1;
-    disk_dev->read_disk(&disk_fetch);
+    disk_dev->read_disk(disk_fetch);
     elt->disk_res = 0;
   }
+  free(disk_fetch);
   // Perform disk read operation on the block taht contains the mbr
   elt->next_c = NULL;
   if(global_cache_buf == 0){
@@ -133,21 +134,22 @@ int sync_elt(c_elt* cache_elt){
   print_fs_no_arg("[df]sync_elt was called on cache");
   debug_print_v_fs(" buffer containing block number = %d\n", 
             cache_elt->blockNumber);
-  disk_op disk_wr;
+  disk_op* disk_wr = (disk_op*)malloc(sizeof(disk_op));
   int blk_ratio = root_file_system->block_size/BLOCK_SIZE;
-  for (int i = 0; i<blk_ratio; i++){
-    disk_wr.blockNumber = global_mbr->partitionTable[root_file_system->partition]
-            .startLBA+cache_elt->blockNumber*blk_ratio+i;
+  for (int blk = 0; blk<blk_ratio; blk++){
+    disk_wr->blockNumber = global_mbr->partitionTable[root_file_system->partition]
+            .startLBA+cache_elt->blockNumber*blk_ratio+blk;
     debug_print_v_fs("[df]Saving disk block %d into disk\n", 
-              disk_wr.blockNumber);
-    disk_wr.type = WRITE;  
-    disk_wr.data = cache_elt->data + i*BLOCK_SIZE;
-    if (disk_dev->write_disk(&disk_wr)<0){
+              disk_wr->blockNumber);
+    disk_wr->type = WRITE;  
+    disk_wr->data = cache_elt->data + blk*BLOCK_SIZE;
+    if (disk_dev->write_disk(disk_wr)<0){
       return -1;
     }
     cache_elt->disk_res = 0;
   }
   cache_elt->dirty = 0;
+  free(disk_wr);
   // // printf("******sync AFTER block********\n");
   // // printLinkedList(global_cache_buf);
   // // printf("******sync AFTER block end********\n");
@@ -211,7 +213,7 @@ int save_fs_block(char* data,
   }
   debug_print_v_fs("[df]Saving fs block %d into memory \n", relative_b_nb);
   if (write_block(relative_b_nb, data,
-      data_size, WRITE_BACK)<0){
+      data_size, WRITE_THROUGH)<0){
     printf("A save operation failed");
     return -1;
   }

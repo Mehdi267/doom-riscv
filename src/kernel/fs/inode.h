@@ -333,4 +333,10 @@ int remove_inode_dir(inode_t* dir,
         char* name,
         uint32_t name_len);
 
+/**
+ * @brief Get the inode t elt from node id directly
+ * @param node_id the id of the node that we are looking for
+ * @return inode_elt* the list node
+ */
+inode_elt* get_inode_t_elt_from_id(uint32_t node_id);
 #endif

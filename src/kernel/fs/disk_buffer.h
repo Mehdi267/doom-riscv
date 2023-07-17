@@ -3,7 +3,7 @@
 #include "stdlib.h"
 #include <stdint.h>
 #include "ext2.h"
-
+#include "inode.h"
 #ifndef DISK_BUFFER_H 
 #define DISK_BUFFER_H
 
