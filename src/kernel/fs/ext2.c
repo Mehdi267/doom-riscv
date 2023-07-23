@@ -143,6 +143,7 @@ int configure_root_inode(){
   if (put_inode(inode, 0, RELEASE_INODE) < 0){
     return -1;
   }
+  add_dot_directories(inode, inode);
   block_group_descriptor* desc_table = 
     (block_group_descriptor*) get_desc_table();
   desc_table->bg_used_dirs_count++;

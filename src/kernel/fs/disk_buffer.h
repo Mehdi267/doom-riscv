@@ -109,4 +109,11 @@ int free_cache_list();
  */
 void printLinkedList(c_elt* elt);
 
+
+/**
+ * @brief Set the cache element to dirty manually 
+ * @param disk_block_number the block number
+ * @return int 
+ */
+int set_dirty_block(uint32_t disk_block_number);
 #endif

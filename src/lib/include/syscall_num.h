@@ -66,7 +66,14 @@
 #define SYSC_sync               47
 #define SYSC_clear_disk_cache   48
 #define SYSC_print_fs_details   49
+//File system api
+#define SYSC_open               50               
+#define SYSC_close              51
+#define SYSC_read               52
+#define SYSC_write              53
+#define SYSC_lseek              54
 
-#define NB_SYSCALLS             50
+#define SYSC_print_dir_elements 55 
+#define NB_SYSCALLS             56
 
 #endif

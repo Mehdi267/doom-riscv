@@ -18,6 +18,7 @@ int builtin_cmd(char *cmd) {
 int main(void) {
   char cmd[20];
   int pid;
+  print_dir_elements(".");
   while (1) {
     printf("shell$>");
     cons_read(cmd, 20);

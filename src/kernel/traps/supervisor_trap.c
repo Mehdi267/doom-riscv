@@ -23,7 +23,9 @@
 #include "../input-output/cons_write.h"
 #include "../input-output/keyboard.h"
 #include "../fs/fs.h"
+#include "../fs/fs_api.h"
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 extern void inc_sepc(void); // defined in supervisor_trap_entry.S
@@ -137,10 +139,23 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
       break;    
     case SYSC_print_fs_details:
       print_fs_details();
-      break;    
+      break;
+    case SYSC_open:
+      return open((const char *)tf->a0, tf->a1, tf->a2);
+    case SYSC_close:
+      return close(tf->a0);
+    case SYSC_read:
+      return read(tf->a0, (void*)tf->a1, (uint64_t) tf->a2);
+    case SYSC_write:
+      return write(tf->a0, (void*)tf->a1, (uint64_t) tf->a2);
+    case SYSC_lseek:
+      return lseek(tf->a0, tf->a1, tf->a2);
+    case SYSC_print_dir_elements:
+      print_dir_elements((const char*)tf->a0);    
+      break;
     default:
       printf("Syscall code does not match any of the defined syscalls");
-      blue_screen(tf);
+      // blue_screen(tf);
       break;
   }
   return 0;

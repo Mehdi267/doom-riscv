@@ -9,116 +9,8 @@
 #include "stdio.h"
 #include "logger.h"
 #include <assert.h>
+#include "inode_util.h"
 
-void print_cache_details(inode_elt* list){
-  print_inode_no_arg("-----[INODE CACHE DETAILS]---\n");
-  if (list == 0){
-    return ;
-  }
-  inode_elt* list_iter = list;
-  int i = 0;
-  while(list_iter != NULL){
-    i++;
-    if (i == 420){
-      break;
-    }
-    debug_print_inode("address = %p\n", list_iter->address);
-    debug_print_inode("inode_id = %d\n", list_iter->inode_id);
-    debug_print_inode("inode_usage = %d\n", list_iter->inode_usage);
-    list_iter = list_iter->next_inode;
-  }
-  print_inode_no_arg("-----[INODE CACHE DETAILS END]---\n");
-}
-
-
-int free_inode_list(inode_elt* list){
-  print_inode_no_arg("[IN]Freeing inode list\n");
-  if (list == 0){
-    return 0;
-  }
-  inode_elt* list_iter = list;
-  inode_elt* list_prev = list;
-  while(list_iter != NULL){
-    if (list_iter->address != 0){
-      free(list_iter->address);
-    }
-    list_prev = list_iter;
-    list_iter = list_iter->next_inode;
-    free(list_prev);
-  }
-  return 0;
-}
-
-int add_inode_list(inode_t* address, uint32_t inode_id){
-  debug_print_inode("[IN]Inode list num %d is being added to cache\n", inode_id);
-  inode_elt* table_elt = (inode_elt*) malloc(sizeof(inode_elt));
-  if (table_elt == 0){
-    return -1;
-  }
-  table_elt->address = address;
-  table_elt->inode_id = inode_id;
-  table_elt->inode_usage = 1;
-  table_elt->previous_inode = NULL;
-  table_elt->next_inode = NULL;
-  if (root_file_system->inode_list == 0){
-    root_file_system->inode_list = table_elt;
-  }
-  else{
-    table_elt->next_inode = root_file_system->inode_list;
-    root_file_system->inode_list->previous_inode
-      = table_elt;
-    root_file_system->inode_list = table_elt; 
-  }
-  // if (hash_set(
-  //   root_file_system->inode_hash_table,
-  //   (void*)address,
-  //   (void*)table_elt) < 0){
-  //     //No error because we have backup
-  //     PRINT_RED("node table elt was not placed in hash table\n");
-  // }
-  debug_print_inode("[IN]Inode num %d was added to cache\n",
-       inode_id);
-  return 0;
-}
-
-int remove_inode_list(uint32_t inode_id, inode_t* inode_address){
-  debug_print_inode("[IN]Inode list num %d is being removed from cache\n", inode_id);
-  inode_elt* node = NULL;
-  //We need to find the node in the linked list
-  if (inode_address == 0){
-    node = get_inode_t_elt(get_inode_from_node_id(inode_id));
-  }
-  else{
-    node = get_inode_t_elt(inode_address);
-  }
-  if (node == 0){
-    return -1;
-  }
-  assert(node->inode_id == inode_id);
-  inode_elt* node_next = node->next_inode;
-  inode_elt* node_previous = node->previous_inode;
-  if (node == root_file_system->inode_list 
-        && node_next == NULL 
-        && node_previous == NULL){
-    root_file_system->inode_list = NULL;
-  }else{
-    if (node_next != NULL){
-      node_next->previous_inode = node_previous;
-    }
-    if (node_previous != NULL){
-      node_previous->next_inode = node_next;
-    }
-    if (node == root_file_system->inode_list){
-      root_file_system->inode_list = node_next;
-    }
-  }
-  // // hash_del(root_file_system->inode_hash_table, 
-  //         (void*)inode_address);
-  free(inode_address);
-  free(node);
-  debug_print_inode("[IN]Inode list num %d was removed from cache and freed\n", inode_id);
-  return 0;
-}
 
 inode_t* get_inode(uint32_t inode_number){  
   debug_print_inode("\033[0;36m[IN]Getting inode num %d\n\033[0;0m", inode_number);
@@ -446,7 +338,8 @@ int add_data_block_inode(inode_t* inode){
     inode->i_blocks = inode->i_blocks+1;
     return 0;
   }
-  if (inode->i_blocks<L_ONE_INDIRECT){
+  else if (inode->i_blocks>=L_DIRECT &&
+     inode->i_blocks<L_ONE_INDIRECT){
     uint32_t indirect_block;
     if (inode->i_blocks == L_DIRECT){
       indirect_block = get_data_block();
@@ -472,9 +365,72 @@ int add_data_block_inode(inode_t* inode){
         inode->i_block[INDIRECT_BLOCKS_INDEX]
         );
   }
+  else if (inode->i_blocks>=L_ONE_INDIRECT &&
+     inode->i_blocks<L_DOUBLE_INDIRECT){
+    bool double_written = false;
+    if (inode->i_blocks == L_ONE_INDIRECT){
+      uint32_t double_direct_block = 0;
+      inode->i_blocks++;
+      double_direct_block = get_data_block();
+      if (double_direct_block == 0){
+        return -1;
+      }
+      inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX] =
+        double_direct_block;
+    }
+    uint32_t double_ind_blk_nb = 0;
+    char* main_double_block = disk_read_block(
+          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
+    if (main_double_block == 0){return -1;}
+    for (int itr = 0; itr < root_file_system->block_size/sizeof(uint32_t);
+         itr++){
+      if (*(((uint32_t*)main_double_block)+itr) != 0){
+        double_ind_blk_nb++;
+      } else {
+        break;
+      }
+    }
+    uint32_t can_use_blocks = (inode->i_blocks -
+           BASIC_DOUBLE_INDIRECT - double_ind_blk_nb)%
+           (root_file_system->block_size/sizeof(uint32_t));
+    if (can_use_blocks == 0) {
+      if (double_ind_blk_nb != root_file_system->block_size/sizeof(uint32_t)){
+        *(((uint32_t*)main_double_block)+double_ind_blk_nb) = get_data_block();
+        inode->i_blocks++;
+        double_ind_blk_nb++;
+        double_written = true;
+      }
+      else{
+        printf("File reached max size");
+        return -1;
+      }
+    }
+    char* indirect_block_block = disk_read_block(*(((uint32_t*)main_double_block)+
+          double_ind_blk_nb-1));
+    if (indirect_block_block == 0){
+      return -1;
+    }
+    *(((uint32_t*)indirect_block_block)+can_use_blocks) = get_data_block();
+    inode->i_blocks++;
+    if (double_written){
+      if (save_fs_block(main_double_block, 
+          root_file_system->block_size,
+          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX])<0){
+          return -1;
+        }  
+    }
+    if (save_fs_block(indirect_block_block, 
+        root_file_system->block_size,
+        *(((uint32_t*)main_double_block)+
+          double_ind_blk_nb-1))<0){
+          return -1;
+    }
+    return 0;
+  }
   else{
     return -1;
   }
+  return -1;
 }
 
 int write_dir_entry(char* data_block,
@@ -852,13 +808,94 @@ uint32_t get_data_block(){
   return block_number-super->s_first_data_block;
 }
 
-char* get_inode_relative_block(inode_t* inode, uint32_t relative_block){
+int get_actual_blocks(inode_t* inode){
+  print_inode_no_arg("\033[0;36m[IN]Getting actual relative blocks\n\033[0;0m");
+  if (inode->i_blocks<L_DIRECT){
+    print_inode_no_arg("\033[0;36m[IN]i blocks< Ldirect\n\033[0;0m");
+    return inode->i_blocks;
+  }
+  else if (inode->i_blocks>L_DIRECT &&
+     inode->i_blocks<=L_ONE_INDIRECT){
+    return inode->i_blocks-1;
+  }
+  else if (inode->i_blocks>L_ONE_INDIRECT &&
+     inode->i_blocks<=L_DOUBLE_INDIRECT){
+    uint32_t double_ind_blk_nb = 0;
+    char* main_double_block = disk_read_block(
+          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
+    if (main_double_block == 0){return -1;}
+    for (int itr = 0; itr < root_file_system->block_size/sizeof(uint32_t);
+         itr++){
+      if (*(((uint32_t*)main_double_block)+itr) != 0){
+        double_ind_blk_nb++;
+      } else {
+        break;
+      }
+    }
+    return inode->i_blocks-double_ind_blk_nb-1;
+  }
+  return -1;
+}
+
+char* get_inode_relative_block(inode_t* inode, 
+    uint32_t relative_block, disk_get op){
   if (inode == 0){
     return 0;
   }
-  if (relative_block<L_DIRECT){
-    char* block_data = disk_read_block(block_number);
+  uint32_t block_number = 0;
+  if (relative_block<REL_NB_DIRECT){
+    block_number = inode->i_block[relative_block];
   }
+  else if (relative_block>=REL_NB_DIRECT && 
+      relative_block<REL_NB_INDIRECT+REL_NB_DIRECT){
+    uint32_t rel_indirect = relative_block-REL_NB_DIRECT;
+    char* indirect_block_data = 
+      disk_read_block(inode->i_block[INDIRECT_BLOCKS_INDEX]);
+    if (indirect_block_data == 0){
+      return 0;
+    }
+    block_number = *(((uint32_t*)indirect_block_data)+rel_indirect);
+  }
+  else if (relative_block>= REL_NB_INDIRECT + REL_NB_DIRECT && 
+      relative_block<REL_NB_DOUB_INDIRECT+REL_NB_INDIRECT+REL_NB_DIRECT){
+    uint32_t double_indirect = REL_NB_INDIRECT + REL_NB_DIRECT;
+    uint32_t indirect_block = double_indirect / 
+            (root_file_system->block_size/sizeof(uint32_t)); 
+    uint32_t indirect_index = double_indirect %
+            (root_file_system->block_size/sizeof(uint32_t)); 
+    char* double_block_data = 
+      disk_read_block(inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
+    if (double_block_data == 0){
+      return 0;
+    }
+    char* indirect_block_data = 
+      disk_read_block(*(((uint32_t*)double_block_data)
+          +indirect_block));
+    if (indirect_block_data == 0){
+      return 0;
+    }
+    block_number = 
+        *(((uint32_t*)indirect_block_data)+indirect_index);
+  }else{
+    printf("block number is too big");
+    return 0;
+  }
+  if (block_number != 0){
+    char* block_data = 
+        disk_read_block(block_number);
+    if (block_data == 0){
+      return 0;
+    }
+    if (op == WRITE_OP){
+      set_dirty_block(block_number);
+    }
+    return block_data;
+  }
+  else{
+    debug_print_inode("[IN]Relative block %d is to big \n", relative_block);
+    return 0;
+  }
+  return 0;
 }
 
 //0 is reserved not used block use for error handeling
@@ -890,14 +927,14 @@ int free_data_block(uint32_t data_block){
            block_bitmap);
 }
 
-void print_dir_list(inode_t* dir){
+void print_dir_list(inode_t* dir, bool verbose){
   print_inode_no_arg("------Printing dir list------\n");
   super_block* super = (super_block*) get_super_block();
   if (dir == 0){
     return ;
   }
   if (dir->i_mode != EXT2_S_IFDIR){
-    PRINT_RED("Inode is not a dir");
+    PRINT_RED("Inode is not a dir\n");
     return;
   }
   debug_print_inode("print dir list dir->i_blocks = %d\n", dir->i_blocks);
@@ -919,22 +956,19 @@ void print_dir_list(inode_t* dir){
     }
     char* limit = block_data+root_file_system->block_size
         -(addition);
-    //int i =0;
     while (((char*)list_elt)<limit){
-      // i++;
-      //   if (i == 500){
-      //     break;
-      //   }
       if (list_elt->file_type != EXT2_FT_FREE){
-        printf("------------\n");
-        printf("inode_n %d\n",list_elt->inode_n);
-        printf("rec_len %d\n",list_elt->rec_len);
-        printf("name_len %d\n",list_elt->name_len);
-        printf("file_ type %d\n",list_elt->file_type);
+        if (verbose){
+          printf("------------\n");
+          printf("inode_n %d\n",list_elt->inode_n);
+          printf("rec_len %d\n",list_elt->rec_len);
+          printf("name_len :%d\n",list_elt->name_len);
+          printf("file_type :%d\n",list_elt->file_type);
+        }
         char filename[list_elt->name_len];
         memcpy(filename, (char*)list_elt + sizeof(dir_entry_basic),
              list_elt->name_len);
-        printf("file_name %s\n",filename);
+        printf("file_name = %s\n",filename);
       }
       uint32_t jump_by = list_elt->rec_len;
       list_elt = (dir_entry_basic*)((char*)list_elt+jump_by);
@@ -943,44 +977,20 @@ void print_dir_list(inode_t* dir){
   print_inode_no_arg("------Printing dir list end------\n");
 }
 
-
-void print_dir_entry_basic(dir_entry_basic* entry){
-  if (entry == 0 ){
-    return;
+int add_dot_directories(inode_t* dir, inode_t* previous_directory){
+  print_inode_no_arg("------ADDING DOT DIRECTORIES------\n");
+  char dot[1] =  ".";
+  char doubledot[2] =  "..";
+  if (add_inode_directory(dir, get_inode_number(dir), 
+                    EXT2_FT_DIR, dot, 1)<0){
+    return -1;
   }
-  print_inode_no_arg("----entry no name ----\n");
-  debug_print_inode("inode_n = %d", entry->inode_n);
-  debug_print_inode("rec_len = %d", entry->rec_len);
-  debug_print_inode("name_len = %d", entry->name_len);
-  debug_print_inode("file_type = %d", entry->file_type);
-  print_inode_no_arg("--------\n");
+  if (add_inode_directory(dir, get_inode_number(previous_directory), 
+                    EXT2_FT_DIR, doubledot, 2)<0){
+    return -1;
+  }
+  return 0;
+  print_inode_no_arg("------DOT DIRECTORIES WERE ADDED------\n");
 }
 
-void print_dir_entry(dir_entry_basic* entry){
-  if (entry == 0 ){
-    return;
-  }
-  print_inode_no_arg("\033[0;32m----Printing disk entry----\n");
-  debug_print_inode("inode_n %d\n", entry->inode_n);
-  debug_print_inode("rec_len %d\n", entry->rec_len);
-  debug_print_inode("name_len %d\n", entry->name_len);
-  debug_print_inode("file_ type %d\n", entry->file_type);
-  char filename[entry->name_len];
-  memcpy(filename, (char*)entry + sizeof(dir_entry_basic), 
-        entry->name_len);
-  debug_print_inode("file_name %s\n", filename);
-  print_inode_no_arg("--------\033[0;0m\n");
-}
 
-void print_dir_entry_obj(dir_entry* entry){
-  if (entry == 0 ){
-    return;
-  }
-  print_inode_no_arg("\033[0;32m----Printing disk entry----\n");
-  debug_print_inode("inode_n %d\n", entry->inode_n);
-  debug_print_inode("rec_len %d\n", entry->rec_len);
-  debug_print_inode("name_len %d\n", entry->name_len);
-  debug_print_inode("file_type %d\n", entry->file_type);
-  debug_print_inode("file_name %s\n", entry->name);
-  print_inode_no_arg("--------\033[0;0m\n");
-}

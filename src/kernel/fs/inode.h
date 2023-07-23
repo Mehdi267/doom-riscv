@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 //Reserved inodes
 #define EXT2_BAD_INO 1        // bad blocks inode
@@ -77,12 +78,18 @@ typedef struct {
 #define NB_DIRECT_BLOCKS 12
 #define L_DIRECT 12 //size limits
 #define NB_ONE_INDIRECT_BLOCKS 1
-#define INDIRECT_BLOCKS_INDEX 13
-#define L_ONE_INDIRECT 525
+#define INDIRECT_BLOCKS_INDEX 12
+#define DOUBLE_DIRECT_BLOCKS_INDEX 13
+#define L_ONE_INDIRECT 525 // all fo the space take by the direct and the indirect blocks
+#define BASIC_DOUBLE_INDIRECT 526 // indirect and double main block
 #define NB_DOUBLE_INDIRECT_BLOCKS 1
 #define L_DOUBLE_INDIRECT 262668
 #define NB_TRIPLE_INDIRECT_BLOCKS 1 
 
+//Relative figures
+#define REL_NB_DIRECT 12
+#define REL_NB_INDIRECT 512
+#define REL_NB_DOUB_INDIRECT 262144
 // limiting my self to double list atm 
 #define MAX_BLOCKS_FILE 262668 
 
@@ -115,7 +122,7 @@ typedef struct Linked_directory_entry {
 
 //sizeof(uint32_t)+sizeof(uint16_t)+sizeof(uint8_t)+sizeof(uint8_t);
 #define SIZE_DIR_NO_NAME 8
-//Functions names taken from 
+//Some functions names taken from 
 //Andrew S. Tanenbaum -
 //Operating Systems. Design and Implementation
 
@@ -131,10 +138,10 @@ typedef enum put_operation_type{
   SAVE_INODE = 1, 
 } put_op;
 
-typedef enum put_operation_type{
-  RELEASE_INODE = 0, 
-  SAVE_INODE = 1, 
-} put_op;
+typedef enum disk_get_type{
+  READ_OP = 0, 
+  WRITE_OP = 1, 
+} disk_get;
 
 /**
  * @brief Return an i-node that is no longer needed.
@@ -286,7 +293,7 @@ int free_inode_list(inode_elt* list);
  * the directory inode that was given as a function argument
  * @param dir the directory inode
  */
-void print_dir_list(inode_t* dir);
+void print_dir_list(inode_t* dir, bool verbose);
 
 /**
  * @brief prints basic entry with no filename
@@ -344,4 +351,36 @@ int remove_inode_dir(inode_t* dir,
  * @return inode_elt* the list node
  */
 inode_elt* get_inode_t_elt_from_id(uint32_t node_id);
+
+
+/**
+ * @brief Get the actual blocks used by the inode by
+ * removing hte blocks that are used by the indirect and double
+ * indirect blocks
+ * @param inode the inode from which we would like to calculate its
+ * actual blocks
+ * @return int number of blocks
+ */
+int get_actual_blocks(inode_t* inode);
+
+/**
+ * @brief Get the relative block number by not looking at the 
+ * the blocks used for the indirection of the inodes
+ * @param inode the inode from which we will extract the block
+ * @param relative_block the nbof the relative block
+ * @param op the type of the operation that we are aiming of doing
+ * @return char* 
+ */
+char* get_inode_relative_block(inode_t* inode, 
+    uint32_t relative_block, disk_get op);
+
+/**
+ * @brief Adds the "." and the ".." directories to the directory
+ * identifies by the dir arguement, the "." will be the the dir inode
+ * and the ".." file will be the previous_directory  
+ * @param dir the directory which we will configure
+ * @param previous_directory the previous directory of the current directory 
+ * @return int function status
+ */
+int add_dot_directories(inode_t* dir, inode_t* previous_directory);
 #endif

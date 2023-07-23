@@ -80,6 +80,25 @@ c_elt* look_up_c_elt(uint32_t disk_block_number){
   return 0;
 }
 
+int set_dirty_block(uint32_t disk_block_number){
+  if (global_cache_buf == 0){
+    return 0;
+  }
+  c_elt* global_cache_iter = global_cache_buf;
+  while(global_cache_iter != 0){
+    if (global_cache_iter->blockNumber == disk_block_number){
+      debug_print_v_fs("[df]element blk %d was set to dirty \n",
+             disk_block_number);
+      global_cache_iter->dirty = true;
+      return 0;
+    }
+    global_cache_iter = global_cache_iter->next_c;
+  }
+  debug_print_v_fs("[df]Set dirty block %d not found \n",
+             disk_block_number);
+  return -1;
+}
+
 c_elt* fetch_block(uint32_t disk_block_number){
   c_elt* elt = (c_elt*)malloc(sizeof(c_elt));
   if (elt == 0){
@@ -219,6 +238,8 @@ int save_fs_block(char* data,
   }
   return 0;
 } 
+
+
 
 char* disk_read_block(uint32_t relative_b_n){
   return read_block_c(relative_b_n);

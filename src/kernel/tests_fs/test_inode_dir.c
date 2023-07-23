@@ -106,7 +106,7 @@ int basic_test(){
       return -1;
   }
   
-  print_dir_list(get_inode(EXT2_GOOD_OLD_FIRST_INO));
+  print_dir_list(get_inode(EXT2_GOOD_OLD_FIRST_INO), 1);
   uint32_t inode_number4 = look_for_inode_dir(
     get_inode(EXT2_GOOD_OLD_FIRST_INO),
     "file--4",
@@ -185,7 +185,7 @@ int basic_test(){
   }
   assert(free_inode_count == 
         super->s_free_inodes_count);
-  print_dir_list(get_inode(EXT2_GOOD_OLD_FIRST_INO));
+  print_dir_list(get_inode(EXT2_GOOD_OLD_FIRST_INO), 1);
   assert(look_for_inode_dir(
     get_inode(EXT2_GOOD_OLD_FIRST_INO),
     "file1",

@@ -11,7 +11,6 @@
 #include "queue.h"
 #include "stdarg.h"
 #include "stdbool.h"
-#include <cstdint>
 #include <stdint.h>
 #include "stddef.h"
 #include "stdio.h"
@@ -83,7 +82,7 @@ typedef struct id_list{
  */
 typedef struct open_file_mang{
   int fd;
-  uint64_t position;
+  int64_t position;
   inode_t* f_inode;
   uint32_t inode_number;
   /**Flags*/

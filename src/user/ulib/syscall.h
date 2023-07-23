@@ -104,4 +104,18 @@ extern int reset_disk();
 extern int sync();
 extern int clear_disk_cache();
 extern void print_fs_details();
+
+typedef long ssize_t;
+typedef long off_t;
+typedef unsigned int mode_t;
+//Fs api 
+int open(const char *file_name, int flags, mode_t mode);
+int close(int file_descriptor);
+ssize_t read(int file_descriptor, void *buffer, size_t count);
+ssize_t write(int file_descriptor, const void *buffer, size_t count);
+off_t lseek(int file_descriptor, off_t offset, int whence);
+
+//Custom api
+void print_dir_elements(const char*);    
+
 #endif

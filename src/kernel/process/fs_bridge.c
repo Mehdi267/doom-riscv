@@ -2,6 +2,8 @@
 #include "fs_bridge.h"
 #include "helperfunc.h"
 #include "logger.h"
+#include "../fs/inode_util.h"
+
 inode_t* get_current_dir(){
  process* proc =  get_process_struct_of_pid(getpid()); 
   if (proc == 0){
@@ -67,6 +69,9 @@ int remove_fd_list(int fd){
     return -1;
   }
   flip* fd_elt = get_fs_list_elt(fd);
+  if (remove_inode_list(0, fd_elt->f_inode)<0){
+    return -1;
+  }
   flip* fd_elt_next = fd_elt->next_file;
   flip* fd_elt_previous = fd_elt->file_previous;
   if (fd_elt == proc_mang_g.open_files_table
