@@ -184,7 +184,7 @@
 
 /**
  * @brief the following macro are used to display the  
- * debug messages of the file system the file system 
+ * debug messages of the file system operations 
  */
 #define DEBUG_INODE_LEVEL 1 //Indicates if debug type is active
 
@@ -197,4 +197,22 @@
         do {if (DEBUG_INODE_LEVEL == 1){ printf(fmt);}  \
             if (DEBUG_INODE_LEVEL == 2){ printf("\033[0;32m[%s][%d][%s]: \033[0;m" fmt, __FILE__, \
                                 __LINE__, __func__);} } while (0)
+
+
+/**
+ * @brief the following macro are used to display the  
+ * debug messages of the file system api
+ */
+#define DEBUG_FS_API_LEVEL 1 //Indicates if debug type is active
+
+#define debug_print_fsapi(fmt, ...) \
+        do {if (DEBUG_FS_API_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_FS_API_LEVEL == 2){ printf("\033[0;32m[%s][%d][%s]: \033[0;m" fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+#define print_fsapi_no_arg(fmt, ...) \
+        do {if (DEBUG_FS_API_LEVEL == 1){ printf(fmt);}  \
+            if (DEBUG_FS_API_LEVEL == 2){ printf("\033[0;32m[%s][%d][%s]: \033[0;m" fmt, __FILE__, \
+                                __LINE__, __func__);} } while (0)
+
 #endif

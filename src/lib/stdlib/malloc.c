@@ -3729,8 +3729,7 @@ void fREe(Void_t* mem)
 void fREe(mem) Void_t* mem;
 #endif
 {
-  printf("[FREE MEHTOD]Before Freeing memory address %p\n", mem);
-
+  // printf("[FREE MEHTOD]Before Freeing memory address %p\n", mem);
   mstate av = get_malloc_state();
 
   mchunkptr       p;           /* chunk corresponding to mem */

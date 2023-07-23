@@ -47,7 +47,7 @@ typedef struct shared_page{
  * 
  * @return int a positive value if the allocation was sucessful and negetive value otherwise
  */
-extern int initialize_share_pages_table();
+extern int initialize_shared_pages_table();
 
 /**
  * @brief Create a frame that is associated to the key given as function argument,

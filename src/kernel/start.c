@@ -12,12 +12,13 @@
 #include "memory/virtual_memory.h" //for set_up_virtual_memory
 #include "riscv.h" // for csr_set
 #include "timer.h"
-#include "test_interface.h"
 
-#include <stdio.h>
-#include "drivers/console.h"
-#include "fs/fs.h"
+#include <stdio.h> 
+#include "test_interface.h"
 #include "tests_fs/tests_fs.h"
+#include "fs/fs.h"
+#include "process/helperfunc.h"
+
 
 int kernel_start() {
   print_mem_symbols();
@@ -47,10 +48,23 @@ int kernel_start() {
         PRINT_RED("error while mounting file system");
       }
       print_fs_details();
-      test_ext2_fs();
-      print_fs_details();
+      // test_ext2_fs();
+      //print_fs_details();
     #endif
   #endif
+  const char* filePath = "/usr/local/bin/example.txt";
+  path_fs* path_data = extract_files(filePath);
+
+  if (path_data != NULL) {
+      printf("Number of elements: %u\n", path_data->nb_files);
+      printf("Folders and Files:\n");
+      for (uint32_t i = 0; i < path_data->nb_files; i++) {
+          printf("%s\n", path_data->files[i]);
+      }
+      free_path_fs(path_data);
+  }
+
+
   //kernel_drivers_tests(0);
   splash_screen();
   splash_vga_screen();

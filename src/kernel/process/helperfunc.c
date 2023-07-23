@@ -110,28 +110,28 @@ int increment_pid_and_get_new_pid(){
   return proc_mang_g.pid_iterator;
 }
 
-
 int increment_shared_page_counter(){
     page_id_counter++;
     return page_id_counter;
 }
 
+int increment_fd_counter(){
+  proc_mang_g.fd_counter++;
+  return proc_mang_g.fd_counter;
+}
 
 int increment_semaphore_id(){
     semaphore_id_counter++;
     return semaphore_id_counter;
-}
-
+} 
 
 hash_t* get_shared_pages_hash_table(void){
     return shared_memory_hash_table;
 }
 
-
 hash_t* get_process_hash_table(void){
     return proc_mang_g.pid_process_hash_table;
 }
-
 
 hash_t* get_semaphore_table(void){
     return semaphore_table;
@@ -231,3 +231,93 @@ void print_process_state(process_state state){
   }
 }
 
+bool is_absolute_directory(const char* path) {
+    // Check if the path is not NULL and not an empty string.
+    if (path && *path != '\0') {
+        // An absolute directory starts with a forward slash ('/') or a drive letter (on Windows).
+        // For this example, we assume a Unix-like file system with a forward slash.
+        if (*path == '/')
+            return true;
+        else
+            return false;
+    }
+    // If the path is NULL or an empty string, it's not absolute.
+    return false;
+}
+
+void extractFolders(const char* path) {
+    char tempPath[256]; // Assuming the maximum path length is 255 characters
+    char* folder;
+    const char* delimiters = "\\/"; // Delimiters: both forward and backslashes
+
+    // Make a copy of the input path to avoid modifying the original string
+    strncpy(tempPath, path, sizeof(tempPath) - 1);
+    tempPath[sizeof(tempPath) - 1] = '\0'; // Ensure null-termination
+
+    printf("Path: %s\n", path);
+    printf("Folders:\n");
+
+    folder = strtok(tempPath, delimiters); // Split path by delimiters
+    while (folder != NULL) {
+        printf("%s\n", folder);
+        folder = strtok(NULL, delimiters);
+    }
+}
+
+path_fs* extract_files(const char* path) {
+  char tempPath[256]; // Assuming the maximum path length is 255 characters
+  const char* delimiters = "\\/"; // Delimiters: both forward and backslashes
+
+  // Make a copy of the input path to avoid modifying the original string
+  strncpy(tempPath, path, sizeof(tempPath) - 1);
+  tempPath[sizeof(tempPath) - 1] = '\0'; // Ensure null-termination
+
+  // Count the number of elements
+  uint32_t count = 0;
+  char* token = strtok(tempPath, delimiters); // Split path by delimiters
+  while (token != NULL) {
+    count++;
+    token = strtok(NULL, delimiters);
+  }
+
+  // Allocate memory for the path_fs structure
+  path_fs* result = (path_fs*)malloc(sizeof(path_fs));
+  if (result == NULL) {
+    printf("Memory allocation failed");
+    return NULL;
+  }
+
+  // Allocate memory for the files array and fill it with folder and file names
+  result->files = (char**)malloc(count * sizeof(char*));
+  if (result->files == NULL) {
+    printf("Memory allocation failed");
+    free(result);
+    return NULL;
+  }
+
+  // Reset tempPath and tokenize it again to fill the files array
+  strncpy(tempPath, path, sizeof(tempPath) - 1);
+  tempPath[sizeof(tempPath) - 1] = '\0';
+  uint32_t i = 0;
+  token = strtok(tempPath, delimiters);
+  while (token != NULL) {
+    result->files[i] = malloc(strlen(token)); // Copy the token into the files array
+    memcpy(result->files[i], token, strlen(token));
+    token = strtok(NULL, delimiters);
+    i++;
+  }
+
+  result->nb_files = count;
+  return result;
+}
+
+void free_path_fs(path_fs* path) {
+  if (path == NULL) {
+    return;
+  }
+  for (uint32_t i = 0; i < path->nb_files; i++) {
+    free(path->files[i]);
+  }
+  free(path->files);
+  free(path);
+}

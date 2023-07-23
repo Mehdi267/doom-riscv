@@ -16,6 +16,18 @@ typedef int pid_t;
 typedef long ssize_t;
 
 // Messages from users
+enum FileOpenFlags {
+    O_RDONLY = 0x0000,      // Read-only
+    O_WRONLY = 0x0001,      // Write-only
+    O_RDWR = 0x0002,        // Read-write
+    O_CREAT = 0x0010,       // Create the file if it doesn't exist
+    O_EXCL = 0x0020,        // Fail if the file exists and O_CREAT is used
+    O_TRUNC = 0x0040,       // Truncate the file to zero length upon opening
+    O_APPEND = 0x0080,      // Set the file offset to the end before each write
+    O_SYNC = 0x0200         // Write operations are synchronized on storage
+};
+int open(const char *file_name, int flags, mode_t mode);
+
 int access(const char *file_name, int mode);
 int chdir(const char *new_directory);
 int chmod(const char *file_name, mode_t new_mode);
@@ -31,7 +43,6 @@ off_t lseek(int file_descriptor, off_t offset, int whence);
 int mkdir(const char *dir_name, mode_t mode);
 //will try to implement but the the current design choices make this very hard to implement
 int mount(const char *special_file, const char *mount_point, int ro_flag);
-int open(const char *file_name, int flags, mode_t mode);
 int pipe(int file_descriptors[2]);
 ssize_t read(int file_descriptor, void *buffer, size_t count);
 int rename(const char *old_name, const char *new_name);

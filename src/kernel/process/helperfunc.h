@@ -11,6 +11,7 @@
 #include "process.h"
 #include "../memory/pages.h"
 #include "../sync/semaphore_api.h"
+#include <stdint.h>
 /**
  * @brief Casts an int to a void * pointer 
 */
@@ -168,4 +169,59 @@ extern int get_pid_iterator();
  * @param state process state 
  */
 extern void print_process_state(process_state state);
+
+/**
+ * @brief Increment the fd counter 
+ * and returns a new fd
+ * @return int 
+ */
+extern int increment_fd_counter();
+
+/**
+ * @brief Checks if the path given is an absolute directory 
+ * or a relative one 
+ * @param path the path that we could like to verify
+ * @return true it is an absolute directory
+ * @return false it is not an absolute directory
+ */
+bool is_absolute_directory(const char* path);
+
+
+typedef struct path_files{
+  char** files;
+  uint32_t nb_files;
+} path_fs;
+
+
+/**
+ * @brief Extracts folder and file names from the given path.
+ *
+ * This function takes a path as input and extracts individual folder and file
+ * names from it. It tokenizes the path using forward slashes ('/') and
+ * backslashes ('\') as delimiters. It dynamically allocates memory for the
+ * result and returns a pointer to a `path_fs` structure containing the
+ * extracted names and the number of elements.
+ *
+ * @param path The input path from which to extract folder and file names.
+ * @return A pointer to the `path_fs` structure containing the extracted names
+ *         and the number of elements. The memory for the structure and its
+ *         `files` array is dynamically allocated and must be freed using the
+ *         `free_path_fs` function after use. If the memory allocation fails
+ *         or the input `path` is NULL, the function returns NULL.
+ */
+path_fs* extract_files(const char* path);
+
+
+/**
+ * @brief Frees the memory allocated for the `path_fs` structure.
+ *
+ * This function frees the dynamically allocated memory for the `path_fs`
+ * structure and its `files` array. It also frees each individual folder and
+ * file name stored in the `files` array. If the input `path` is NULL, this
+ * function has no effect.
+ *
+ * @param path A pointer to the `path_fs` structure to be freed.
+ */
+void free_path_fs(path_fs* path);
+
 #endif

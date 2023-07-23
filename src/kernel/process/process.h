@@ -11,6 +11,7 @@
 #include "queue.h"
 #include "stdarg.h"
 #include "stdbool.h"
+#include <cstdint>
 #include <stdint.h>
 #include "stddef.h"
 #include "stdio.h"
@@ -21,6 +22,9 @@
 #include "../sync/msgqueue.h" // for message_t
 #include "../userspace_apps.h" //Used for locating the app and adding its code
 #include "../input-output/cons_read.h" //for cons_read declation
+//File system related 
+#include "../fs/inode.h" //Used for inode pointer
+#include "../fs/ext2.h" 
 /**
  * @brief global function constants
  * @param MAXPRIO the maximun priority of a process
@@ -69,13 +73,37 @@ typedef struct id_list{
   struct id_list* next_id;
 } id_list_t;
 
+
+/**
+ * @brief this data structure is inspired for the Andrew Tanenbaum's book
+ * related to operating systems it will be used in this case to hold infrmation about
+ * the open files and the current position that they are in.
+ * this array will not indexed it will a linked list for now but i will attached to a hash table
+ * later one one it works as we wish it does 
+ */
+typedef struct open_file_mang{
+  int fd;
+  uint64_t position;
+  inode_t* f_inode;
+  uint32_t inode_number;
+  /**Flags*/
+  bool can_read;
+  bool can_write;
+  bool append_on;
+  bool sync_directly; //will not be used
+  struct open_file_mang* next_file;
+  struct open_file_mang* file_previous;
+} flip;
+
 struct process_management_global {
-    hash_t *pid_process_hash_table;    // Hash table that associates to every pid the process struct associated to it
-    int current_running_process_pid;   // Id of the process that is currently running (changed dynamically by the scheduler)
-    int pid_iterator;                  // Pid iterator used to associate a unique pid to every process
-    int nb_proc_running;               // Counts the currently running processes
-    id_list_t *process_id_list;        // Saves all the used ids of the processes
-    int killed_counter;                // Counter indicating the order at which processes were killed
+  hash_t *pid_process_hash_table;    // Hash table that associates to every pid the process struct associated to it
+  int current_running_process_pid;   // Id of the process that is currently running (changed dynamically by the scheduler)
+  int pid_iterator;                  // Pid iterator used to associate a unique pid to every process
+  int nb_proc_running;               // Counts the currently running processes
+  id_list_t *process_id_list;        // Saves all the used ids of the processes
+  int killed_counter;                // Counter indicating the order at which processes were killed
+  int fd_counter;                    // Files counter
+  flip* open_files_table;            // Open files table
 };
 extern struct process_management_global proc_mang_g;
 
@@ -174,7 +202,16 @@ typedef struct shared_pages_wrap{
    shared_pages_proc_t* tail_shared_page;
 } shared_pages_wrap_t;
 
-
+/**
+ * @brief Use to describe direcotries for the processes
+ * it will mostly be used for the current and the root directory
+ * and it it will use in the process table 
+ */
+typedef struct process_directory{
+  char * dir_name;
+  uint32_t name_size;
+  inode_t* inode;
+} p_dir_t;
 
 
 /**
@@ -243,6 +280,9 @@ typedef struct process_t {
   int semaphore_id;
   //App struct pointer
   const struct uapps* app_pointer;
+  //File system
+  p_dir_t root_dir;
+  p_dir_t cur_dir;
 } process;
 
 /**

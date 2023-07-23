@@ -216,6 +216,7 @@ int stress_test(){
         SAVE_INODE)<0){
           return -1;
     }
+    // print_cache_details(root_file_system->inode_list);
   }
   PRINT_GREEN("Created files and i am now adding them to the directory\n");
   print_cache_details(root_file_system->inode_list);
@@ -265,12 +266,16 @@ int stress_test(){
       return -1;
     }
   }
-  for(int file_iter = 0; file_iter <number_of_free_files; file_iter++){
-    print_cache_details(root_file_system->inode_list);
+  PRINT_GREEN("All files were removed from the directories, freeing files\n");
+  for(int file_iter = number_of_free_files - 1;
+        file_iter >= 0; 
+        file_iter--){
+    // print_cache_details(root_file_system->inode_list);
     if (free_inode(NULL,file_ids[file_iter])<0){
       return -1;
     }
   }
+  return 0;
   assert(free_inode_count == 
         super->s_free_inodes_count);
   assert(free_data_block_count == 

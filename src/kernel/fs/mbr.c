@@ -76,6 +76,27 @@ int set_up_mbr(){
   return save_global_mbr();
 }
 
+int clear_partition_space(uint8_t partition_number){
+  if(global_mbr ==0){
+    return -1;
+  }
+  disk_op* disk_wr = (disk_op*)malloc(sizeof(disk_op));
+  char data[BLOCK_SIZE];
+  memset(data, 0, BLOCK_SIZE);
+  for (int blk = global_mbr->partitionTable[0].startLBA; 
+        blk<global_mbr->partitionTable[0].sizeLBA +
+            global_mbr->partitionTable[0].startLBA; blk++){
+    disk_wr->blockNumber = blk;
+    disk_wr->type = WRITE;  
+    disk_wr->data = data;
+    if (disk_dev->write_disk(disk_wr)<0){
+      return -1;
+    }
+  }
+  free(disk_wr);
+  return 0;
+}
+
 int setup_test_partition(uint8_t partition_type){
   if(global_mbr ==0){
     return -1;
@@ -84,6 +105,7 @@ int setup_test_partition(uint8_t partition_type){
   global_mbr->partitionTable[0].type = partition_type;//test partition
   global_mbr->partitionTable[0].startLBA = 2;
   global_mbr->partitionTable[0].sizeLBA = TEST_EXT2_PARTITION_SIZE;
+  clear_partition_space(0);
   if (partition_type == EXT2_PARTITION){
       configure_ext2_file_system(0);
   }

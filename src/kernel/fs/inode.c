@@ -61,11 +61,9 @@ int add_inode_list(inode_t* address, uint32_t inode_id){
   table_elt->previous_inode = NULL;
   table_elt->next_inode = NULL;
   if (root_file_system->inode_list == 0){
-    printf("AAAAAAAAAAAAA\n");
     root_file_system->inode_list = table_elt;
   }
   else{
-    printf("BBBBBBB\n");
     table_elt->next_inode = root_file_system->inode_list;
     root_file_system->inode_list->previous_inode
       = table_elt;
@@ -109,6 +107,9 @@ int remove_inode_list(uint32_t inode_id, inode_t* inode_address){
     }
     if (node_previous != NULL){
       node_previous->next_inode = node_next;
+    }
+    if (node == root_file_system->inode_list){
+      root_file_system->inode_list = node_next;
     }
   }
   // // hash_del(root_file_system->inode_hash_table, 
@@ -212,7 +213,7 @@ inode_elt* get_inode_t_elt(inode_t* inode){
 }
 
 uint32_t get_inode_number(inode_t* inode){
-  print_inode_no_arg("[IN]Looking for inode an number\n");
+  print_inode_no_arg("[IN]Looking for an inode's number\n");
   // inode_elt* node_elt = hash_get(root_file_system->inode_hash_table,
   //             (void*)inode,
   //             NULL);
@@ -249,7 +250,8 @@ int put_inode(inode_t* inode, uint32_t inode_number, put_op op_type){
   if (block_inode ==0){
     return -1;
   }
-  inode_t* inode_ptr =  (inode_t*)(block_inode+inode_number*INODE_SIZE);
+  inode_t* inode_ptr =  (inode_t*)(block_inode+(inode_number*INODE_SIZE)
+                            %root_file_system->block_size); 
   memcpy(inode_ptr, inode, sizeof(inode_t));
   inode_elt* node = get_inode_t_elt(inode);
   if (op_type == RELEASE_INODE){
@@ -257,12 +259,15 @@ int put_inode(inode_t* inode, uint32_t inode_number, put_op op_type){
     if (node->inode_usage == 0){
       remove_inode_list(inode_number, inode);
     }
-  }
-  debug_print_inode("\033[0;34m[IN]Put inode reached end on %d\033[0;0m\n", inode_number);
-  return save_fs_block(block_inode, 
+  } 
+  if (save_fs_block(block_inode, 
           root_file_system->block_size,
           block_number
-          );
+          )<0){
+            return -1;
+  }
+  debug_print_inode("\033[0;34m[IN]Put inode reached end on %d\033[0;0m\n", inode_number);
+  return 0;
 }
 
 int alloc_bit_bitmap(char* block){
@@ -372,7 +377,7 @@ int free_inode(inode_t* inode, uint32_t inode_number){
   }
   uint32_t disk_blks = inode->i_blocks;
   debug_print_inode("\033[0;36m[IN]inode->i_blocks = %d\n\033[0;0m", inode->i_blocks);
-  if (disk_blks<L_DIRECT){
+  if (disk_blks>0){
     uint32_t direct = disk_blks>L_DIRECT ? L_DIRECT : inode->i_blocks;
     for (int i = 0; i<direct; i++){
       if (free_data_block(inode->i_block[i])<0){
@@ -524,17 +529,24 @@ int add_inode_directory(inode_t* dir,
     PRINT_RED("inode is not a directory\n");
     return -1;
   }
+  if (look_for_inode_dir(dir, name, name_size)>0){
+    return -1;
+  }
   dir_entry dir_entry;
   dir_entry.inode_n = inode_number ;  
   dir_entry.name = name;  
   dir_entry.name_len = name_size;  
   dir_entry.file_type = type;  
   //min size
-  dir_entry.rec_len = SIZE_DIR_NO_NAME
+  uint32_t file_size = SIZE_DIR_NO_NAME
                   +dir_entry.name_len;
+  dir_entry.rec_len = file_size;
   if (dir_entry.rec_len%4 != 0){
     dir_entry.rec_len += 4-dir_entry.rec_len%4; 
   }
+  //To improve later because if there is no space 
+  //we will not be able to add a directory entry
+  dir->i_size += file_size;
   debug_print_inode("[IN]rec_lec = %d\n",dir_entry.rec_len);  
   if (dir->i_blocks == 0){
     print_inode_no_arg("[IN]---Adding inode to dir block 0--\n");
@@ -840,8 +852,19 @@ uint32_t get_data_block(){
   return block_number-super->s_first_data_block;
 }
 
+char* get_inode_relative_block(inode_t* inode, uint32_t relative_block){
+  if (inode == 0){
+    return 0;
+  }
+  if (relative_block<L_DIRECT){
+    char* block_data = disk_read_block(block_number);
+  }
+}
+
 //0 is reserved not used block use for error handeling
 int free_data_block(uint32_t data_block){
+  debug_print_inode("\033[0;35m[IN]Trying to free a data blk %d \n\033[0;35m", 
+      data_block);
   block_group_descriptor* desc_table = get_desc_table();
   super_block* super = (super_block*) get_super_block();
   if (desc_table == 0 || super == 0 ){

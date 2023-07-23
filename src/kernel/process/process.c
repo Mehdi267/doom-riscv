@@ -27,7 +27,6 @@ int initialize_process_hash_table() {
   return 0;
 }
 
-
 /**
  * @brief setup_main_context is used to allocate space for a scheduler_struct
  * in which we will store the main exection context when the scheduler is first
@@ -179,6 +178,7 @@ static int declares_debug_processes() {
   return 0;
 }
 
+
 int init_global_variables(){
   // Assigning values to the fields of the globalData struct
   proc_mang_g.pid_process_hash_table = NULL;
@@ -187,9 +187,9 @@ int init_global_variables(){
   proc_mang_g.nb_proc_running = 0;
   proc_mang_g.process_id_list = NULL;
   proc_mang_g.killed_counter = 0;
+  proc_mang_g.open_files_table = NULL;
   return 0;
 }
-
 
 int initialize_process_workflow(){
   if (init_global_variables()<0){
@@ -203,8 +203,8 @@ int initialize_process_workflow(){
       printf("hash_init_direct failed \n");
       return -1;
   }
-  if (initialize_share_pages_table()<0){
-      printf("initialize_share_pages_table failed \n");
+  if (initialize_shared_pages_table()<0){
+      printf("initialize_shared_pages_table failed \n");
       return -1;
   }
   if (hash_init_string(shared_memory_hash_table)){
@@ -219,7 +219,7 @@ int initialize_process_workflow(){
       printf("hash_init_direct failed \n");
       return -1;
   }
-  if (setup_main_context() <0){
+  if (setup_main_context()<0){
       printf("setup_main_context failed \n");
       return -1;
   }

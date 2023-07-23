@@ -16,6 +16,7 @@ char *strcpy(char *, const char *);
 size_t strlen(const char *);
 int strncmp(const char *, const char *, size_t);
 char *strncpy(char *, const char *, size_t);
+char *strtok(char *str, const char *delimiters);
 
 #ifdef __cplusplus
 }

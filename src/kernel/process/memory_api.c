@@ -61,7 +61,7 @@ void* map_address_for_process(   uint16_t lvl2_index,
     return (void*)((long) lvl2_index*GIGA_SIZE+lvl1_index*MEGA_SIZE+lvl0_index*KILO_SIZE);
 }
 
-int initialize_share_pages_table(){
+int initialize_shared_pages_table(){
     shared_memory_hash_table = (hash_t*) malloc(sizeof(hash_t));
     if (shared_memory_hash_table == NULL){
         return -1;

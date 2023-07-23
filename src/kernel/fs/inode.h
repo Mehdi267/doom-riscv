@@ -131,6 +131,11 @@ typedef enum put_operation_type{
   SAVE_INODE = 1, 
 } put_op;
 
+typedef enum put_operation_type{
+  RELEASE_INODE = 0, 
+  SAVE_INODE = 1, 
+} put_op;
+
 /**
  * @brief Return an i-node that is no longer needed.
  *
