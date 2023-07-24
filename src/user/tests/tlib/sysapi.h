@@ -49,6 +49,60 @@ int vsnprintf(char *, size_t, const char *, va_list);
 #define PRINTF_BUF_LEN 512
 
 /*******************************************************************************
+ * stdint : Standard ints
+ ******************************************************************************/
+typedef __INT8_TYPE__ int8_t;
+typedef __INT16_TYPE__ int16_t;
+typedef __INT32_TYPE__ int32_t;
+typedef __INT64_TYPE__ int64_t;
+
+typedef __INT_FAST8_TYPE__ int_fast8_t;
+typedef __INT_FAST16_TYPE__ int_fast16_t;
+typedef __INT_FAST32_TYPE__ int_fast32_t;
+typedef __INT_FAST64_TYPE__ int_fast64_t;
+
+typedef __INT_LEAST16_TYPE__ int_least16_t;
+typedef __INT_LEAST32_TYPE__ int_least32_t;
+typedef __INT_LEAST64_TYPE__ int_least64_t;
+typedef __INT_LEAST8_TYPE__ int_least8_t;
+
+typedef __INTMAX_TYPE__ intmax_t;
+typedef __INTPTR_TYPE__ intptr_t;
+
+typedef __UINT8_TYPE__ uint8_t;
+typedef __UINT16_TYPE__ uint16_t;
+typedef __UINT32_TYPE__ uint32_t;
+typedef __UINT64_TYPE__ uint64_t;
+
+typedef __UINT_FAST8_TYPE__ uint_fast8_t;
+typedef __UINT_FAST16_TYPE__ uint_fast16_t;
+typedef __UINT_FAST32_TYPE__ uint_fast32_t;
+typedef __UINT_FAST64_TYPE__ uint_fast64_t;
+
+typedef __UINT_LEAST8_TYPE__ uint_least8_t;
+typedef __UINT_LEAST16_TYPE__ uint_least16_t;
+typedef __UINT_LEAST32_TYPE__ uint_least32_t;
+typedef __UINT_LEAST64_TYPE__ uint_least64_t;
+
+typedef __UINTMAX_TYPE__ uintmax_t;
+typedef __UINTPTR_TYPE__ uintptr_t;
+
+#define INT8_MAX __INT8_MAX__
+#define INT16_MAX __INT16_MAX__
+#define INT32_MAX __INT32_MAX__
+#define INT64_MAX __INT64_MAX__
+
+#define UINT8_MAX  __UINT8_MAX__
+#define UINT16_MAX __UINT16_MAX__
+#define UINT32_MAX __UINT32_MAX__
+#define UINT64_MAX __UINT64_MAX__
+
+#define INTPTR_MAX __INTPTR_MAX__
+#define UINTPTR_MAX __UINTPTR_MAX__
+#define PTRDIFF_MAX __PTRDIFF_MAX__
+#define SIZE_MAX __SIZE_MAX__
+
+/*******************************************************************************
  * Assert : check a condition or fail
  ******************************************************************************/
 #define __STRING(x) #x
@@ -154,8 +208,6 @@ void cons_gets(char *s, unsigned long length);
 int assert_failed(const char *cond, const char *file, int line);
 
 /* math.h */
-typedef unsigned long long uint_fast64_t;
-typedef unsigned long uint_fast32_t;
 short randShort(void);
 void setSeed(uint_fast64_t _s);
 unsigned long rand();
@@ -168,6 +220,47 @@ void test_it(void);
 void *shm_create(const char*);
 void *shm_acquire(const char*);
 void shm_release(const char*);
+
+
+//Disk related syscalls
+extern void display_partions();
+extern int create_partition(uint32_t start, uint32_t size, uint8_t partition_type);
+extern int delete_partition(uint8_t partition_number);
+extern int reset_disk();
+
+//Disk Cache related syscals
+extern int sync();
+extern int clear_disk_cache();
+extern void print_fs_details();
+
+typedef long ssize_t;
+typedef long off_t;
+typedef unsigned int mode_t;
+// Messages from users
+enum FileOpenFlags {
+    O_RDONLY = 0x0000,      // Read-only
+    O_WRONLY = 0x0001,      // Write-only
+    O_RDWR = 0x0002,        // Read-write
+    O_CREAT = 0x0010,       // Create the file if it doesn't exist
+    O_EXCL = 0x0020,        // Fail if the file exists and O_CREAT is used
+    O_TRUNC = 0x0040,       // Truncate the file to zero length upon opening
+    O_APPEND = 0x0080,      // Set the file offset to the end before each write
+    O_SYNC = 0x0200         // Write operations are synchronized on storage
+};
+enum SEEK_OPERATION {
+  SEEK_SET = 0,
+  SEEK_CUR = 1,
+  SEEK_END = 2,
+};
+//Fs api 
+int open(const char *file_name, int flags);
+int close(int file_descriptor);
+ssize_t read(int file_descriptor, void *buffer, size_t count);
+ssize_t write(int file_descriptor, const void *buffer, size_t count);
+off_t lseek(int file_descriptor, off_t offset, int whence);
+
+//Custom api
+void print_dir_elements(const char*);    
 
 /*
  * RISC-V asm

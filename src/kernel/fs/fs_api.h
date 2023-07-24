@@ -26,7 +26,7 @@ enum FileOpenFlags {
     O_APPEND = 0x0080,      // Set the file offset to the end before each write
     O_SYNC = 0x0200         // Write operations are synchronized on storage
 };
-int open(const char *file_name, int flags, mode_t mode);
+int open(const char *file_name, int flags);
 int close(int file_descriptor);
 ssize_t read(int file_descriptor, void *buffer, size_t count);
 ssize_t write(int file_descriptor, const void *buffer, size_t count);

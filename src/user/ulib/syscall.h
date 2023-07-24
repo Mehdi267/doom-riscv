@@ -96,11 +96,13 @@ extern void show_programs();
 extern void info_queue();
 extern void sleep(long int nbr_sec);
 
+//Disk related syscalls
 extern void display_partions();
 extern int create_partition(uint32_t start, uint32_t size, uint8_t partition_type);
 extern int delete_partition(uint8_t partition_number);
 extern int reset_disk();
 
+//Disk Cache related syscals
 extern int sync();
 extern int clear_disk_cache();
 extern void print_fs_details();
@@ -109,7 +111,7 @@ typedef long ssize_t;
 typedef long off_t;
 typedef unsigned int mode_t;
 //Fs api 
-int open(const char *file_name, int flags, mode_t mode);
+int open(const char *file_name, int flags);
 int close(int file_descriptor);
 ssize_t read(int file_descriptor, void *buffer, size_t count);
 ssize_t write(int file_descriptor, const void *buffer, size_t count);

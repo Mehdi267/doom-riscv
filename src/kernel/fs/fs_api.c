@@ -14,7 +14,7 @@
 
 
 // Messages from users
-int open(const char *file_name, int flags, mode_t mode){
+int open(const char *file_name, int flags){
   debug_print_fsapi("[FSAPI]Trying to open a file with the name %s flags %x\n",
          file_name, flags);
   if (file_name == 0){
@@ -220,6 +220,7 @@ off_t lseek(int file_descriptor, off_t offset, int whence){
 
 //Custom api
 void print_dir_elements(const char* path){
+  debug_print_fsapi("\033[0;33m[FSAPI]print_dir_elements path =  %s\n\033[0;0m", path);
   inode_t* dir =  walk_and_get(path, 0);
   if (dir != 0){
     print_dir_list(dir, false);

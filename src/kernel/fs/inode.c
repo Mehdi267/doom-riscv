@@ -3,6 +3,7 @@
 #include "ext2.h"
 #include "super_block.h"
 #include "disk_buffer.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "string.h"
@@ -21,7 +22,7 @@ inode_t* get_inode(uint32_t inode_number){
   if (super == 0 || desc_table == 0){
     return 0;
   }
-  if (inode_number<0 ||
+  if (inode_number<=0 ||
     inode_number > super->s_inodes_count){
     return 0;
   }
@@ -939,7 +940,7 @@ void print_dir_list(inode_t* dir, bool verbose){
   }
   debug_print_inode("print dir list dir->i_blocks = %d\n", dir->i_blocks);
   if (dir->i_blocks == 0){
-      printf("List is empty\n");
+      printf("Dir is empty\n");
   } 
   for (int blk = 0; blk<dir->i_blocks; blk++){
     char* block_data = disk_read_block(
@@ -979,6 +980,14 @@ void print_dir_list(inode_t* dir, bool verbose){
 
 int add_dot_directories(inode_t* dir, inode_t* previous_directory){
   print_inode_no_arg("------ADDING DOT DIRECTORIES------\n");
+  if (dir == 0 || previous_directory == 0){
+    print_inode_no_arg("add dot dirs failed because arg is null\n");
+    return -1;
+  }
+  if (dir->i_mode != EXT2_S_IFDIR || previous_directory->i_mode != EXT2_S_IFDIR){
+    print_inode_no_arg("add dot dirs failed because an inode is not a dir\n");
+    return -1;
+  }
   char dot[1] =  ".";
   char doubledot[2] =  "..";
   if (add_inode_directory(dir, get_inode_number(dir), 

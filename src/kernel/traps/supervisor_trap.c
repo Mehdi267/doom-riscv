@@ -141,7 +141,7 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
       print_fs_details();
       break;
     case SYSC_open:
-      return open((const char *)tf->a0, tf->a1, tf->a2);
+      return open((const char *)tf->a0, tf->a1);
     case SYSC_close:
       return close(tf->a0);
     case SYSC_read:

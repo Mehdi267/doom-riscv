@@ -311,6 +311,19 @@ path_fs* extract_files(const char* path) {
   return result;
 }
 
+
+void print_path_data(path_fs* path){
+  if (path == NULL) {
+    return;
+  }
+  printf("------Print Path data\n");  
+  printf("Number of paths = %d \n", path->nb_files);
+  for (uint32_t i = 0; i < path->nb_files; i++) {
+    printf("path %s\n", path->files[i]);
+  }
+  printf("------Print Path data end\n");  
+}
+
 void free_path_fs(path_fs* path) {
   if (path == NULL) {
     return;

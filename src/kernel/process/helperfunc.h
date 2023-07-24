@@ -211,6 +211,11 @@ typedef struct path_files{
  */
 path_fs* extract_files(const char* path);
 
+/**
+ * @brief Prints path data of the path_fs struct given as argument 
+ * @param path_data the struct that we will read
+ */
+void print_path_data(path_fs* path_data);
 
 /**
  * @brief Frees the memory allocated for the `path_fs` structure.

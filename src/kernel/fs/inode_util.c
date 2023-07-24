@@ -160,13 +160,16 @@ void print_dir_entry_obj(dir_entry* entry){
 
 
 inode_t* walk_and_get(const char* path, uint32_t backward_steps){
+  debug_print_inode("\033[0;33m[IN]walk_and_get called on %s with back steps = %d\033[0;0m\n",
+       path, backward_steps);
   path_fs* path_data = extract_files(path);
   if (path_data == 0){
     return 0;
   }
+  print_path_data(path_data);
   inode_t* inode = 0;
   if (is_absolute_directory(path)){
-      inode = get_inode(EXT2_GOOD_OLD_FIRST_INO);  
+    inode = get_inode(EXT2_GOOD_OLD_FIRST_INO);  
   } else {
     inode = get_current_dir();
   }

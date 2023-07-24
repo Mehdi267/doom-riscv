@@ -13,6 +13,7 @@
 #include "riscv.h" // for csr_set
 #include "timer.h"
 
+#include <stdbool.h>
 #include <stdio.h> 
 #include "test_interface.h"
 #include "tests_fs/tests_fs.h"
@@ -52,18 +53,7 @@ int kernel_start() {
       //print_fs_details();
     #endif
   #endif
-  const char* filePath = "/usr/local/bin/example.txt";
-  path_fs* path_data = extract_files(filePath);
-
-  if (path_data != NULL) {
-      printf("Number of elements: %u\n", path_data->nb_files);
-      printf("Folders and Files:\n");
-      for (uint32_t i = 0; i < path_data->nb_files; i++) {
-          printf("%s\n", path_data->files[i]);
-      }
-      free_path_fs(path_data);
-  }
-
+  print_dir_list(get_inode(11), true);
 
   //kernel_drivers_tests(0);
   splash_screen();
@@ -82,3 +72,16 @@ int kernel_start() {
   while (1)
     wfi();
 }
+
+
+  // const char* filePath = "/usr/local/bin/example.txt";
+  // path_fs* path_data = extract_files(filePath);
+
+  // if (path_data != NULL) {
+  //     printf("Number of elements: %u\n", path_data->nb_files);
+  //     printf("Folders and Files:\n");
+  //     for (uint32_t i = 0; i < path_data->nb_files; i++) {
+  //         printf("%s\n", path_data->files[i]);
+  //     }
+  //     free_path_fs(path_data);
+  // }
