@@ -32,20 +32,28 @@ int open(const char *file_name, int flags){
   //We create the file 
   if ((flags & O_CREAT) != 0){
     inode_t* dir_inode = walk_and_get(file_name, 1);
-    if (dir_inode == 0){
+    if (dir_inode == 0 || dir_inode->i_mode != EXT2_S_IFDIR){
       free_path_fs(path_data);
       return -1;
     }
-    file_inode = alloc_inode(); 
-    if (file_inode != 0){
-      file_inode->i_mode = EXT2_S_IFREG;
-      if (dir_inode && add_inode_directory(dir_inode, 
-            get_inode_number(file_inode), 
-            get_inode_number(dir_inode),
-            path_data->files[path_data->nb_files -1],
-            strlen(path_data->files[path_data->nb_files -1]))){
-        free_path_fs(path_data);
-        return -1;
+    if (look_for_inode_dir(dir_inode, path_data->files[path_data->nb_files -1],
+            strlen(path_data->files[path_data->nb_files -1])) != 0){
+      printf("File already exists");
+      file_inode = walk_and_get(file_name, 0);
+      free_inode_data(file_inode);
+    }
+    else{
+      file_inode = alloc_inode(); 
+      if (file_inode != 0){
+        file_inode->i_mode = EXT2_S_IFREG;
+        if (add_inode_directory(dir_inode, 
+              get_inode_number(file_inode), 
+              get_inode_number(dir_inode),
+              path_data->files[path_data->nb_files -1],
+              strlen(path_data->files[path_data->nb_files -1]))<0){
+          free_path_fs(path_data);
+          return -1;
+        }
       }
     }
   } 
@@ -247,10 +255,14 @@ off_t lseek(int file_descriptor, off_t offset, int whence){
 
 //Custom api
 void print_dir_elements(const char* path){
-  debug_print_fsapi("\033[0;33m[FSAPI]print_dir_elements path =  %s\n\033[0;0m", path);
-  inode_t* dir =  walk_and_get(path, 0);
+  debug_print_fsapi("\033[0;33m[FSAPI]print_dir_elements path = %s\n\033[0;0m", path);
+  inode_t* dir = walk_and_get(path, 0);
   if (dir != 0){
+    debug_print_fsapi("\033[0;33m[FSAPI] inode found dir with id = %d\n\033[0;0m", get_inode_number(dir));
     print_dir_list(dir, true);
     return;
+  }
+  else{
+    debug_print_fsapi("\033[0;33m[FSAPI]print_dir_elements no path was found on path = %s\n\033[0;0m", path);
   }
 }

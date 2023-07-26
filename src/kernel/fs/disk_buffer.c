@@ -150,7 +150,7 @@ int sync_elt(c_elt* cache_elt){
   if(cache_elt == 0){
     return -1;
   }
-  print_fs_no_arg("[df]sync_elt was called on cache");
+  print_fs_no_arg("[df]sync_elt was called on cache\n");
   debug_print_v_fs(" buffer containing block number = %d\n", 
             cache_elt->blockNumber);
   disk_op* disk_wr = (disk_op*)malloc(sizeof(disk_op));

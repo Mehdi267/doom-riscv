@@ -177,6 +177,13 @@ inode_t* alloc_inode();
 int free_inode(inode_t* inode, uint32_t inode_number);
 
 /**
+ * @brief Frees all of the blocks occupied by the inode
+ * @param inode the inode that we wich to free its data
+ * @return int function status
+ */
+int free_inode_data(inode_t* inode);
+
+/**
  * @brief Duplicate an i-node.
  *
  * This function duplicates an i-node, creating a new i-node with the same contents.
