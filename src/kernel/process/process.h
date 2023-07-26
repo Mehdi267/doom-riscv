@@ -85,6 +85,7 @@ typedef struct open_file_mang{
   int64_t position;
   inode_t* f_inode;
   uint32_t inode_number;
+  uint32_t usage_counter;
   /**Flags*/
   bool can_read;
   bool can_write;

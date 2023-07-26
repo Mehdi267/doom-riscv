@@ -29,7 +29,7 @@ int main(void *arg)
 #elif defined WITH_MSG
 /* Test d'utilisation d'une file comme espace de stockage temporaire. */
 
-static void write(int fid, const char *buf, unsigned long len)
+static void write10(int fid, const char *buf, unsigned long len)
 {
         unsigned long i;
         for (i=0; i<len; i++) {
@@ -37,7 +37,7 @@ static void write(int fid, const char *buf, unsigned long len)
         }
 }
 
-static void read(int fid, char *buf, unsigned long len)
+static void read10(int fid, char *buf, unsigned long len)
 {
         unsigned long i;
         for (i=0; i<len; i++) {
@@ -57,9 +57,9 @@ int main(void *arg)
 
         printf("1");
         assert((fid = pcreate(5)) >= 0);
-        write(fid, str, len);
+        write10(fid, str, len);
         printf(" 2");
-        read(fid, buf, len);
+        read10(fid, buf, len);
         buf[len] = 0;
         assert(strcmp(str, buf) == 0);
         assert(pdelete(fid) == 0);

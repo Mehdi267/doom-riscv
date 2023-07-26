@@ -23,6 +23,7 @@ flip* add_new_element_open_files(){
   open_file->next_file = 0;
   open_file->file_previous = 0;
   open_file->inode_number = 0;
+  open_file->usage_counter = 1;
   open_file->position = 0;
   open_file->f_inode = 0;
   open_file->f_inode = 0;
@@ -70,6 +71,12 @@ int remove_fd_list(int fd){
   }
   debug_print_fsapi("[FSAPI]Remove fd list called on fd = %d\n", fd);
   flip* fd_elt = get_fs_list_elt(fd);
+  fd_elt->usage_counter--;
+  if (fd_elt->usage_counter != 0){
+    debug_print_fsapi("[FSAPI]Fd usage is not equal to zero, = %d\n", 
+        fd_elt->usage_counter);
+    return 0;
+  }
   debug_print_fsapi("[FSAPI]Tyring to remove inode number = %d\n", fd_elt->inode_number);
   if (put_inode(fd_elt->f_inode, 0, RELEASE_INODE)<0){
     return -1;
