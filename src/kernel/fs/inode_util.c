@@ -82,6 +82,12 @@ int remove_inode_list(uint32_t inode_id, inode_t* inode_address){
   debug_print_inode("[IN]Inode list num %d is being removed from cache\n", inode_id);
   inode_elt* node = NULL;
   //We need to find the node in the linked list
+  if (inode_id == 0 && inode_address != 0){
+    inode_id = get_inode_number(inode_address);
+    if (inode_id == 0){
+      return -1;
+    }
+  }
   if (inode_address == 0){
     node = get_inode_t_elt(get_inode_from_node_id(inode_id));
   }
@@ -179,6 +185,7 @@ inode_t* walk_and_get(const char* path, uint32_t backward_steps){
       strlen(path_data->files[file_iter]))); 
   }
   free_path_fs(path_data);
+  debug_print_inode("[IN]Finished walk on path %s\n",path);
   return inode;
 }
 

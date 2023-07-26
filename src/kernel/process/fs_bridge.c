@@ -14,9 +14,24 @@ inode_t* get_current_dir(){
 
 
 flip* add_new_element_open_files(){
+  flip* open_file = (flip*) 
+            malloc(sizeof(flip));
+  if (open_file == 0){
+    return 0;
+  } 
+  open_file->fd = increment_fd_counter();
+  open_file->next_file = 0;
+  open_file->file_previous = 0;
+  open_file->inode_number = 0;
+  open_file->position = 0;
+  open_file->f_inode = 0;
+  open_file->f_inode = 0;
+  open_file->can_read = 0;
+  open_file->can_write = 0;
+  open_file->append_on = 0;
+  open_file->sync_directly = 0; 
   if (proc_mang_g.open_files_table == 0){
-    proc_mang_g.open_files_table = (flip*) 
-          malloc(sizeof(flip));
+    proc_mang_g.open_files_table = open_file;
     if (proc_mang_g.open_files_table == 0){
       return 0; 
     }
@@ -25,22 +40,6 @@ flip* add_new_element_open_files(){
     return proc_mang_g.open_files_table;
   }
   else {
-    flip* open_file = (flip*) 
-              malloc(sizeof(flip));
-    if (open_file == 0){
-      return 0;
-    } 
-    open_file->fd = increment_fd_counter();
-    open_file->next_file = 0;
-    open_file->file_previous = 0;
-    open_file->inode_number = 0;
-    open_file->position = 0;
-    open_file->f_inode = 0;
-    open_file->f_inode = 0;
-    open_file->can_read = 0;
-    open_file->can_write = 0;
-    open_file->append_on = 0;
-    open_file->sync_directly = 0; 
     open_file->next_file = proc_mang_g.open_files_table;
     proc_mang_g.open_files_table->file_previous
       = open_file;
@@ -57,6 +56,7 @@ flip* get_fs_list_elt(int fd){
   flip* fd_list_iter =  proc_mang_g.open_files_table;
   while (fd_list_iter != 0){
     if (fd_list_iter->fd == fd){
+      debug_print_fsapi("[FSAPI]Get fs api num %d was found\n", fd);
       return fd_list_iter;
     }
     fd_list_iter = fd_list_iter->next_file;
@@ -68,8 +68,10 @@ int remove_fd_list(int fd){
   if (fd < 0){
     return -1;
   }
+  debug_print_fsapi("[FSAPI]Remove fd list called on fd = %d\n", fd);
   flip* fd_elt = get_fs_list_elt(fd);
-  if (remove_inode_list(0, fd_elt->f_inode)<0){
+  debug_print_fsapi("[FSAPI]Tyring to remove inode number = %d\n", fd_elt->inode_number);
+  if (put_inode(fd_elt->f_inode, 0, RELEASE_INODE)<0){
     return -1;
   }
   flip* fd_elt_next = fd_elt->next_file;

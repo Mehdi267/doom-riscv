@@ -239,9 +239,28 @@ inode_t* alloc_inode(){
   }
   inode_t* inode = (inode_t*)malloc(sizeof(inode_t));
   if (inode == 0){
+    return 0;
+  }
+  memset(inode,0, sizeof(inode_t));
+  inode->i_links_count = 1;
+  if (inode == 0){
     PRINT_RED("No space for inode");
     return 0;
   }
+  int block_number = desc_table->bg_inode_table 
+                    + inode_number*INODE_SIZE
+                    /root_file_system->block_size;
+  char* block_inode = disk_read_block(block_number);
+  if (block_inode ==0){
+    return 0;
+  }
+  inode_t* inode_ptr =  (inode_t*)(block_inode+(inode_number*INODE_SIZE)
+                            %root_file_system->block_size); 
+  memcpy(inode_ptr, inode, sizeof(inode_t));
+  if (save_fs_block(block_inode, 
+          root_file_system->block_size,
+          block_number
+          )<0){return 0;}
   super->s_free_inodes_count--;
   desc_table->bg_free_inodes_count--;
   save_super_block();
@@ -278,15 +297,15 @@ int free_inode(inode_t* inode, uint32_t inode_number){
       }
     }
   }
-  if (disk_blks > L_DIRECT &&
-      disk_blks < L_ONE_INDIRECT){
+  if (disk_blks > L_DIRECT){
     char* indirect_block_data = disk_read_block(
                                   super->s_first_data_block+
                                   inode->i_block[INDIRECT_BLOCKS_INDEX]);
     if (indirect_block_data == 0){
       return -1;
     }
-    for (int i = 0; i<disk_blks-L_DIRECT-1; i++){
+    uint32_t indirect_blocks = disk_blks >= L_ONE_INDIRECT  ? REL_NB_INDIRECT : inode->i_blocks - L_DIRECT -1;
+    for (int i = 0; i<indirect_blocks; i++){
       if (free_data_block(
           *((uint32_t*)indirect_block_data+i))){
           return -1;
@@ -296,6 +315,42 @@ int free_inode(inode_t* inode, uint32_t inode_number){
       return -1;
     }
   }
+  if (disk_blks > L_ONE_INDIRECT){
+    uint32_t double_ind_blk_nb = 0;
+    uint32_t nb_elts_blk = root_file_system->block_size/sizeof(uint32_t);
+    char* main_double_block = disk_read_block(
+          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
+    if (main_double_block == 0){return -1;}
+    for (int itr = 0; itr < nb_elts_blk;
+         itr++){
+      if (*(((uint32_t*)main_double_block)+itr) != 0){
+        double_ind_blk_nb++;
+      } else {break; }
+      for (int itr = 0; itr < nb_elts_blk; itr++){
+        //Not possible but used in case there is a bug somewhere
+        if ((*(((uint32_t*)main_double_block)+itr)) == 0){
+          continue; 
+        }
+        char* blk_data = disk_read_block(*(((uint32_t*)main_double_block)+itr));
+        if (blk_data == 0){
+          continue;
+        }
+        for (int blk = 0; blk <nb_elts_blk; blk++){
+          uint32_t blk_number = *(((uint32_t*)blk_data)+blk);
+          if (blk_number != 0){
+            if (free_data_block(blk_number)){return -1;}
+          }
+        }
+        if (free_data_block(*(((uint32_t*)main_double_block)+itr))){
+          return -1;
+        }
+      }
+      if (free_data_block(inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX])){
+        return -1;
+      }
+    }
+  }
+  //Free inode in the bit map
   uint32_t inode_bitmap = desc_table->bg_inode_bitmap + 
                             inode_number/(8*root_file_system->block_size);
   char* inode_bitmap_data = disk_read_block(inode_bitmap);
@@ -833,7 +888,8 @@ int get_actual_blocks(inode_t* inode){
         break;
       }
     }
-    return inode->i_blocks-double_ind_blk_nb-1;
+    //-1 is for the doule indirect blocks and single indirect block;
+    return inode->i_blocks-double_ind_blk_nb-1 -1;
   }
   return -1;
 }

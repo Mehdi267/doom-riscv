@@ -11,11 +11,11 @@
 #include "inode.h"
 #include "inode_util.h"
 #include "../process/fs_bridge.h"
-
+#include "assert.h"
 
 // Messages from users
 int open(const char *file_name, int flags){
-  debug_print_fsapi("[FSAPI]Trying to open a file with the name %s flags %x\n",
+  debug_print_fsapi("\033[0;35m[FSAPI]Trying to open a file with the name %s flags %x\n\033[0;0m",
          file_name, flags);
   if (file_name == 0){
     return -1;
@@ -85,18 +85,22 @@ int open(const char *file_name, int flags){
   }
   new_file->inode_number = 
     get_inode_number(file_inode);
-  debug_print_fsapi("[FSAPI]Filed opened with success %s flags %x\n",
+  debug_print_fsapi("\033[0;34m[FSAPI]{open}Filed opened with success %s flags %x\033[0;0m\n",
         file_name, flags);
   free_path_fs(path_data);
   return new_file->fd;
 }
 
 int close(int file_descriptor){
+  debug_print_fsapi("\033[0;35m[FSAPI]Close file was called on fd = %d\n\033[0;0m",
+       file_descriptor);
   return remove_fd_list(file_descriptor);
 }
 
 ssize_t write(int file_descriptor, 
               const void *buffer, size_t count){
+  debug_print_fsapi("\033[0;34m[FSAPI] write syscall was called on fd %d, , write size = %ld\033[0;0m\n",
+       file_descriptor, count);
   flip* fs_elt = get_fs_list_elt(file_descriptor); 
   if (fs_elt == 0 || count == 0){
     return 0;
@@ -106,6 +110,8 @@ ssize_t write(int file_descriptor,
   if (actual_blocks < 0){
     return -1;
   }
+  debug_print_fsapi("\033[0;34m[FSAPI] Actual blocks on fd %d are %d\033[0;0m\n",
+       file_descriptor, actual_blocks);
   while (written_data<count){
     if (actual_blocks<(fs_elt->position/root_file_system->block_size + 1)){
       if (add_data_block_inode(fs_elt->f_inode)<0){
@@ -118,30 +124,46 @@ ssize_t write(int file_descriptor,
     char* block_data = get_inode_relative_block(fs_elt->f_inode,
         fs_elt->position/root_file_system->block_size, WRITE_OP);
     if (block_data == 0){
+      debug_print_fsapi("\033[0;31m[FSAPI]Relative block does want not found written data =  %d\033[0;0m\n",
+         written_data);
       return written_data;
     }
-    uint32_t write_iter = root_file_system->block_size-
+    uint32_t write_space = root_file_system->block_size-
           (fs_elt->position%root_file_system->block_size);
+    if (write_space > count - written_data){
+      write_space = count - written_data;
+    }
     memcpy(block_data+fs_elt->position%root_file_system->block_size,
-      buffer + written_data, write_iter);
-    written_data += write_iter;
-    fs_elt->position += write_iter;
-    fs_elt->f_inode->i_size += write_iter;
+      buffer + written_data, write_space);
+    written_data += write_space;
+    fs_elt->position += write_space;
+    fs_elt->f_inode->i_size += write_space;
   }
   sync();
+  debug_print_fsapi("\033[0;34m[FSAPI]Write ran normal and data written is equal to %d\033[0;0m\n",
+       written_data); 
+  assert(written_data <= count);
   return written_data;
 }
 
 ssize_t read(int file_descriptor, void *buffer, size_t count){
+  if (file_descriptor<0){
+    return -1;
+  }
+  debug_print_fsapi("\033[0;34m[FSAPI] read syscall was called on fd %d, read size = %ld\033[0;0m\n",
+         file_descriptor, count);
   flip* fs_elt = get_fs_list_elt(file_descriptor); 
   if (fs_elt == 0 || count == 0){
     return 0;
   }
   uint32_t read_data = 0;
+  
   int actual_blocks = get_actual_blocks(fs_elt->f_inode);
   if (actual_blocks < 0){
     return -1;
   }
+  debug_print_fsapi("\033[0;34m[FSAPI] Actual blocks on fd %d are %d\033[0;0m\n",
+      file_descriptor, actual_blocks);
   while (read_data<count){
     if (actual_blocks<
         (fs_elt->position/root_file_system->block_size + 1)){
@@ -154,12 +176,17 @@ ssize_t read(int file_descriptor, void *buffer, size_t count){
     }
     uint32_t read_iter = root_file_system->block_size-
           (fs_elt->position%root_file_system->block_size);
+    if (read_iter > count - read_data){
+      read_iter = count - read_data;
+    }
     memcpy( buffer + read_data, 
             block_data+fs_elt->position%root_file_system->block_size,
             read_iter);
     read_data += read_iter;
     fs_elt->position += read_iter;
   }
+  debug_print_fsapi("\033[0;34m[FSAPI]Read ran normal and data read is equal to %d\033[0;0m\n",
+      read_data); 
   return read_data;
 }
 
@@ -223,7 +250,7 @@ void print_dir_elements(const char* path){
   debug_print_fsapi("\033[0;33m[FSAPI]print_dir_elements path =  %s\n\033[0;0m", path);
   inode_t* dir =  walk_and_get(path, 0);
   if (dir != 0){
-    print_dir_list(dir, false);
+    print_dir_list(dir, true);
     return;
   }
 }

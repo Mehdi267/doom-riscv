@@ -132,7 +132,6 @@ int configure_root_inode(){
   inode->i_mtime = 0;            
   inode->i_dtime = 0;            
   inode->i_gid = 0;              
-  inode->i_links_count = 0;      
   inode->i_blocks = 0;//these options where not used           
   inode->i_flags = 0xfffffff;            
   inode->i_osd1 = 0;             
