@@ -429,7 +429,7 @@ int add_data_block_inode(inode_t* inode){
     }
     *((uint32_t*)indirect_block_data+
                   inode->i_blocks
-                  -L_DIRECT) = blk;
+                  -DIRECT_AND_INDEX_INDIRECT) = blk;
     inode->i_blocks++;
     return save_fs_block(indirect_block_data, 
         root_file_system->block_size,
@@ -441,12 +441,11 @@ int add_data_block_inode(inode_t* inode){
      inode->i_blocks<L_DOUBLE_INDIRECT){
     bool double_written = false;
     if (inode->i_blocks == L_ONE_INDIRECT){
-      uint32_t double_direct_block = 0;
-      inode->i_blocks++;
-      double_direct_block = get_data_block();
+      uint32_t double_direct_block = get_data_block();
       if (double_direct_block == 0){
         return -1;
       }
+      inode->i_blocks++;
       inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX] =
         double_direct_block;
     }
@@ -583,7 +582,7 @@ int add_inode_directory(inode_t* dir,
     if (add_data_block_inode(dir)<0){
       return -1;
     }
-    dir_entry.rec_len = root_file_system->block_size - dir_entry.rec_len;
+    dir_entry.rec_len = root_file_system->block_size;
     debug_print_inode("[IN]Final rec_lec = %d\n",dir_entry.rec_len);  
     return save_dir_entry(&dir_entry, 0, dir->i_block[0]);
   }
@@ -601,12 +600,17 @@ int add_inode_directory(inode_t* dir,
       }
       dir_entry_basic* list_elt = 
               (dir_entry_basic*)block_data;
-      char* limit = block_data+root_file_system->block_size
-                -dir_entry.rec_len;
+      char* limit = block_data+root_file_system->block_size;
       bool hit = 0;
       while (((char*)list_elt)<limit){
         // printf("-------Inside %p \n",limit);
         // print_dir_entry(list_elt);
+        //We look for a freed spot first
+        uint32_t list_elt_size = SIZE_DIR_NO_NAME +
+               list_elt->name_len;
+        if (list_elt->name_len%4 != 0){
+          list_elt_size += 4-list_elt->name_len%4; 
+        }
         if (list_elt->file_type == EXT2_FT_FREE
           && SIZE_DIR_NO_NAME+list_elt->name_len <
            dir_entry.rec_len  
@@ -614,19 +618,21 @@ int add_inode_directory(inode_t* dir,
           dir_entry.rec_len = list_elt->rec_len;
           hit = true;
         }
-        else if (dir_entry.rec_len < list_elt->rec_len){
+        else if (dir_entry.rec_len < list_elt->rec_len
+                                      -list_elt_size){
           uint32_t old_rec_len = list_elt->rec_len;
+          //We empty a space for the new element
           list_elt->rec_len = 
               SIZE_DIR_NO_NAME + list_elt->name_len;
           if (list_elt->rec_len%4 != 0){
             list_elt->rec_len += 4-list_elt->rec_len%4; 
           }
-          dir_entry.rec_len = old_rec_len - dir_entry.rec_len;
+          dir_entry.rec_len = old_rec_len - list_elt->rec_len;
           debug_print_inode("[IN]Final rec_lec = %d\n",dir_entry.rec_len);
           //print_dir_entry_obj(&dir_entry);
           pos += list_elt->rec_len;
           debug_print_inode("\033[0;35m[IN]Adding inode to dir blks num %d actual blk %d\n\033[0;0m", 
-          blk, dir->i_block[blk]);
+              blk, dir->i_block[blk]);
           hit = true;
         }
         if (hit){
@@ -650,7 +656,7 @@ int add_inode_directory(inode_t* dir,
       if (add_data_block_inode(dir)<0){
         return -1;
       }
-      dir_entry.rec_len = root_file_system->block_size - dir_entry.rec_len; 
+      dir_entry.rec_len = root_file_system->block_size; 
       debug_print_inode("[IN]Final rec_lec = %d\n",dir_entry.rec_len);  
       return save_dir_entry(&dir_entry, 0, dir->i_block[dir->i_blocks-1]);
     }
@@ -690,24 +696,19 @@ uint32_t look_for_inode_dir(inode_t* dir,
       }
       dir_entry_basic* list_elt = 
               (dir_entry_basic*)block_data;
-    uint32_t addition = SIZE_DIR_NO_NAME+list_elt->name_len;
-    if ((uint64_t)addition%4 !=0){
-      addition += 4-(uint64_t)addition%4;
-    }
-    char* limit = block_data+root_file_system->block_size
-        -(addition);
-    while (((char*)list_elt)<limit){
-        if (list_elt->file_type != EXT2_FT_FREE 
-            && name_len == list_elt->name_len 
-            &&memcmp((char*)list_elt+SIZE_DIR_NO_NAME, 
-               name, name_len) == 0 ){
-          debug_print_inode("\033[0;35m[IN]Inode with name %s, len = %d was found\n\033[0;0m",
-              name, name_len);
-          return list_elt->inode_n;
-        }
-        uint32_t jump_by = list_elt->rec_len;
-        pos+=jump_by;
-        list_elt = (dir_entry_basic*)((char*)list_elt+jump_by);
+      char* limit = block_data+root_file_system->block_size;
+      while (((char*)list_elt)<limit){
+          if (list_elt->file_type != EXT2_FT_FREE 
+              && name_len == list_elt->name_len 
+              &&memcmp((char*)list_elt+SIZE_DIR_NO_NAME, 
+                name, name_len) == 0 ){
+            debug_print_inode("\033[0;35m[IN]Inode with name %s, len = %d was found\n\033[0;0m",
+                name, name_len);
+            return list_elt->inode_n;
+          }
+          uint32_t jump_by = list_elt->rec_len;
+          pos+=jump_by;
+          list_elt = (dir_entry_basic*)((char*)list_elt+jump_by);
       }
     }
   }
@@ -751,17 +752,12 @@ int remove_inode_dir(inode_t* dir,
       if ((uint64_t)size_struct%4 !=0){
         size_struct += 4-(uint64_t)size_struct%4;
       }
-      uint32_t size_previous = size_struct;
-      uint32_t addition = SIZE_DIR_NO_NAME+list_elt->name_len;
-      if ((uint64_t)addition%4 !=0){
-        addition += 4-(uint64_t)addition%4;
-      }
-      char* limit = block_data+root_file_system->block_size
-          -(addition);
+      // uint32_t size_previous = size_struct;
+      char* limit = block_data+root_file_system->block_size;
       bool delete = false;
       while (((char*)list_elt)<limit){
         // print_dir_entry(list_elt);
-        size_previous = size_struct;
+        // size_previous = size_struct;
         size_struct = SIZE_DIR_NO_NAME + 
           list_elt->name_len;
         if ((uint64_t)size_struct%4 !=0){
@@ -785,7 +781,7 @@ int remove_inode_dir(inode_t* dir,
             previous_elt->rec_len = 
               previous_elt->rec_len+list_elt->rec_len; 
             if (previous_elt->file_type == EXT2_FT_FREE 
-              && root_file_system->block_size - size_previous
+              && root_file_system->block_size
               == previous_elt->rec_len){
               delete = true;
             }
@@ -793,7 +789,9 @@ int remove_inode_dir(inode_t* dir,
           if (delete){
             debug_print_inode("\033[0;35m[IN]Freeing data block %d\n\033[0;0m", 
                   dir->i_block[blk]);
-            if (blk ==dir->i_blocks - 1){
+            //If the block is on the edge we free it otherwise
+            //We just set it variables to zero
+            if (blk == dir->i_blocks - 1){
               if (free_data_block(dir->i_block[blk])<0){
                   return -1;
                 }
@@ -802,9 +800,8 @@ int remove_inode_dir(inode_t* dir,
             }
             else{
               list_elt->file_type = EXT2_FT_FREE;
-              list_elt->name_len = 1;
-              list_elt->rec_len = 
-                  root_file_system->block_size - SIZE_DIR_NO_NAME+1;
+              list_elt->name_len = 0;
+              list_elt->rec_len = root_file_system->block_size;
             }
             return 0;
           }
@@ -873,7 +870,7 @@ uint32_t get_data_block(){
   desc_table->bg_free_blocks_count--;
   save_super_block();
   save_blk_desc_table();
-  debug_print_inode("\033[0;35m[IN]End block location %d \n\033[0;35m", block_number);
+  debug_print_inode("\033[0;35m[IN]End block location %d \n\033[0;0m", block_number);
   //We return the relative block number
   return block_number-super->s_first_data_block;
 }
@@ -884,7 +881,7 @@ int get_actual_blocks(inode_t* inode){
   if (super == 0){
     return -1;
   }
-  if (inode->i_blocks<L_DIRECT){
+  if (inode->i_blocks<=L_DIRECT){
     print_inode_no_arg("\033[0;36m[IN]i blocks< Ldirect\n\033[0;0m");
     return inode->i_blocks;
   }
@@ -914,6 +911,8 @@ int get_actual_blocks(inode_t* inode){
 
 char* get_inode_relative_block(inode_t* inode, 
     uint32_t relative_block, disk_get op){
+  debug_print_inode("\033[0;35m[IN]Trying to inode's relative block num %d \n\033[0;0m", 
+      relative_block);
   super_block* super = (super_block*) get_super_block();
   if (inode == 0 || super == 0){
     return 0;
@@ -1030,15 +1029,13 @@ void print_dir_list(inode_t* dir, bool verbose){
     }
     dir_entry_basic* list_elt = 
           (dir_entry_basic*)block_data;
-    uint32_t addition = SIZE_DIR_NO_NAME+list_elt->name_len;
-    if ((uint64_t)addition%4 !=0){
-      addition += 4-(uint64_t)addition%4;
-    }
-    char* limit = block_data+root_file_system->block_size
-        -(addition);
-    int i = 0;
+    char* limit = block_data+root_file_system->block_size;
+    // int i = 0;
     while (((char*)list_elt)<limit){
-      i++;if (i == 100){break;}
+      // printf("(char*)list_elt %ld \n", (unsigned long )list_elt);
+      // printf("(char*)limit %ld \n", (unsigned long )limit);
+      // printf("list_elt - limit = %ld\n", (char*)list_elt-limit);
+      // i++;if (i == 10){break;}
       if (list_elt->file_type != EXT2_FT_FREE){
         if (verbose){
           printf("------------\n");

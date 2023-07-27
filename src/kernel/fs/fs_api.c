@@ -107,7 +107,7 @@ int close(int file_descriptor){
 
 ssize_t write(int file_descriptor, 
               const void *buffer, size_t count){
-  debug_print_fsapi("\033[0;34m[FSAPI] write syscall was called on fd %d, , write size = %ld\033[0;0m\n",
+  debug_print_fsapi("\033[0;34m[FSAPI] write syscall was called on fd %d, write size = %ld\033[0;0m\n",
        file_descriptor, count);
   flip* fs_elt = get_fs_list_elt(file_descriptor); 
   if (fs_elt == 0 || count == 0){
@@ -116,6 +116,7 @@ ssize_t write(int file_descriptor,
   uint32_t written_data = 0;
   int actual_blocks = get_actual_blocks(fs_elt->f_inode);
   if (actual_blocks < 0){
+    PRINT_RED("Failed while trying to get file size");
     return -1;
   }
   debug_print_fsapi("\033[0;34m[FSAPI] Actual blocks on fd %d are %d\033[0;0m\n",

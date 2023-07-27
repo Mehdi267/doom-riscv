@@ -62,6 +62,7 @@ int main(void *arg){
         printf("Data read matches the data written: %s\n", buffer);
     } else {
         printf("Data read does not match the data written!\n");
+        return -1;
     }
     return 0;
 }

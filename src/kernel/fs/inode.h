@@ -78,6 +78,7 @@ typedef struct {
 #define NB_DIRECT_BLOCKS 12
 #define L_DIRECT 12 //size limits
 #define NB_ONE_INDIRECT_BLOCKS 1
+#define DIRECT_AND_INDEX_INDIRECT 13
 #define INDIRECT_BLOCKS_INDEX 12
 #define DOUBLE_DIRECT_BLOCKS_INDEX 13
 #define L_ONE_INDIRECT 525 // all fo the space take by the direct and the indirect blocks
