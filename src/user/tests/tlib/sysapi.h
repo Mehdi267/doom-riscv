@@ -253,14 +253,28 @@ enum SEEK_OPERATION {
   SEEK_END = 2,
 };
 //Fs api 
-int open(const char *file_name, int flags);
+int open(const char *file_name, int flags, mode_t mode);
 int close(int file_descriptor);
 ssize_t read(int file_descriptor, void *buffer, size_t count);
 ssize_t write(int file_descriptor, const void *buffer, size_t count);
 off_t lseek(int file_descriptor, off_t offset, int whence);
+int unlink(const char *file_name);
+
+//Dir api
+char *getcwd(char *buf, size_t size);
+int mkdir(const char *dir_name, mode_t mode);
+int chdir(const char *new_directory);
 
 //Custom api
-void print_dir_elements(const char*);    
+void print_dir_elements(const char*);
+typedef struct disk_info{
+ uint32_t total_blocks;
+ uint32_t free_blocks;
+ uint32_t total_inodes;
+ uint32_t free_inodes;
+} disk_info;    
+void fs_info(disk_info* info);
+
 
 /*
  * RISC-V asm

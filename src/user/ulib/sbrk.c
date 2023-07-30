@@ -36,7 +36,7 @@
 void *sbrk(ptrdiff_t increment)
 {
 	static char *current = (char *) HEAP;
-  // printf("[USER brk called ] curptr = %p \n", current);
+  	// printf("[USER brk called ] curptr = %p \n", current);
 	char *s = current;
 	char *c = s + increment;
 

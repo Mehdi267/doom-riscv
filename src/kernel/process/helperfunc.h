@@ -229,4 +229,11 @@ void print_path_data(path_fs* path_data);
  */
 void free_path_fs(path_fs* path);
 
+/**
+ * @brief Create a new string for the start of the string pointer 
+ * until we encounter a "\0"
+ * @param str the old string
+ * @return char* new allocated string 
+ */
+char* create_substring(const char* str);
 #endif

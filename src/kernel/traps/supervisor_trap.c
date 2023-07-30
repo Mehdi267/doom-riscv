@@ -24,11 +24,13 @@
 #include "../input-output/keyboard.h"
 #include "../fs/fs.h"
 #include "../fs/fs_api.h"
+#include "../fs/dir_api.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
 extern void inc_sepc(void); // defined in supervisor_trap_entry.S
+
 unsigned long static syscall_handler(struct trap_frame *tf) {
   // we need to return a ulong because some functions returns int (32 bit)
   // and other ulong (64 bits)
@@ -132,7 +134,7 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
       return set_up_mbr();
       break; 
     case SYSC_sync:
-      return sync();
+      return sync_all();
       break;    
     case SYSC_clear_disk_cache:
       return free_cache_list();
@@ -141,7 +143,7 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
       print_fs_details();
       break;
     case SYSC_open:
-      return open((const char *)tf->a0, tf->a1);
+      return open((const char *)tf->a0, tf->a1, tf->a2);
     case SYSC_close:
       return close(tf->a0);
     case SYSC_read:
@@ -150,8 +152,19 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
       return write(tf->a0, (void*)tf->a1, (uint64_t) tf->a2);
     case SYSC_lseek:
       return lseek(tf->a0, tf->a1, tf->a2);
+    case SYSC_unlink:
+      return unlink((const char *)tf->a0);
+    case SYSC_getcwd:
+      return ((unsigned long) getcwd((char *)tf->a0, tf->a1));
+    case SYSC_mkdir:
+      return mkdir((const char *)tf->a0, tf->a1);
+    case SYSC_chdir:
+      return chdir((const char *)tf->a0);
     case SYSC_print_dir_elements:
       print_dir_elements((const char*)tf->a0);    
+      break;
+    case SYSC_fs_info:
+      fs_info((disk_info*)tf->a0);
       break;
     default:
       printf("Syscall code does not match any of the defined syscalls");

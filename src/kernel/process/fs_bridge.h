@@ -1,6 +1,8 @@
 #include "process.h"
 #include "../fs/inode.h"
 
+#ifndef FS_BRIDGE 
+#define FS_BRIDGE
 
 /**
  * @brief Get the inode of the current
@@ -34,3 +36,65 @@ int remove_fd_list(int fd);
  * canot be found
  */
 flip* get_fs_list_elt(int fd);
+
+/**
+ * @brief Checks if the inode number given as argument is being used i.e.
+ * that inode number is being used by an open file
+ * @param inode_number the inode that we are checking
+ * @return true the inode is being used
+ * @return false the inode is not being used
+ */
+bool check_if_inode_is_being_used(uint32_t inode_number);
+
+/**
+ * @brief Set the diectory of the current process to the 
+ * paramter given, the path(new_name) must an absolute path 
+ * @param new_name 
+ * @param name_size 
+ * @param inode 
+ * @return int function status 
+ */
+int set_current_dir(char* new_name, uint32_t name_size, inode_t* inode);
+
+/**
+ * @brief Get the name of the current directory
+ * @return char* the pointer to the new file name
+ */
+char* get_current_dir_name();
+
+/**
+ * @brief Get the root inode
+ * @return inode_t* 
+ */
+inode_t* get_root_dir();
+
+/**
+ * @brief Get the name of the root directory
+ * @return char* the pointer to root dir
+ */
+char* get_root_dir_name();
+
+
+/**
+ * @brief Get the size of the name of the root directory for the current process.
+ *
+ * The get_root_dir_name_size() function retrieves the size of the name of the root directory
+ * associated with the current process.
+ *
+ * @return The size of the root directory name in bytes.
+ *         If the process structure for the current process is not found or invalid, returns 0.
+ */
+uint32_t get_root_dir_name_size();
+
+/**
+ * @brief Get the size of the name of the current directory for the current process.
+ *
+ * The get_current_dir_name_size() function retrieves the size of the name of the current directory
+ * associated with the current process.
+ *
+ * @return The size of the current directory name in bytes.
+ *         If the process structure for the current process is not found or invalid, returns 0.
+ */
+uint32_t get_current_dir_name_size();
+
+#endif

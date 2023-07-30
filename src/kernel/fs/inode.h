@@ -391,4 +391,12 @@ char* get_inode_relative_block(inode_t* inode,
  * @return int function status
  */
 int add_dot_directories(inode_t* dir, inode_t* previous_directory);
+
+/**
+ * @brief Saves the current inode data that is in memory into the 
+ * disk
+ * @returns int function status
+ */
+int sync_inodes();
+
 #endif

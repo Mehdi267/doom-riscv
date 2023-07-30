@@ -19,7 +19,7 @@ int main(void *arg){
     char buffer[100];
 
     // Open the file for writing and create it if it doesn't exist
-    int fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC);
+    int fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0);
     if (fd == -1) {
         printf("Error opening the file");
         return 1;
@@ -37,7 +37,7 @@ int main(void *arg){
     close(fd);
 
     // Open the file for reading
-    fd = open(filename, O_RDONLY);
+    fd = open(filename, O_RDONLY, 0);
     if (fd == -1) {
         printf("Error opening the file for reading");
         return 1;

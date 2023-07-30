@@ -172,7 +172,7 @@ inode_t* walk_and_get(const char* path, uint32_t backward_steps){
   if (path_data == 0){
     return 0;
   }
-  print_path_data(path_data);
+  // print_path_data(path_data);
   inode_t* inode = 0;
   if (is_absolute_directory(path)){
     print_inode_no_arg("Path is an absolute dir \n");
@@ -192,6 +192,3 @@ inode_t* walk_and_get(const char* path, uint32_t backward_steps){
   debug_print_inode("[IN]Finished walk on path %s\n",path);
   return inode;
 }
-
-
-

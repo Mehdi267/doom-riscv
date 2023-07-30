@@ -116,4 +116,13 @@ void printLinkedList(c_elt* elt);
  * @return int 
  */
 int set_dirty_block(uint32_t disk_block_number);
+
+/**
+ * @brief Check if the cache has reached max capacity 
+ * and clears all of the elements located in the cache,
+ * this verison is simple, more advanced version will look
+ * of the individual usage of elements in the list 
+ * and then least used in order. 
+ */
+void check_if_cache_is_full();
 #endif

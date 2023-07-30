@@ -65,7 +65,7 @@ int set_up_mbr(){
   if (global_mbr == 0){
     return -1;
   }
-  sync();
+  sync_all();
   free_cache_list();
   memset(global_mbr, 0, 512);
   global_mbr->signature = MBR_SIGNATURE;
@@ -104,7 +104,7 @@ int setup_test_partition(uint8_t partition_type){
   global_mbr->partitionTable[0].status = ACTIVE_PARTITION;
   global_mbr->partitionTable[0].type = partition_type;//test partition
   global_mbr->partitionTable[0].startLBA = 2;
-  global_mbr->partitionTable[0].sizeLBA = TEST_EXT2_PARTITION_SIZE;
+  global_mbr->partitionTable[0].sizeLBA = TEST_EXT2_PARTITION_SIZE*15;
   clear_partition_space(0);
   if (partition_type == EXT2_PARTITION){
       configure_ext2_file_system(0);

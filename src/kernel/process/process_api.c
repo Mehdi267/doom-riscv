@@ -441,14 +441,17 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
   //------------File system related configuration----------
   //Bad code improve later
   char root_char[1] = "/";
+  //The reason as to why we use 2 is for the null terminator
   new_process->root_dir.inode = get_inode(EXT2_GOOD_OLD_FIRST_INO);
-  new_process->root_dir.dir_name = (char*) malloc(1);
-  new_process->root_dir.name_size = 1;
-  memcpy(new_process->root_dir.dir_name, root_char, 1);
+  new_process->root_dir.dir_name = (char*) malloc(2);
+  new_process->root_dir.name_size = 2;
+  strcpy(new_process->root_dir.dir_name, root_char);
+  new_process->root_dir.dir_name[1] = '\0';
   new_process->cur_dir.inode = get_inode(EXT2_GOOD_OLD_FIRST_INO);
-  new_process->cur_dir.dir_name = (char*) malloc(1);
-  new_process->cur_dir.name_size = 1;
-  memcpy(new_process->cur_dir.dir_name, root_char, 1);
+  new_process->cur_dir.dir_name = (char*) malloc(2);
+  new_process->cur_dir.name_size = 2;
+  strcpy(new_process->cur_dir.dir_name, root_char);
+  new_process->cur_dir.dir_name[1] = '\0';
   //---Add process to activatable queue
   queue_add(new_process, &activatable_process_queue, process, next_prev, prio);
 

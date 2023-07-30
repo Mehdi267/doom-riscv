@@ -14,6 +14,7 @@ typedef long off_t;
 typedef unsigned int mode_t;
 typedef int pid_t;
 typedef long ssize_t;
+typedef unsigned long int ino_t;
 
 // Messages from users
 enum FileOpenFlags {
@@ -26,7 +27,7 @@ enum FileOpenFlags {
     O_APPEND = 0x0080,      // Set the file offset to the end before each write
     O_SYNC = 0x0200         // Write operations are synchronized on storage
 };
-int open(const char *file_name, int flags);
+int open(const char *file_name, int flags, mode_t mode);
 int close(int file_descriptor);
 ssize_t read(int file_descriptor, void *buffer, size_t count);
 ssize_t write(int file_descriptor, const void *buffer, size_t count);
@@ -37,17 +38,12 @@ enum SEEK_OPERATION {
 };
 off_t lseek(int file_descriptor, off_t offset, int whence);
 
-int access(const char *file_name, int mode);
-int chdir(const char *new_directory);
-int chmod(const char *file_name, mode_t new_mode);
-int chroot(const char *new_root_directory);
-int create(const char *file_name, mode_t mode);
+
 int dup(int file_descriptor);
 int dup2(int file_descriptor, int new_file_descriptor);
 int fcntl(int file_descriptor, int function_code, int arg);
 // int fstat(const char *file_name, struct stat *buffer);
 int ioctl(int file_descriptor, int function_code, int arg);
-int mkdir(const char *dir_name, mode_t mode);
 //will try to implement but the the current design choices make this very hard to implement
 int mount(const char *special_file, const char *mount_point, int ro_flag);
 // int pipe(int file_descriptors[2]);
@@ -66,5 +62,12 @@ pid_t fork(pid_t parent_pid);
 pid_t setsid(pid_t pid);
 
 void print_dir_elements(const char* path);
-
+typedef struct disk_info{
+ uint32_t total_blocks;
+ uint32_t free_blocks;
+ uint32_t total_inodes;
+ uint32_t free_inodes;
+} disk_info;
+void fs_info(disk_info* info);
+extern int sync_all(); // define elsewere
 #endif /* FILE_SYS_CALLS_H */

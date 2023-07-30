@@ -144,7 +144,7 @@ int configure_root_file_system(
       hash_destroy(root_file_system->inode_hash_table);
     }
     free_inode_list(root_file_system->inode_list);
-    sync();
+    sync_all();
     free_cache_list();
   }
   root_file_system->fs_type = fs_type; 
@@ -163,4 +163,17 @@ int configure_root_file_system(
   PRINT_GREEN("File system was configured\n");
   return 0;
 }
+
+int sync_all(){
+  if (sync()<0){
+    return -1;
+  }
+  if (sync_inodes()){
+    return -1;
+  }
+  return 0;
+}
+
+
+
 

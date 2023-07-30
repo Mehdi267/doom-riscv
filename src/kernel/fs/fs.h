@@ -152,4 +152,9 @@ extern void print_fs_details();
  */
 extern int clear_and_mount_test_part();
 
+/**
+ * @brief Saves the inode and the disk blocks that are 
+ * in memory into disk
+ */
+int sync_all();
 #endif

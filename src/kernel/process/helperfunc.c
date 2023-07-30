@@ -264,13 +264,40 @@ void extractFolders(const char* path) {
     }
 }
 
-path_fs* extract_files(const char* path) {
-  char tempPath[256]; // Assuming the maximum path length is 255 characters
-  const char* delimiters = "\\/"; // Delimiters: both forward and backslashes
+char* create_substring(const char* str) {
+    // Find the position of the null terminator in the input string
+    const char* end_ptr = str;
+    while (*end_ptr != '\0') {
+        end_ptr++;
+    }
 
+    // Calculate the length of the substring
+    size_t length = end_ptr - str;
+
+    // Allocate memory for the new substring
+    char* substring = (char*)malloc(length + 1); // +1 for the null terminator
+
+    if (substring != NULL) {
+        // Copy the characters from the start of the original string to the new substring
+        for (size_t i = 0; i < length; i++) {
+            substring[i] = str[i];
+        }
+        substring[length] = '\0'; // Null-terminate the new substring
+    }
+
+    return substring;
+}
+
+path_fs* extract_files(const char* path) {
+  if (path && strlen(path)>256){
+    return 0;
+  }
+  char tempPath[256]; // Assuming the maximum path length is 255 characters
+  memset(tempPath, 0, 256);
+  const char* delimiters = "\\/"; // Delimiters: both forward and backslashes
   // Make a copy of the input path to avoid modifying the original string
-  strncpy(tempPath, path, sizeof(tempPath) - 1);
-  tempPath[sizeof(tempPath) - 1] = '\0'; // Ensure null-termination
+  strncpy(tempPath, path, strlen(path));
+  tempPath[strlen(path)] = '\0'; // Ensure null-termination
 
   // Count the number of elements
   uint32_t count = 0;
@@ -295,18 +322,23 @@ path_fs* extract_files(const char* path) {
     return NULL;
   }
 
+  memset(tempPath, 0, 256);
   // Reset tempPath and tokenize it again to fill the files array
-  strncpy(tempPath, path, sizeof(tempPath) - 1);
-  tempPath[sizeof(tempPath) - 1] = '\0';
+  strncpy(tempPath, path, strlen(path));
+  tempPath[strlen(path)] = '\0'; // Ensure null-termination
   uint32_t i = 0;
   token = strtok(tempPath, delimiters);
+  // printf("------------------\n");
   while (token != NULL) {
-    result->files[i] = malloc(strlen(token)); // Copy the token into the files array
-    memcpy(result->files[i], token, strlen(token));
+    // printf("token = %s, token len = %ld\n", token, strlen(token));
+    result->files[i] = (char*)malloc(strlen(token) + 1); // Allocate memory for token + null terminator
+    strncpy(result->files[i], token, strlen(token));
+    result->files[i][strlen(token)] = '\0'; // Explicitly add the null terminator
+    // printf("result->files[i] = %s\n", result->files[i]);
     token = strtok(NULL, delimiters);
     i++;
   }
-
+  // printf("------------------\n");
   result->nb_files = count;
   return result;
 }

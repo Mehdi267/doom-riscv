@@ -265,6 +265,7 @@ int virt_disk_op(disk_op* oper) {
   // print_block(oper->data, 512);
   free_list(desc_list);
   free(desc_list);
+  free(req);
   return 0;
 }
 

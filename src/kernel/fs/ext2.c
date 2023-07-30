@@ -71,13 +71,14 @@ int configure_ext2_file_system(uint8_t partition){
     PRINT_RED("[EXT2] configure_reserved_data failed\n");
     return -1;
   }
-  print_fs_details();
   if (configure_root_inode()<0){
     PRINT_RED("[EXT2] configure_root_inode failed\n");
     return -1;
   }
   PRINT_GREEN("Root directory was built\n");
+  print_fs_details();
   print_fs_no_arg("[ext2]conf finished\n");
+  sync();
   return 0;
 }
 
