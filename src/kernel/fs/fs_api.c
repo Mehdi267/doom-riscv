@@ -282,7 +282,7 @@ int unlink(const char *file_name){
       if (file_inode->i_mode == EXT2_S_IFREG && 
           check_if_inode_is_being_used(get_inode_number(file_inode)) == true){
         if (remove_inode_dir(dir_inode, path_data->files[path_data->nb_files -1],
-            strlen(path_data->files[path_data->nb_files -1])) <0){
+            strlen(path_data->files[path_data->nb_files -1]))<0){
           free_path_fs(path_data);
           return -1;
         }
@@ -335,7 +335,7 @@ void print_dir_elements(const char* path){
   inode_t* dir = walk_and_get(path, 0);
   if (dir != 0){
     debug_print_fsapi("\033[0;33m[FSAPI] inode found dir with id = %d\n\033[0;0m", get_inode_number(dir));
-    print_dir_list(dir, false);
+    print_dir_list(dir, true);
     return;
   }
   else{

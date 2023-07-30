@@ -20,6 +20,7 @@ void print_cache_details(inode_elt* list){
   inode_elt* list_iter = list;
   while(list_iter != NULL){
     debug_print_inode("address = %p\n", list_iter->address);
+    debug_print_inode("inode mode= %x\n", list_iter->address->i_mode);
     debug_print_inode("inode_id = %d\n", list_iter->inode_id);
     debug_print_inode("inode_usage = %d\n", list_iter->inode_usage);
     list_iter = list_iter->next_inode;

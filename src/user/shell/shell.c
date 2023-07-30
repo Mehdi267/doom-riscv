@@ -23,6 +23,8 @@ int main(void) {
   char mkdirprog[] = "mkdir";
   char lsprog[] = "ls";
   char cdprog[] = "cd";
+  char rmdirprog[] = "rmdir";
+  char unlinkprog[] = "unlink";
   while (1) {
     printf("shell$");
     if (getcwd(current_dir, CURR_DIR_SIZE) != 0){
@@ -43,6 +45,16 @@ int main(void) {
       char* curr_path = cmd + strlen(cdprog) + 1;
       printf("curr_path = %s\n", curr_path);
       chdir(curr_path);
+    }
+    else if (memcmp(cmd, "rmdir", strlen(rmdirprog)) == 0){
+      char* curr_path = cmd + strlen(rmdirprog) + 1;
+      printf("curr_path = %s\n", curr_path);
+      rmdir(curr_path);
+    }
+    else if (memcmp(cmd, "unlink", strlen(unlinkprog)) == 0){
+      char* curr_path = cmd + strlen(unlinkprog) + 1;
+      printf("curr_path = %s\n", curr_path);
+      unlink(curr_path);
     }
     else if (builtin_cmd(cmd) != 0) {
       pid = start(cmd, 4000, 128, NULL);

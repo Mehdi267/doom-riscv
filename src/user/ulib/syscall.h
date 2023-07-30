@@ -122,7 +122,7 @@ int unlink(const char *file_name);
 char *getcwd(char *buf, size_t size);
 int mkdir(const char *dir_name, mode_t mode);
 int chdir(const char *new_directory);
-
+int rmdir(const char *path);
 //Custom api
 void print_dir_elements(const char*);
 typedef struct disk_info{

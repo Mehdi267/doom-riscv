@@ -8,11 +8,13 @@
 #include "process/scheduler.h" // for scheduler car
 #include "process/helperfunc.h" //to use helper functions
 #include "sync/timer_api.h" // to exploit the counter variable
+#include "fs/fs.h" // to save data to disk that is on memory
 #include <stdbool.h>
 #include <stdint.h>
 
 bool first_call = true;
-
+uint32_t sync_counter = 0;
+#define SYNC_LIMIT 200
 /*
  * Set machine timer
  *
@@ -63,6 +65,11 @@ void handle_mtimer_interrupt()
 		//Timer interupts must come from user mode, if it is not the case we return 
 		//directly to the state at which we were in.
 		debug_print_no_arg("Inside machine mode time handler\n");
+		sync_counter++;
+		if (sync_counter > SYNC_LIMIT){
+			sync_counter = 0;
+			// sync_all();
+		}
 		if (((csr_read(mstatus) & MSTATUS_MPP_0) != 0) && !first_call){
 			debug_print_no_arg("Int comming from supervisor mode and " 
 					"we are not in the first call \n");

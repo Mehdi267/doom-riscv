@@ -54,7 +54,7 @@
 #define EXT2_RESERVED_FL 0x80000000     // reserved for ext2 library
 
 
-typedef struct {
+typedef struct __attribute__((packed)) {
   uint16_t i_mode;             // File mode
   uint16_t i_uid;              // Owner user ID
   uint32_t i_size;             // File size in bytes
@@ -93,6 +93,8 @@ typedef struct {
 #define REL_NB_DOUB_INDIRECT 262144
 // limiting my self to double list atm 
 #define MAX_BLOCKS_FILE 262668 
+
+#define BASIC_DOT_DIR_SIZE 24
 
 typedef enum file_type{
   EXT2_FT_UNKNOWN = 0, //Unknown File Type
@@ -398,5 +400,7 @@ int add_dot_directories(inode_t* dir, inode_t* previous_directory);
  * @returns int function status
  */
 int sync_inodes();
+
+
 
 #endif

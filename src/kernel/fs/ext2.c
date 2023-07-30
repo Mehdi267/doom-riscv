@@ -78,7 +78,7 @@ int configure_ext2_file_system(uint8_t partition){
   PRINT_GREEN("Root directory was built\n");
   print_fs_details();
   print_fs_no_arg("[ext2]conf finished\n");
-  sync();
+  sync_all();
   return 0;
 }
 

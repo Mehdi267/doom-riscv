@@ -243,7 +243,7 @@ int save_fs_block(char* data,
   }
   debug_print_v_fs("[df]Saving fs block %d into memory \n", relative_b_nb);
   if (write_block(relative_b_nb, data,
-      data_size, WRITE_BACK)<0){
+      data_size, WRITE_THROUGH)<0){
     printf("A save operation failed");
     return -1;
   }

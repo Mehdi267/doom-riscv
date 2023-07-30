@@ -36,10 +36,10 @@ inode_t* get_inode(uint32_t inode_number){
   else{
     print_inode_no_arg("\033[0;32m[IN]get inode not found in cache\033[0;0m\n");
     debug_print_inode("[IN]Read disk block %d while getting inode %d\n", desc_table->bg_inode_table 
-                                        +inode_number*INODE_SIZE
+                                        +(inode_number*INODE_SIZE)
                                         /root_file_system->block_size, inode_number);
     char *block_inode = disk_read_block(desc_table->bg_inode_table 
-                                        +inode_number*INODE_SIZE
+                                        +(inode_number*INODE_SIZE)
                                         /root_file_system->block_size);
     if (block_inode == 0){
       return 0;
@@ -50,7 +50,9 @@ inode_t* get_inode(uint32_t inode_number){
       PRINT_RED("No memory when allocating inode");
       return 0;
     }
-    memcpy(return_inode, block_inode+inode_number*INODE_SIZE, INODE_SIZE);
+    memcpy(return_inode, 
+          block_inode+(inode_number*INODE_SIZE)%root_file_system->block_size, 
+          INODE_SIZE);
     add_inode_list(return_inode, inode_number);
     return return_inode;
   }
@@ -153,8 +155,10 @@ int put_inode(inode_t* inode, uint32_t inode_number, put_op op_type){
     return -1;
   }
   int block_number = desc_table->bg_inode_table 
-                    + inode_number*INODE_SIZE
+                    + (inode_number*INODE_SIZE)
                     /root_file_system->block_size;
+  debug_print_inode("[IN]Saving Inode num %d, inode mode %x\n",
+             inode_number, inode->i_mode);
   char* block_inode = disk_read_block(block_number);
   if (block_inode ==0){
     return -1;
@@ -175,7 +179,7 @@ int put_inode(inode_t* inode, uint32_t inode_number, put_op op_type){
           )<0){
     return -1;
   }
-  debug_print_inode("\033[0;34m[IN]Put inode reached end on %d\033[0;0m\n", inode_number);
+  debug_print_inode("\033[0;34m[IN]Put inode reached end on %d, \033[0;0m\n", inode_number);
   return 0;
 }
 
@@ -264,7 +268,7 @@ inode_t* alloc_inode(){
     return 0;
   }
   int block_number = desc_table->bg_inode_table 
-                    + inode_number*INODE_SIZE
+                    + (inode_number*INODE_SIZE)
                     /root_file_system->block_size;
   char* block_inode = disk_read_block(block_number);
   if (block_inode ==0){
@@ -299,8 +303,9 @@ int free_inode(inode_t* inode, uint32_t inode_number){
     inode = get_inode(inode_number);
     if (inode == 0){return -1;}
   }
-  if (inode->i_mode == EXT2_S_IFDIR && inode->i_size != 0){
-    PRINT_RED("inode is a directory with data");
+  if (inode->i_mode == EXT2_S_IFDIR && 
+      inode->i_size > BASIC_DOT_DIR_SIZE){
+    PRINT_RED("Inode is a directory with data\n");
     return 0;
   }
   inode->i_links_count--;
@@ -635,15 +640,15 @@ int add_inode_directory(inode_t* dir,
   dir_entry.name = name;  
   dir_entry.name_len = name_size;  
   dir_entry.file_type = type;  
-  //min size
-  uint32_t file_size = SIZE_DIR_NO_NAME
+  //size config
+  dir_entry.rec_len = SIZE_DIR_NO_NAME
                   +dir_entry.name_len;
-  dir_entry.rec_len = file_size;
   if (dir_entry.rec_len%4 != 0){
     dir_entry.rec_len += 4-dir_entry.rec_len%4; 
   }
   //To improve later because if there is no space 
   //we will not be able to add a directory entry
+  uint32_t file_size = dir_entry.rec_len;
   dir->i_size += file_size;
   debug_print_inode("[IN]rec_lec = %d\n",dir_entry.rec_len);  
   if (dir->i_blocks == 0){
@@ -797,6 +802,17 @@ int remove_inode_dir(inode_t* dir,
     PRINT_RED("inode is not a directory\n");
     return -1;
   }
+  //We make sure that the last element is 
+  //is null of the string
+  char temp_name[name_len];
+  memcpy(temp_name, name, name_len);
+  temp_name[name_len] = 0;
+  if (name_len <= 2 &&(
+     strcmp(temp_name, ".") == 0 ||
+     strcmp(temp_name, "..") == 0)){
+    PRINT_RED("Cannot delete . or ..\n");
+    return -1;
+  }
   if (dir->i_blocks == 0){
     print_inode_no_arg("[IN]---Directory has no blocks/inodes--\n");
     return 0;
@@ -872,6 +888,7 @@ int remove_inode_dir(inode_t* dir,
               list_elt->name_len = 0;
               list_elt->rec_len = root_file_system->block_size;
             }
+            dir->i_size -= size_struct;
             return 0;
           }
           return save_fs_block(block_data,

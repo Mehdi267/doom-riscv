@@ -142,12 +142,41 @@ int chroot(const char *new_root_directory);
  * @note The mode parameter is used to set the permissions of the new directory.
  *       The exact permission bits that are set depend on the user's umask setting.
  *       To ensure specific permissions are set, it is recommended to use explicit octal values.
- *
+ *  
  * @note The mkdir() function may fail due to various reasons, including permissions, file system
  *       constraints, or other errors. In case of failure, check the errno variable for the
  *       specific error code.
  */
 int mkdir(const char *dir_name, mode_t mode);
+
+/**
+ * @brief Remove a directory.
+ *
+ * The rmdir() function deletes a directory specified by the path name.
+ * The directory must be empty for the removal to be successful. If the
+ * directory is not empty or there is an error, the function will fail.
+ *
+ * @param path The path to the directory to be removed.
+ * @return Upon successful completion, 0 is returned. On error, -1 is returned,
+ *         and errno is set to indicate the error.
+ * @note The directory must be empty for the operation to succeed.
+ * @see rmdir(2)
+ */
+int rmdir(const char *path);
+
+/**
+ * @brief Rename a file or directory.
+ *
+ * The rename() function renames a file or directory specified by the oldpath
+ * to the newpath. If the newpath already exists, it will be overwritten.
+ *
+ * @param oldpath The current path of the file or directory to be renamed.
+ * @param newpath The new path or name for the file or directory.
+ * @return Upon successful completion, 0 is returned. On error, -1 is returned,
+ *         and errno is set to indicate the error.
+ * @see rename(2)
+ */
+int rename(const char *oldpath, const char *newpath);
 
 
 #endif // MY_DIRENT_H

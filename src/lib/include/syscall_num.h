@@ -76,6 +76,7 @@
 #define SYSC_chdir              56
 #define SYSC_mkdir              57
 #define SYSC_getcwd             58
+#define SYSC_rmdir              59
 
 #define SYSC_print_dir_elements 66 
 #define SYSC_fs_info            67

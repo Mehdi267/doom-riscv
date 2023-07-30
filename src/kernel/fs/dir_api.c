@@ -18,9 +18,14 @@ static void navigate_to_parent_directory(char* current_directory) {
   if (last_separator != NULL) {
     printf("current_directory = %s space = %ld\n", current_directory, (unsigned long) (last_separator-current_directory));
     // Truncate the path at the last separator to go up to the parent directory
-    memset(current_directory + (last_separator-current_directory) + 1,
-           0,
+    if (current_directory == 
+        (char*) current_directory + (last_separator-current_directory)){
+      memset(current_directory + (last_separator-current_directory) + 1, 0,
            old_len-(last_separator-current_directory) - 1);
+    }else{
+      memset(current_directory + (last_separator-current_directory), 0,
+           old_len-(last_separator-current_directory) - 1);
+    }
     printf("current_directory = %s len = %ld\n",
          current_directory, strlen(current_directory));
   }
@@ -117,13 +122,16 @@ int chdir(const char *new_directory){
   }
   if (dir_inode->i_mode != EXT2_S_IFDIR){
     free(final_string);
-    PRINT_RED("Inode is not a directory\n");
+    PRINT_RED("Inode is not a directory, mode = %d\n", 
+          dir_inode->i_mode);
     return -1;
   }
   if (set_current_dir(final_string, strlen(final_string)+1,
                    dir_inode)<0){
     return -1;
   }
+  //Not very usefull
+  sync_all();
   return 0;
 }
 
@@ -169,8 +177,8 @@ int mkdir(const char *dir_name, mode_t mode){
       free_path_fs(path_data);
       return -1;
     }
+    sync_all();
   }
-  sync_all();
   free(final_string);
   free_path_fs(path_data);
   return 0;
@@ -189,4 +197,53 @@ char *getcwd(char *buf, size_t size){
   }
   memcpy(buf, current_dir_name, get_current_dir_name_size());
   return buf;
+}
+
+int rmdir(const char *path){
+  if (path == 0){
+    return -1;
+  }
+  if (strcmp(path, "/") == 0){
+    PRINT_RED("Cannot delete root directory\n");    
+  }
+  char* final_string = get_final_string(path);
+  if (final_string == 0){
+    return -1;
+  }
+  inode_t* dir_inode = walk_and_get(final_string, 0);
+  inode_t* parent_dir = walk_and_get(final_string, 1);
+  if (dir_inode == 0 || parent_dir == 0){
+    free(final_string);
+    return -1;
+  }
+  if (dir_inode->i_mode != EXT2_S_IFDIR){
+    free(final_string);
+    PRINT_RED("Inode is not a directory, mode = %d\n", 
+          dir_inode->i_mode);
+    return -1;
+  }
+  path_fs* path_data = extract_files(final_string);
+  if (path_data == 0){
+    free(final_string);
+    return -1;
+  }
+  if (dir_inode->i_size == BASIC_DOT_DIR_SIZE){
+    if (remove_inode_dir(parent_dir, path_data->files[path_data->nb_files -1],
+      strlen(path_data->files[path_data->nb_files -1]))<0){
+      PRINT_RED("Remove dir from folder failed\n");
+      free(final_string);
+      free_path_fs(path_data);
+      return -1;
+    }
+    if (free_inode(dir_inode, get_inode_number(dir_inode))<0){
+      free(final_string);
+      free_path_fs(path_data);
+      return -1;
+    }
+  } else{
+    free_path_fs(path_data);
+    PRINT_RED("Dir is not empty cannot delete it, size = %d\n", 
+          dir_inode->i_size);
+  }
+  return 0;
 }

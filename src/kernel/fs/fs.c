@@ -6,10 +6,11 @@
 #include <stdint.h> //uint
 #include <string.h> // memset
 #include "drivers/disk_device.h" //to do disk operations
-#include "ext2.h"
+#include "ext2.h" 
 #include "super_block.h"
 #include "hash.h"
 #include "logger.h"
+#include "inode.h"
 file_system_t* root_file_system = 0;
 
 int set_up_file_system() {
@@ -113,6 +114,7 @@ void load_and_print_desc_table(){
 void print_fs_details(){
   load_and_print_superblock();
   load_and_print_desc_table();
+  print_cache_details(root_file_system->inode_list);
 }
 
 
@@ -165,13 +167,16 @@ int configure_root_file_system(
 }
 
 int sync_all(){
+  printf("Sync has been called\n");
+  int res = 0;
   if (sync()<0){
-    return -1;
+    res = -1;
   }
   if (sync_inodes()){
-    return -1;
+    res = -1;
   }
-  return 0;
+  printf("Sync finished\n");
+  return res;
 }
 
 

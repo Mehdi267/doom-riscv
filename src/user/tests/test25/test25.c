@@ -1,11 +1,22 @@
-/*******************************************************************************
+/******************************************************************************
  * Ensimag - Projet Systeme 
- * Test 24
+ * Test 25
  *
- * Does basic file operations, open's a file 
- * (creating if it does not exist) and then writes numbers from 1 to one million into it
- * then it closes the file and finally it reopens and reads the numbers 
- * and makes sure that they are saved in the file.
+ * File Operations and Error Handling Tests
+ * This test program demonstrates basic file operations such as opening files
+ * (creating if they do not exist), writing data to files, and reading data 
+ * from files. It also tests error handling scenarios for file operations.
+ *
+ * Test Functions:
+ * 1. test_read_empty_file() - Reads from a newly created or existing file and 
+ *    prints its content. If the file is empty, it prints "File is empty. Nothing to read."
+ * 2. test_write_readonly_file() - Tries to write data to a file opened in read-only mode.
+ * 3. test_write_to_existing_file() - Opens an existing file or creates a new file,
+ *    writes some initial data to it, seeks to a specific position, writes additional 
+ *    data, reads the entire content, and verifies the written data.
+ * 4. test_error_cases() - Tests various error scenarios during file operations,
+ *    including opening a non-existent file, incorrect flags while opening a file,
+ *    and writing/reading from a file descriptor with the wrong permissions.
  ******************************************************************************/
 
 #include "sysapi.h"
@@ -182,4 +193,7 @@ int main() {
  assert(test_error_cases() == 0);
  return 0;
 }
+
+
+
 
