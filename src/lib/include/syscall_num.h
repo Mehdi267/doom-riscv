@@ -72,8 +72,13 @@
 #define SYSC_read               52
 #define SYSC_write              53
 #define SYSC_lseek              54
+#define SYSC_unlink             55
+#define SYSC_chdir              56
+#define SYSC_mkdir              57
+#define SYSC_getcwd             58
 
-#define SYSC_print_dir_elements 55 
-#define NB_SYSCALLS             56
+#define SYSC_print_dir_elements 66 
+#define SYSC_fs_info            67
+#define NB_SYSCALLS             68
 
 #endif
