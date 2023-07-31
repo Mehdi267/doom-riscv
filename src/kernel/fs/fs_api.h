@@ -27,15 +27,68 @@ enum FileOpenFlags {
     O_APPEND = 0x0080,      // Set the file offset to the end before each write
     O_SYNC = 0x0200         // Write operations are synchronized on storage
 };
+/**
+ * Opens or creates a file.
+ *
+ * @param file_name The name of the file to be opened or created.
+ * @param flags The file open flags that specify the file access mode and other options.
+ * @param mode The file mode to be used if O_CREAT flag is specified.
+ * @return On success, returns the file descriptor of the opened or created file. On failure, returns -1 and sets 'errno' to indicate the specific error.
+ */
 int open(const char *file_name, int flags, mode_t mode);
+
+/**
+ * Closes the file associated with the given file descriptor.
+ *
+ * @param file_descriptor The file descriptor of the file to be closed.
+ * @return On success, returns 0. On failure, returns -1 and sets 'errno' to indicate the specific error.
+ */
 int close(int file_descriptor);
+
+/**
+ * Reads data from a file into a buffer.
+ *
+ * @param file_descriptor The file descriptor of the file to read from.
+ * @param buffer The buffer to store the read data.
+ * @param count The maximum number of bytes to read.
+ * @return On success, returns the number of bytes read. On failure, returns -1 and sets 'errno' to indicate the specific error.
+ */
 ssize_t read(int file_descriptor, void *buffer, size_t count);
+
+/**
+ * Writes data from a buffer to a file.
+ *
+ * @param file_descriptor The file descriptor of the file to write to.
+ * @param buffer The buffer containing the data to be written.
+ * @param count The number of bytes to write.
+ * @return On success, returns the number of bytes written. On failure, returns -1 and sets 'errno' to indicate the specific error.
+ */
 ssize_t write(int file_descriptor, const void *buffer, size_t count);
+
+// Other function definitions and comments omitted for brevity...
+
+/**
+ * Creates a hard link between an existing file and a new filename.
+ *
+ * @param oldpath The pathname of the existing file (source) to be linked.
+ * @param newpath The pathname of the new link (destination) to be created.
+ * @return On success, returns 0. On failure, returns -1 and sets 'errno' to indicate the specific error.
+ */
+int sys_link(const char *oldpath, const char *newpath);
+
 enum SEEK_OPERATION {
   SEEK_SET = 0,
   SEEK_CUR = 1,
   SEEK_END = 2,
 };
+/**
+ * Changes the file offset of an open file.
+ *
+ * @param file_descriptor The file descriptor of the open file.
+ * @param offset The new file offset.
+ * @param whence The reference point for the offset (SEEK_SET, SEEK_CUR, SEEK_END).
+ * @return On success, returns the new file offset. On failure, returns -1 and sets 'errno' to indicate the specific error.
+ */
 off_t lseek(int file_descriptor, off_t offset, int whence);
 
 
@@ -70,4 +123,6 @@ typedef struct disk_info{
 } disk_info;
 void fs_info(disk_info* info);
 extern int sync_all(); // define elsewere
+
 #endif /* FILE_SYS_CALLS_H */
+

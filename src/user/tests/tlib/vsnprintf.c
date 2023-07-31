@@ -2,6 +2,15 @@
 
 #include "sysapi.h"
 
+
+#define SPRINTF_UNLIMITED 0xFFFFFFFu
+struct sprintf_state {
+	char *buf;
+	unsigned int len;
+	unsigned int max;
+};
+
+
 int vsnprintf(char * out, size_t n, const char* s, va_list vl)
 {
     int format = 0;
@@ -124,4 +133,33 @@ int vsnprintf(char * out, size_t n, const char* s, va_list vl)
         out[n-1] = 0;
     }
     return pos;
+}
+
+int vsprintf(char *s, const char *fmt, va_list args)
+{
+	return vsnprintf(s, SPRINTF_UNLIMITED, fmt, args);
+}
+
+int snprintf(char *s, size_t size, const char *fmt, ...)
+{
+	va_list args;
+	int err;
+
+	va_start(args, fmt);
+	err = vsnprintf(s, size, fmt, args);
+	va_end(args);
+
+	return err;
+}
+
+int sprintf(char *s, const char *fmt, ...)
+{
+	va_list args;
+	int err;
+
+	va_start(args, fmt);
+	err = vsprintf(s, fmt, args);
+	va_end(args);
+
+	return err;
 }

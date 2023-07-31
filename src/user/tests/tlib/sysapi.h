@@ -200,6 +200,7 @@ int strcmp(const char *str1, const char *str2);
 size_t strlen(const char *s);
 char *strncpy(char *, const char *, size_t);
 void *memset(void *dst, int c, size_t n);
+int memcmp(const void *, const void *, size_t);
 
 /* printf.h */
 void cons_gets(char *s, unsigned long length);
@@ -259,6 +260,7 @@ ssize_t read(int file_descriptor, void *buffer, size_t count);
 ssize_t write(int file_descriptor, const void *buffer, size_t count);
 off_t lseek(int file_descriptor, off_t offset, int whence);
 int unlink(const char *file_name);
+int link(const char *oldpath, const char *newpath);
 
 //Dir api
 char *getcwd(char *buf, size_t size);

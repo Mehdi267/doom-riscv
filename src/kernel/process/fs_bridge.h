@@ -38,7 +38,7 @@ int remove_fd_list(int fd);
 flip* get_fs_list_elt(int fd);
 
 /**
- * @brief Checks if the inode number given as argument is being used i.e.
+ * @brief Checks if the inode number given as argument is currently being used i.e.
  * that inode number is being used by an open file
  * @param inode_number the inode that we are checking
  * @return true the inode is being used

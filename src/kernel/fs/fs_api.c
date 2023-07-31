@@ -273,14 +273,15 @@ int unlink(const char *file_name){
   }
   if (look_for_inode_dir(dir_inode, path_data->files[path_data->nb_files -1],
           strlen(path_data->files[path_data->nb_files -1])) != 0){
-      print_fsapi_no_arg("File already exists, deleting its data\n");
+      print_fsapi_no_arg("File found, unlinking it\n");
       file_inode = walk_and_get(file_name, 0);
       if (file_inode == 0){
         free_path_fs(path_data);
         return -1;
       }
+      bool used = check_if_inode_is_being_used(get_inode_number(file_inode));
       if (file_inode->i_mode == EXT2_S_IFREG && 
-          check_if_inode_is_being_used(get_inode_number(file_inode)) == true){
+           used == false){
         if (remove_inode_dir(dir_inode, path_data->files[path_data->nb_files -1],
             strlen(path_data->files[path_data->nb_files -1]))<0){
           free_path_fs(path_data);
@@ -293,11 +294,55 @@ int unlink(const char *file_name){
         sync_all();
         printf("DELETED FILE\n");
       }
+      else if (used == true){
+        printf("File is being used, cannot delete\n");
+      }
   }else{
     free_path_fs(path_data);
     return -1;
   }
   free_path_fs(path_data);
+  return 0;
+}
+
+int sys_link(const char *oldpath, const char *newpath){
+  if (oldpath == 0 || newpath == 0){
+    return -1;
+  }
+  debug_print_fsapi("\033[0;35m[FSAPI]Trying to create a new hard link old path %s new path %s\n\033[0;0m",
+      oldpath, newpath); 
+  inode_t* main_file = walk_and_get(oldpath, 0);
+  if (main_file == 0 || main_file->i_mode != EXT2_S_IFREG){
+    return -1;
+  }
+  inode_t* dir_inode = walk_and_get(newpath, 1);
+  if (dir_inode == 0 || dir_inode->i_mode != EXT2_S_IFDIR){
+    return -1;
+  }
+  path_fs* path_data = extract_files(newpath);
+  if (path_data == 0){
+    return -1;
+  }
+  if (look_for_inode_dir(dir_inode, path_data->files[path_data->nb_files -1],
+          strlen(path_data->files[path_data->nb_files -1])) != 0){
+    PRINT_RED("Cannot create link, file already exists, \n");
+    free_path_fs(path_data);
+    return -1;
+  }
+  main_file->i_links_count++;
+  if (add_inode_directory(dir_inode, 
+        get_inode_number(main_file), 
+        EXT2_FT_REG_FILE,
+        path_data->files[path_data->nb_files -1],
+        strlen(path_data->files[path_data->nb_files -1]))<0){
+    free_path_fs(path_data);
+    return -1;
+  }
+  free_path_fs(path_data);
+  debug_print_fsapi("\033[0;34m[FSAPI]{link}Link created with success %s -> %s\033[0;0m\n",
+        oldpath, newpath);
+  printf("\033[0;34m[FSAPI]{link}Link created with success %s -> %s\033[0;0m\n",
+        oldpath, newpath);
   return 0;
 }
 

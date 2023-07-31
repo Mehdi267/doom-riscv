@@ -167,7 +167,7 @@ int configure_root_file_system(
 }
 
 int sync_all(){
-  printf("Sync has been called\n");
+  print_fs_no_arg("Sync has been called\n");
   int res = 0;
   if (sync()<0){
     res = -1;
@@ -175,7 +175,7 @@ int sync_all(){
   if (sync_inodes()){
     res = -1;
   }
-  printf("Sync finished\n");
+  print_fs_no_arg("Sync finished\n");
   return res;
 }
 

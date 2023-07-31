@@ -7,6 +7,8 @@
 #ifndef _HELPFUNCTIONS_H_
 #define _HELPFUNCTIONS_H_
 
+#define PATH_SIZE_MAX 512
+
 #include "stdint.h"
 #include "process.h"
 #include "../memory/pages.h"

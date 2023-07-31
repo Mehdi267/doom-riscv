@@ -93,7 +93,9 @@ typedef struct __attribute__((packed)) {
 #define REL_NB_DOUB_INDIRECT 262144
 // limiting my self to double list atm 
 #define MAX_BLOCKS_FILE 262668 
-
+//This used to determine the size
+//of a directory that contains only 
+//the basic . and .. directories
 #define BASIC_DOT_DIR_SIZE 24
 
 typedef enum file_type{

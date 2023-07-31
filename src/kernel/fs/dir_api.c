@@ -16,7 +16,7 @@ static void navigate_to_parent_directory(char* current_directory) {
   char *last_separator = strrchr(current_directory, '/');
   ssize_t old_len = strlen(current_directory);
   if (last_separator != NULL) {
-    printf("current_directory = %s space = %ld\n", current_directory, (unsigned long) (last_separator-current_directory));
+    // printf("current_directory = %s space = %ld\n", current_directory, (unsigned long) (last_separator-current_directory));
     // Truncate the path at the last separator to go up to the parent directory
     if (current_directory == 
         (char*) current_directory + (last_separator-current_directory)){
@@ -26,7 +26,7 @@ static void navigate_to_parent_directory(char* current_directory) {
       memset(current_directory + (last_separator-current_directory), 0,
            old_len-(last_separator-current_directory) - 1);
     }
-    printf("current_directory = %s len = %ld\n",
+    debug_print_dirapi("[DIRAPI] naviagate parent current_directory = %s len = %ld\n",
          current_directory, strlen(current_directory));
   }
 }
@@ -96,13 +96,11 @@ char * get_final_string(const char* new_directory){
       }
     }
   }
-  printf("final temp = %s len = %ld\n",
-       temp_directory, strlen(temp_directory));
   free_path_fs(path_data);
   char * final_string = (char*)malloc(strlen(temp_directory)+1);
   memcpy(final_string, temp_directory, strlen(temp_directory));
   final_string[strlen(temp_directory)] = '\0';
-  printf("Final string = %s\n", final_string);
+  debug_print_dirapi("[DIRAPI] Final string = %s\n", final_string);
   free(temp_directory);
   return final_string;
 }
@@ -131,7 +129,7 @@ int chdir(const char *new_directory){
     return -1;
   }
   //Not very usefull
-  sync_all();
+  // sync_all();
   return 0;
 }
 
@@ -144,7 +142,8 @@ int mkdir(const char *dir_name, mode_t mode){
   if (final_string == 0){
     return -1;
   }
-  printf("final_string = %s\n", final_string);
+  debug_print_dirapi("[DIRAPI] mkdir called and final_string = %s\n",
+       final_string);
   path_fs* path_data = extract_files(final_string);
   if (path_data == 0){
     return -1;
@@ -177,8 +176,9 @@ int mkdir(const char *dir_name, mode_t mode){
       free_path_fs(path_data);
       return -1;
     }
-    sync_all();
+    // sync_all();
   }
+  printf("Mkdir called = %s\n", final_string);
   free(final_string);
   free_path_fs(path_data);
   return 0;
@@ -245,5 +245,6 @@ int rmdir(const char *path){
     PRINT_RED("Dir is not empty cannot delete it, size = %d\n", 
           dir_inode->i_size);
   }
+  printf("Removing dir = %s\n", final_string);
   return 0;
 }

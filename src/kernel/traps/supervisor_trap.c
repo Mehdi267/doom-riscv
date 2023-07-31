@@ -162,6 +162,8 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
       return chdir((const char *)tf->a0);
     case SYSC_rmdir:
       return rmdir((const char *)tf->a0);
+    case SYSC_link:
+      return sys_link((const char *)tf->a0, (const char *)tf->a1);
     case SYSC_print_dir_elements:
       print_dir_elements((const char*)tf->a0);    
       break;

@@ -819,6 +819,10 @@ int remove_inode_dir(inode_t* dir,
   }
   //search direct blocks
   else {
+    if (dir->i_blocks > L_DIRECT){
+      assert(0); //Something went wrong
+      return -1;
+    }
     //We look for elements in the present direct blocks
     for (int blk = 0; blk<dir->i_blocks; blk++){
       uint32_t pos = 0;
@@ -882,15 +886,15 @@ int remove_inode_dir(inode_t* dir,
                 }
               dir->i_blocks--;
               dir->i_block[blk] = 0;
+              return 0;
             }
             else{
               list_elt->file_type = EXT2_FT_FREE;
               list_elt->name_len = 0;
               list_elt->rec_len = root_file_system->block_size;
             }
-            dir->i_size -= size_struct;
-            return 0;
           }
+          dir->i_size -= size_struct;
           return save_fs_block(block_data,
             root_file_system->block_size, 
             super->s_first_data_block+

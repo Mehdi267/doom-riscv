@@ -246,7 +246,7 @@ bool is_absolute_directory(const char* path) {
 }
 
 void extractFolders(const char* path) {
-    char tempPath[256]; // Assuming the maximum path length is 255 characters
+    char tempPath[PATH_SIZE_MAX]; // Assuming the maximum path length is 255 characters
     char* folder;
     const char* delimiters = "\\/"; // Delimiters: both forward and backslashes
 
@@ -289,11 +289,11 @@ char* create_substring(const char* str) {
 }
 
 path_fs* extract_files(const char* path) {
-  if (path && strlen(path)>256){
+  if (path && strlen(path)>PATH_SIZE_MAX){
     return 0;
   }
-  char tempPath[256]; // Assuming the maximum path length is 255 characters
-  memset(tempPath, 0, 256);
+  char tempPath[PATH_SIZE_MAX]; // Assuming the maximum path length is 255 characters
+  memset(tempPath, 0, PATH_SIZE_MAX);
   const char* delimiters = "\\/"; // Delimiters: both forward and backslashes
   // Make a copy of the input path to avoid modifying the original string
   strncpy(tempPath, path, strlen(path));
@@ -322,7 +322,7 @@ path_fs* extract_files(const char* path) {
     return NULL;
   }
 
-  memset(tempPath, 0, 256);
+  memset(tempPath, 0, PATH_SIZE_MAX);
   // Reset tempPath and tokenize it again to fill the files array
   strncpy(tempPath, path, strlen(path));
   tempPath[strlen(path)] = '\0'; // Ensure null-termination
