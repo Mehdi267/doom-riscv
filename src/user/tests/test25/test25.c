@@ -50,6 +50,10 @@ int test_read_empty_file() {
         printf("Error closing file\n");
         return -1;
     }
+    if (unlink("testfile3.txt") == -1) {
+        printf("Error Deleting file\n");
+        return -1;
+    }
     return 0;
 }
 
@@ -74,6 +78,10 @@ int test_write_readonly_file() {
     // Close the file
     if (close(fd) == -1) {
         printf("Error closing file\n");
+        return -1;
+    }
+    if (unlink("readonly.txt") == -1) {
+        printf("Error Deleting file\n");
         return -1;
     }
     return 0;
@@ -141,6 +149,10 @@ int test_write_to_existing_file() {
         printf("Error closing file\n");
         return -1;
     }
+    if (unlink(file) == -1) {
+        printf("Error Deleting file\n");
+        return -1;
+    }
     return 0;
 }
 
@@ -151,10 +163,10 @@ int test_error_cases() {
         printf("Error caught opening non-existent file\n");
     }
 
-    // Test incorrect flags while opening a file
+    // Test flags while opening a file
     const char path[] =  "newfile25.txt";
-    int incorrect_flags_fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0);
-    if (incorrect_flags_fd == -1) {
+    int test_flags_fd = open(path, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0);
+    if (test_flags_fd == -1) {
         printf("Error opening file with flags\n");
         return -1;
     }
@@ -176,11 +188,12 @@ int test_error_cases() {
     }
 
     // Close file descriptors
-    if (close(read_only_fd) == -1 || close(write_only_fd) == -1) {
+    if (close(test_flags_fd) == -1 || close(read_only_fd) == -1 || close(write_only_fd) == -1) {
         printf("Error caught closing file descriptors\n");
     }
     if (unlink(path) == -1) {
         printf("Error Deleting file\n");
+        return -1;
     }
     return 0;
 }

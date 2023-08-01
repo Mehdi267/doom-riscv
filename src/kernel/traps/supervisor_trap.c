@@ -178,6 +178,7 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
   return 0;
 }
 
+int debug = 0;
 
 void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
   // printf("super int %ld\n",scause&0xff);

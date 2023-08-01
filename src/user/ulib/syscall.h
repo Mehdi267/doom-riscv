@@ -108,7 +108,7 @@ extern int clear_disk_cache();
 extern void print_fs_details();
 
 typedef long ssize_t;
-typedef long off_t;
+typedef long long off_t;
 typedef unsigned int mode_t;
 //Fs api 
 int open(const char *file_name, int flags, mode_t mode);

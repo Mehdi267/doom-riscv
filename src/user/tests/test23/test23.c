@@ -64,5 +64,10 @@ int main(void *arg){
         printf("Data read does not match the data written!\n");
         return -1;
     }
+    if (unlink(filename) == -1) {
+        printf("Error Deleting file\n");
+        return -1;
+    }
+
     return 0;
 }

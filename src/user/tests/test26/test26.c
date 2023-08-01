@@ -23,16 +23,16 @@
 
 int create_directory(const char *dir_name) {
   if (mkdir(dir_name, 0) == -1) {
-  printf("Error creating directory");
-  return -1;
+    printf("Error creating directory");
+    return -1;
   }  
   return 0;
 }
 
 int delete_directory(const char *dir_name) {
   if (rmdir(dir_name) == -1) {
-  printf("Error deleting directory");
-  return -1;
+    printf("Error deleting directory");
+    return -1;
   }
   return 0;
 }

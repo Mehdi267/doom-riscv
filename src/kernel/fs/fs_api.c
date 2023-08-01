@@ -296,6 +296,8 @@ int unlink(const char *file_name){
       }
       else if (used == true){
         printf("File is being used, cannot delete\n");
+        free_path_fs(path_data);
+        return -1;
       }
   }else{
     free_path_fs(path_data);
@@ -346,23 +348,66 @@ int sys_link(const char *oldpath, const char *newpath){
   return 0;
 }
 
+static int conf_buf(struct stat *buf, inode_t* file_inode){
+  if (root_file_system == 0 && file_inode == 0){
+    return -1;
+  }
+  buf->st_dev = 1; //We are using one device currently         
+  buf->st_ino = get_inode_number(file_inode);         
+  buf->st_mode = 777; //Random value might add modes later        
+  buf->st_nlink = file_inode->i_links_count;       
+  buf->st_uid = 0;         
+  buf->st_gid = 0;         
+  buf->st_rdev = EXT2_S_IFBLK;        
+  buf->st_size = file_inode->i_size;  
+  buf->st_blksize = root_file_system->block_size;     
+  buf->st_blocks = file_inode->i_blocks*(
+          root_file_system->block_size/512);      
+  buf->st_atime = 0;       
+  buf->st_mtime = 0;       
+  buf->st_ctime = 0;
+  return 0;
+}
+
+int stat(const char *pathname, struct stat *buf){
+  if (pathname == 0 || buf == 0){
+    return -1;
+  }
+  inode_t* file_inode = walk_and_get(pathname, 0);  
+  return conf_buf(buf, file_inode);
+}
+
+int fstat(unsigned int fd, struct stat *buf){
+  if (fd == 0 || buf == 0){
+    return -1;
+  }
+  flip* fs_elt = get_fs_list_elt(fd); 
+  if (fs_elt == 0){
+    return -1;
+  }
+  return conf_buf(buf, fs_elt->f_inode);
+}
+
+int dup(int file_descriptor){
+  if (file_descriptor){
+
+  }
+  return 0;
+}
+
+int dup2(int file_descriptor, int new_file_descriptor){
+  return 0;
+}
+// int pipe(int file_descriptors[2f]);
 // int access(const char *file_name, int mode);
-// int chdir(const char *new_directory);
 // int chmod(const char *file_name, mode_t new_mode);
 // int chroot(const char *new_root_directory);
 // int create(const char *file_name, mode_t mode);
-// int dup(int file_descriptor);
-// int dup2(int file_descriptor, int new_file_descriptor);
 // int fcntl(int file_descriptor, int function_code, int arg);
-// int fstat(const char *file_name, struct stat *buffer);
 // int ioctl(int file_descriptor, int function_code, int arg);
-// int mkdir(const char *dir_name, mode_t mode);
 // //will try to implement but the the current design choices make this very hard to implement
 // int mount(const char *special_file, const char *mount_point, int ro_flag);
-// int pipe(int file_descriptors[2f]);
 // int rename(const char *old_name, const char *new_name);
-// int rmdir(const char *dir_name);
-// int stat(const char *file_name, struct stat *status_buffer);
 // mode_t umask(mode_t mask);
 // int umount(const char *special_file);
 // int utime(const char *file_name, const struct utimbuf *times);

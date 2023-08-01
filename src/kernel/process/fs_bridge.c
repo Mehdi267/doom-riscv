@@ -144,7 +144,8 @@ bool check_if_inode_is_being_used(uint32_t inode_number){
   flip* fd_list_iter =  proc_mang_g.open_files_table;
   while (fd_list_iter != 0){
     if (fd_list_iter->inode_number == inode_number){
-      debug_print_fsapi("[FSAPI]Inode is still being used%d \n", inode_number);
+      debug_print_fsapi("[FSAPI]Inode is still being used%d, fd %d \n",
+           inode_number, fd_list_iter->fd);
       return true;
     }
     fd_list_iter = fd_list_iter->next_file;

@@ -10,11 +10,19 @@ typedef enum {
     PERMISSION_EXECUTE = 1 << 2
 } Permission;
 
-typedef long off_t;
+typedef long long off_t;
 typedef unsigned int mode_t;
 typedef int pid_t;
 typedef long ssize_t;
 typedef unsigned long int ino_t;
+typedef unsigned int   uid_t;      // User ID of owner
+typedef unsigned int   gid_t;      // Group ID of owner
+typedef unsigned int   dev_t;      // Device ID (if file is character or block special)
+typedef int            blksize_t;  // Block size for filesystem I/O
+typedef long           blkcnt_t;   // Number of 512B blocks allocated
+typedef long           time_t;     // Time type (usually represents POSIX timestamp)
+typedef unsigned short nlink_t;    // Number of hard links
+
 
 // Messages from users
 enum FileOpenFlags {
@@ -91,11 +99,82 @@ enum SEEK_OPERATION {
  */
 off_t lseek(int file_descriptor, off_t offset, int whence);
 
+struct stat {
+    dev_t     st_dev;         // ID of device containing file
+    ino_t     st_ino;         // Inode number
+    mode_t    st_mode;        // File type and mode
+    nlink_t   st_nlink;       // Number of hard links
+    uid_t     st_uid;         // User ID of owner
+    gid_t     st_gid;         // Group ID of owner
+    dev_t     st_rdev;        // Device ID (if file is character or block special)
+    off_t     st_size;        // Total size, in bytes
+    blksize_t st_blksize;     // Block size for filesystem I/O
+    blkcnt_t  st_blocks;      // Number of 512B blocks allocated
+    time_t    st_atime;       // Time of last access
+    time_t    st_mtime;       // Time of last modification
+    time_t    st_ctime;       // Time of last status change
+};
 
+/**
+ * @brief Get file information for a specified file.
+ *
+ * The stat function retrieves file information, such as size, permissions,
+ * timestamps, etc., for a file specified by its pathname.
+ *
+ * @param[in] pathname The path to the file whose information is to be retrieved.
+ * @param[out] buf Pointer to a struct stat that will be filled with file information.
+ * @return 0 on success, -1 on failure, and the specific error code is set in errno.
+ */
+int stat(const char *pathname, struct stat *buf);
+
+/**
+ * @brief Get file information for an open file descriptor.
+ *
+ * The fstat function retrieves file information, such as size, permissions,
+ * timestamps, etc., for a file associated with the specified file descriptor.
+ *
+ * @param[in] fd The file descriptor for the open file whose information is to be retrieved.
+ * @param[out] buf Pointer to a struct stat that will be filled with file information.
+ * @return 0 on success, -1 on failure, and the specific error code is set in errno.
+ */
+int fstat(unsigned int fd, struct stat *buf);
+
+
+/**
+ * @brief Duplicate a file descriptor.
+ *
+ * The dup() function duplicates an existing file descriptor, file_descriptor,
+ * using the lowest-numbered unused file descriptor for the new descriptor.
+ *
+ * @param file_descriptor The file descriptor to be duplicated.
+ * @return On success, returns the new file descriptor. On failure, -1 is returned,
+ * and errno is set to indicate the error.
+ * @note The new file descriptor shares the same file offset, file status flags,
+ * and file access mode with the original file descriptor.
+ */
 int dup(int file_descriptor);
+
+/**
+ * @brief Duplicate a file descriptor to a specific file descriptor number.
+ *
+ * The dup2() function duplicates the file descriptor specified by file_descriptor
+ * to the file descriptor number specified by new_file_descriptor.
+ * If new_file_descriptor is already open, it is closed before duplicating the descriptor.
+ *
+ * @param file_descriptor The file descriptor to be duplicated.
+ * @param new_file_descriptor The new file descriptor number to which the duplication will be performed.
+ * @return On success, returns the new file descriptor. On failure, -1 is returned,
+ * and errno is set to indicate the error.
+ * @note If new_file_descriptor is negative or greater than or equal to the maximum number of file descriptors,
+ * the function fails, and no duplication occurs.
+ * @note The new file descriptor shares the same file offset, file status flags,
+ * and file access mode with the original file descriptor.
+ */
 int dup2(int file_descriptor, int new_file_descriptor);
+
+
 int fcntl(int file_descriptor, int function_code, int arg);
-// int fstat(const char *file_name, struct stat *buffer);
+
 int ioctl(int file_descriptor, int function_code, int arg);
 //will try to implement but the the current design choices make this very hard to implement
 int mount(const char *special_file, const char *mount_point, int ro_flag);

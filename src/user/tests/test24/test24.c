@@ -98,6 +98,10 @@ int main(void *arg) {
     assert(block_usage_start == info2.free_blocks);
     // Close the file
     close(fd);
+    if (unlink("test_file2.txt") == -1) {
+        printf("Error Deleting file\n");
+        return -1;
+    }
     printf("Test passed: File operations successful!\n");
     return 0;
 }
