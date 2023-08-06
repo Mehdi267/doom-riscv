@@ -110,6 +110,7 @@ int simple_chdir_test(){
 int main() {
   int numFolders = 30;
   assert(createAndDeleteFolders(numFolders) == 0);
+  printf("createAndDeleteFolders passed\n");
   assert(simple_chdir_test() == 0);
   return 0;
 }

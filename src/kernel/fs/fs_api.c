@@ -78,39 +78,39 @@ int open(const char *file_name, int flags, mode_t mode){
     free_path_fs(path_data);
     return -1;
   }
-  flip* new_file = add_new_element_open_files();
+  open_fd* new_file = add_new_element_open_files();
   if (new_file == 0){
     free_path_fs(path_data);
     return -1;
   }
   //Permissions
-  new_file->f_inode = file_inode;
+  new_file->file_info->f_inode = file_inode;
   if ((flags && O_TRUNC) != 0){
-    print_fsapi_no_arg("File already exists, deleting its data\n");
+    print_fsapi_no_arg("Deleting file data\n");
     if (free_inode_data(file_inode)<0){
       return -1;
     }
   }
   if ((flags & 3) == O_RDONLY){
-    new_file->can_read = true;
-    new_file->can_write = false;
+    new_file->file_info->can_read = true;
+    new_file->file_info->can_write = false;
   }
   else if ((flags & 3) == O_WRONLY){
-    new_file->can_read = false;
-    new_file->can_write = true;
+    new_file->file_info->can_read = false;
+    new_file->file_info->can_write = true;
   }
   else{
-    new_file->can_read = true;
-    new_file->can_write = true;
+    new_file->file_info->can_read = true;
+    new_file->file_info->can_write = true;
   }
   if ((flags & O_APPEND) != 0){
-    new_file->append_on = true;
-    new_file->position = file_inode->i_size;
+    new_file->file_info->append_on = true;
+    new_file->file_info->position = file_inode->i_size;
   }
   if ((flags & O_SYNC) != 0){
-    new_file->sync_directly = true;
+    new_file->file_info->sync_directly = true;
   }
-  new_file->inode_number = 
+  new_file->file_info->inode_number = 
     get_inode_number(file_inode);
   debug_print_fsapi("\033[0;34m[FSAPI]{open}Filed opened with success %s flags %x\033[0;0m\n",
         file_name, flags);
@@ -122,7 +122,7 @@ int close(int file_descriptor){
   debug_print_fsapi("\033[0;35m[FSAPI]Close file was called on fd = %d\n\033[0;0m",
        file_descriptor);
   sync_all();
-  return remove_fd_list(file_descriptor);
+  return remove_fd_list(file_descriptor, REMOVE_ALL);
 }
 
 ssize_t write(int file_descriptor, 
@@ -256,7 +256,6 @@ off_t lseek(int file_descriptor, off_t offset, int whence){
 
 int unlink(const char *file_name){
   debug_print_fsapi("\033[0;35m[FSAPI]Trying to unlink a file with the name %s\n\033[0;0m",file_name);
-  printf("\033[0;35m[FSAPI]Trying to unlink a file with the name %s\n\033[0;0m",file_name);
   if (file_name == 0){
     return -1;
   }
@@ -389,32 +388,64 @@ int fstat(unsigned int fd, struct stat *buf){
 }
 
 int dup(int file_descriptor){
-  if (file_descriptor){
-
+  if (file_descriptor<0){
+    return -1;
   }
-  return 0;
+  open_fd* op_file = 
+      dup_open_file(get_fs_list_elt(file_descriptor), 0);
+  if(op_file!=0){
+    return op_file->fd;
+  }else{
+    return -1;
+  }
 }
 
 int dup2(int file_descriptor, int new_file_descriptor){
+  if (file_descriptor<0 || new_file_descriptor<0 ||
+       file_descriptor>=MAX_FS || new_file_descriptor>=MAX_FS){
+    return -1;
+  }
+  flip* file_dup = get_fs_list_elt(file_descriptor);
+  if (file_dup == 0){
+    //File is not open
+    return -1;
+  }
+  //We check if it is already open for ths process
+  open_fd* new_file = get_open_fd_elt(new_file_descriptor);
+  if (new_file == 0){
+    new_file = dup_open_file(file_dup, new_file_descriptor);
+    if (new_file == 0){
+      return -1;
+    }
+    file_dup->usage_counter++;
+    return new_file_descriptor;
+  } else{
+    if (remove_fd_list(file_descriptor, ONLY_CLOSE_FILE)<0){
+      return -1;
+    }
+    file_dup->usage_counter++;
+    new_file->file_info = file_dup;
+    return new_file_descriptor;
+  }
+  return -1;
+}
+int rename(const char *old_name, const char *new_name){
+  return 0; 
+}
+
+#define PIPE_SIZE 4096;
+int pipe(int file_descriptors[2]){
   return 0;
 }
-// int pipe(int file_descriptors[2f]);
-// int access(const char *file_name, int mode);
-// int chmod(const char *file_name, mode_t new_mode);
-// int chroot(const char *new_root_directory);
 // int create(const char *file_name, mode_t mode);
-// int fcntl(int file_descriptor, int function_code, int arg);
-// int ioctl(int file_descriptor, int function_code, int arg);
 // //will try to implement but the the current design choices make this very hard to implement
 // int mount(const char *special_file, const char *mount_point, int ro_flag);
-// int rename(const char *old_name, const char *new_name);
 // mode_t umask(mode_t mask);
 // int umount(const char *special_file);
 // int utime(const char *file_name, const struct utimbuf *times);
 
 // // Messages from PM
 // int exec(pid_t pid);
-// void exit(pid_t pid);
 // pid_t fork(pid_t parent_pid);
 // pid_t setsid(pid_t pid);
 

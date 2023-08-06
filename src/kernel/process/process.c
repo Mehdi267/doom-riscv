@@ -187,8 +187,6 @@ int init_global_variables(){
   proc_mang_g.nb_proc_running = 0;
   proc_mang_g.process_id_list = NULL;
   proc_mang_g.killed_counter = 0;
-  proc_mang_g.open_files_table = NULL;
-  proc_mang_g.fd_counter = 3;
   return 0;
 }
 

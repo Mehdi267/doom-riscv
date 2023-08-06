@@ -81,7 +81,7 @@ typedef struct id_list{
  * later one one it works as we wish it does 
  */
 typedef struct open_file_mang{
-  int fd;
+  // int fd;
   int64_t position;
   inode_t* f_inode;
   uint32_t inode_number;
@@ -90,10 +90,20 @@ typedef struct open_file_mang{
   bool can_read;
   bool can_write;
   bool append_on;
-  bool sync_directly; //will not be used
-  struct open_file_mang* next_file;
-  struct open_file_mang* file_previous;
+  bool sync_directly;
 } flip;
+
+/**
+ * @brief This struct will be placed in every 
+ * process table and it will be used mainly to link 
+ * file descriptors with the file details 
+ */
+typedef struct fd_file_proc{
+  int fd;
+  flip* file_info;
+  struct fd_file_proc* next_file;
+  struct fd_file_proc* file_previous;
+} open_fd;
 
 struct process_management_global {
   hash_t *pid_process_hash_table;    // Hash table that associates to every pid the process struct associated to it
@@ -102,8 +112,6 @@ struct process_management_global {
   int nb_proc_running;               // Counts the currently running processes
   id_list_t *process_id_list;        // Saves all the used ids of the processes
   int killed_counter;                // Counter indicating the order at which processes were killed
-  int fd_counter;                    // Files counter
-  flip* open_files_table;            // Open files table
 };
 extern struct process_management_global proc_mang_g;
 
@@ -281,8 +289,14 @@ typedef struct process_t {
   //App struct pointer
   const struct uapps* app_pointer;
   //File system
-  p_dir_t root_dir;
-  p_dir_t cur_dir;
+  p_dir_t root_dir; //Contains information 
+                    //about the root dir 
+  p_dir_t cur_dir; //Contains information 
+                    //about the current dir
+  #define SIZE_BIT_MAP 64
+  #define MAX_FS SIZE_BIT_MAP*8
+  char fd_bitmap[SIZE_BIT_MAP];
+  open_fd* open_files_table;  // Open files table
 } process;
 
 /**

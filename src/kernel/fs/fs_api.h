@@ -189,7 +189,6 @@ int unlink(const char *file_name);
 
 // Messages from PM
 int exec(pid_t pid);
-void exit(pid_t pid);
 pid_t fork(pid_t parent_pid);
 pid_t setsid(pid_t pid);
 

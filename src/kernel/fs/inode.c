@@ -633,6 +633,7 @@ int add_inode_directory(inode_t* dir,
     return -1;
   }
   if (look_for_inode_dir(dir, name, name_size)>0){
+    PRINT_RED("File already exits\n");
     return -1;
   }
   dir_entry dir_entry;
@@ -735,6 +736,7 @@ int add_inode_directory(inode_t* dir,
       return save_dir_entry(&dir_entry, 0, dir->i_block[dir->i_blocks-1]);
     }
   }
+  PRINT_RED("No space left\n");
   return -1;
 }
 
@@ -1134,6 +1136,7 @@ void print_dir_list(inode_t* dir, bool verbose){
           printf("rec_len %d\n",list_elt->rec_len);
           printf("name_len :%d\n",list_elt->name_len);
           printf("file_type :%d\n",list_elt->file_type);
+          printf("block nb :%d\n",blk);
         }
         char filename[list_elt->name_len + 1];
         memcpy(filename, (char*)list_elt + sizeof(dir_entry_basic),
@@ -1162,8 +1165,8 @@ int add_dot_directories(inode_t* dir, inode_t* previous_directory){
     print_inode_no_arg("add dot dirs failed because an inode is not a dir\n");
     return -1;
   }
-  char dot[1] =  ".";
-  char doubledot[2] =  "..";
+  char dot[] =  ".";
+  char doubledot[] =  "..";
   if (add_inode_directory(dir, get_inode_number(dir), 
                     EXT2_FT_DIR, dot, 1)<0){
     return -1;

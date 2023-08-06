@@ -14,6 +14,19 @@
 #include "../memory/pages.h"
 #include "../sync/semaphore_api.h"
 #include <stdint.h>
+#define CHECK_AND_RET_NEG_ONE(var) ({ \
+    typeof(var) result = (var); \
+    if (result == 0) { \
+        return -1; \
+    } \
+})
+#define CHECK_AND_RET_Zero(var) ({ \
+    typeof(var) result = (var); \
+    if (result == 0) { \
+        return 0; \
+    } \
+})
+
 /**
  * @brief Casts an int to a void * pointer 
 */
@@ -172,12 +185,6 @@ extern int get_pid_iterator();
  */
 extern void print_process_state(process_state state);
 
-/**
- * @brief Increment the fd counter 
- * and returns a new fd
- * @return int 
- */
-extern int increment_fd_counter();
 
 /**
  * @brief Checks if the path given is an absolute directory 

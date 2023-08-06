@@ -17,7 +17,15 @@ inode_t* get_current_dir();
  * the newly added element which is the head list 
  * @return flip* the newly create open file
  */
-flip* add_new_element_open_files();
+open_fd* add_new_element_open_files();
+
+typedef enum rem_type{
+  REMOVE_ALL = 0, //Closes the inode 
+                  //and removes the chain link 
+  ONLY_CLOSE_FILE = 1, //Does not remove the link 
+                       //of the list 
+} rem_type;
+
 
 /**
  * @brief Remove the structure of the old file
@@ -26,8 +34,7 @@ flip* add_new_element_open_files();
  * that we would like to close 
  * @return int function status 
  */
-int remove_fd_list(int fd);
-
+int remove_fd_list(int fd, rem_type op_type);
 
 /**
  * @brief Get the open file system details
@@ -36,6 +43,15 @@ int remove_fd_list(int fd);
  * canot be found
  */
 flip* get_fs_list_elt(int fd);
+
+/**
+ * @brief Create a new open file 
+ * in the current process and alloctes the file given
+ * as argument to it 
+ * @param open_file 
+ * @return open_fd* 
+ */
+open_fd* dup_open_file(flip* open_file, int custom_fd);
 
 /**
  * @brief Checks if the inode number given as argument is currently being used i.e.
@@ -55,6 +71,13 @@ bool check_if_inode_is_being_used(uint32_t inode_number);
  * @return int function status 
  */
 int set_current_dir(char* new_name, uint32_t name_size, inode_t* inode);
+
+/**
+ * @brief Get the open fd object for the file descriptor given
+ * @param fd 
+ * @return open_fd* 
+ */
+open_fd* get_open_fd_elt(int fd);
 
 /**
  * @brief Get the name of the current directory

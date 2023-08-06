@@ -137,8 +137,6 @@ int basic_test(){
     7);
   printf("looking file that does not exist, inode number found : %d\n",inode_number_no);
   assert(inode_number_no == 0);
-  
-
   if (remove_inode_dir(get_inode(EXT2_GOOD_OLD_FIRST_INO), 
     "file1",
     5)<0){
@@ -201,11 +199,11 @@ int stress_test(){
   super_block* super = (super_block*) get_super_block();
   uint32_t free_data_block_count = super->s_free_blocks_count;
   uint32_t free_inode_count = super->s_free_inodes_count;
-  uint32_t number_of_free_files = 
-        super->s_free_inodes_count;
+  uint32_t number_of_free_files = super->s_free_inodes_count < 1000 
+        ? super->s_free_inodes_count : 1000;
   #define FILE_NAME_SIZE 32
   char filename[FILE_NAME_SIZE];
-  uint32_t file_ids[number_of_free_files];
+  uint32_t file_ids[number_of_free_files+1];
   for(int file_iter = 0; file_iter <number_of_free_files; file_iter++){
     gdb_variable++;
     printf("i = %d, max = %d\n", file_iter, number_of_free_files);
@@ -219,7 +217,7 @@ int stress_test(){
     // print_cache_details(root_file_system->inode_list);
   }
   PRINT_GREEN("Created files and i am now adding them to the directory\n");
-  print_cache_details(root_file_system->inode_list);
+  // print_cache_details(root_file_system->inode_list);
   for(int file_iter = 0; file_iter <number_of_free_files; file_iter++){
     sprintf(filename, "file%d", file_iter);
     uint32_t name_size = file_iter == 0 ? 5 : 4;

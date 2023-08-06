@@ -261,6 +261,8 @@ ssize_t write(int file_descriptor, const void *buffer, size_t count);
 off_t lseek(int file_descriptor, off_t offset, int whence);
 int unlink(const char *file_name);
 int link(const char *oldpath, const char *newpath);
+int dup(int file_descriptor);
+int dup2(int file_descriptor, int new_file_descriptor);
 
 //Dir api
 char *getcwd(char *buf, size_t size);

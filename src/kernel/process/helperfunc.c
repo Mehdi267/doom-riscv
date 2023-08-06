@@ -117,10 +117,6 @@ int increment_shared_page_counter(){
     return page_id_counter;
 }
 
-int increment_fd_counter(){
-  proc_mang_g.fd_counter++;
-  return proc_mang_g.fd_counter;
-}
 
 int increment_semaphore_id(){
     semaphore_id_counter++;

@@ -78,7 +78,8 @@ QEMU_OPT_LINK_BLOCK = -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 # Pour afficher l'affichage série en console, marche à travers ssh
 QEMU_NO_GRAPH_OPTS = -nographic
 # Pour avoir l'uart + le VGA en mode graphique
-QEMU_GRAPH_OPTS = --enable-sdl --with-sdlabi=2.0 -display sdl -serial mon:stdio
+# QEMU_GRAPH_OPTS = --enable-sdl --with-sdlabi=2.0 -display sdl -serial mon:stdio
+QEMU_GRAPH_OPTS = --enable-sdl -display sdl
 
 QEMU = $(RISCV_ROOT)qemu-system-riscv64
 ifeq ("$(MACHINE)", "spike")

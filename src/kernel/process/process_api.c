@@ -452,6 +452,10 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
   new_process->cur_dir.name_size = 2;
   strcpy(new_process->cur_dir.dir_name, root_char);
   new_process->cur_dir.dir_name[1] = '\0';
+  new_process->open_files_table = NULL;
+  //The file descriptors from zero to 3 are reserved  
+  memset(new_process->fd_bitmap, 0, SIZE_BIT_MAP);
+  *new_process->fd_bitmap = 0x07;
   //---Add process to activatable queue
   queue_add(new_process, &activatable_process_queue, process, next_prev, prio);
 
