@@ -68,7 +68,7 @@ void handle_mtimer_interrupt()
 		sync_counter++;
 		if (sync_counter > SYNC_LIMIT){
 			sync_counter = 0;
-			sync_all();
+			// sync_all();
 		}
 		if (((csr_read(mstatus) & MSTATUS_MPP_0) != 0) && !first_call){
 			debug_print_no_arg("Int comming from supervisor mode and " 

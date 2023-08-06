@@ -14,16 +14,6 @@ static int default_getchar()
 	__asm__ __volatile__("ebreak");
 	return 0;
 }
-/*
-void add_to_buffer(char c)
-{
-	if(!console_dev->ignore){
-		if(!(console_dev->top_ptr >= 128)){ //if buffer is full, ignore
-			console_dev->buffer[console_dev->top_ptr] = c;
-			console_dev->top_ptr ++;
-		}
-	}
-}*/
 
 bool is_buffer_full() {
   if (console_dev->last_written_char_index == -1) return 0;

@@ -11,6 +11,16 @@
 #include "stdint.h"
 typedef __SIZE_TYPE__ size_t;
 
+
+/*******************************************************************************
+ * Assert : check a condition or fail
+ ******************************************************************************/
+#define __STRING(x) #x
+#define die(str, ...) ({ \
+  printf("%s:%d: " str "\n", __FILE__, __LINE__, ##__VA_ARGS__); exit(-1); })
+
+#define assert(x) ({ if (!(x)) die("assertion failed: %s", #x); })
+
 /*******************************************************************************
  * var args
  ******************************************************************************/
@@ -107,9 +117,53 @@ extern int sync();
 extern int clear_disk_cache();
 extern void print_fs_details();
 
-typedef long ssize_t;
 typedef long long off_t;
 typedef unsigned int mode_t;
+typedef int pid_t;
+typedef long ssize_t;
+typedef unsigned long int ino_t;
+typedef unsigned int   uid_t;      // User ID of owner
+typedef unsigned int   gid_t;      // Group ID of owner
+typedef unsigned int   dev_t;      // Device ID (if file is character or block special)
+typedef int            blksize_t;  // Block size for filesystem I/O
+typedef long           blkcnt_t;   // Number of 512B blocks allocated
+typedef long           time_t;     // Time type (usually represents POSIX timestamp)
+typedef unsigned short nlink_t;    // Number of hard links
+
+
+// Messages from users
+enum FileOpenFlags {
+    O_RDONLY = 0x0000,      // Read-only
+    O_WRONLY = 0x0001,      // Write-only
+    O_RDWR = 0x0002,        // Read-write
+    O_CREAT = 0x0010,       // Create the file if it doesn't exist
+    O_EXCL = 0x0020,        // Fail if the file exists and O_CREAT is used
+    O_TRUNC = 0x0040,       // Truncate the file to zero length upon opening
+    O_APPEND = 0x0080,      // Set the file offset to the end before each write
+    O_SYNC = 0x0200         // Write operations are synchronized on storage
+};
+enum SEEK_OPERATION {
+  SEEK_SET = 0,
+  SEEK_CUR = 1,
+  SEEK_END = 2,
+};
+
+struct stat {
+    dev_t     st_dev;         // ID of device containing file
+    ino_t     st_ino;         // Inode number
+    mode_t    st_mode;        // File type and mode
+    nlink_t   st_nlink;       // Number of hard links
+    uid_t     st_uid;         // User ID of owner
+    gid_t     st_gid;         // Group ID of owner
+    dev_t     st_rdev;        // Device ID (if file is character or block special)
+    off_t     st_size;        // Total size, in bytes
+    blksize_t st_blksize;     // Block size for filesystem I/O
+    blkcnt_t  st_blocks;      // Number of 512B blocks allocated
+    time_t    st_atime;       // Time of last access
+    time_t    st_mtime;       // Time of last modification
+    time_t    st_ctime;       // Time of last status change
+};
+
 //Fs api 
 int open(const char *file_name, int flags, mode_t mode);
 int close(int file_descriptor);
@@ -118,6 +172,11 @@ ssize_t write(int file_descriptor, const void *buffer, size_t count);
 off_t lseek(int file_descriptor, off_t offset, int whence);
 int unlink(const char *file_name);
 int link(const char *oldpath, const char *newpath);
+int dup(int file_descriptor);
+int dup2(int file_descriptor, int new_file_descriptor);
+int stat(const char *pathname, struct stat *buf);
+int fstat(unsigned int fd, struct stat *buf);
+
 
 //dir api
 char *getcwd(char *buf, size_t size);
@@ -133,4 +192,5 @@ typedef struct disk_info{
  uint32_t free_inodes;
 } disk_info;    
 void fs_info(disk_info* info);
+
 #endif

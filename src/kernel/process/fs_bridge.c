@@ -121,7 +121,7 @@ open_fd* dup_open_file(flip* open_file, int custom_fd){
   if (custom_fd == 0){
     open_file_proc->fd = alloc_bit_fdmap(proc->fd_bitmap);
     *((char*)((proc->fd_bitmap + (open_file_proc->fd/8)))) |=
-         (1<<open_file_proc->fd%8);
+         (1<<(open_file_proc->fd%8));
   }else{
     //We assume that the file has already been allocated 
     open_file_proc->fd = custom_fd;

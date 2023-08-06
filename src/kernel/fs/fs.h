@@ -1,5 +1,6 @@
 #include "stdint.h"
 #include "super_block.h"
+#include "chdev.h"
 #include "hash.h"
 #include <stdint.h>
 #include "inode.h"
@@ -9,16 +10,16 @@
 
 
 typedef struct file_system_struct {
-  uint8_t fs_type;
-  uint32_t superblock_loc;
-  uint32_t desc_table_loc;
-  uint32_t block_size;
-  uint32_t fs_size;
-  uint8_t partition;
-  super_block* super_block;
-  block_group_descriptor* desc_table;
-  hash_t* inode_hash_table;
-  inode_elt* inode_list;
+  uint8_t fs_type;//Type of the file system evn though it is mostly ext2
+  uint32_t superblock_loc;//relative location of the super block 
+  uint32_t desc_table_loc;//relative location of the desc table
+  uint32_t block_size; //Size of the block in the current file system
+  uint32_t fs_size; //Size of the partition of the file system
+  uint8_t partition;//Id of the partition in which the file system is located
+  super_block* super_block; //Super block on mem
+  block_group_descriptor* desc_table; //desc size on mem
+  hash_t* inode_hash_table; //Inode hash table to make access faster
+  inode_elt* inode_list; //List of he curretly open inodes
 } file_system_t;
 
 /**

@@ -1,5 +1,5 @@
-#ifndef MY_DIRENT_H
-#define MY_DIRENT_H
+#ifndef MY_DIRAPI_H
+#define MY_DIRAPI_H
 
 #include "fs_api.h"
 
@@ -105,4 +105,4 @@ int rmdir(const char *path);
 int rename(const char *oldpath, const char *newpath);
 
 
-#endif // MY_DIRENT_H
+#endif // MY_DIRAPI_H

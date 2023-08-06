@@ -11,13 +11,11 @@
 
 c_elt* global_cache_buf = 0; 
 uint32_t nb_elements_cache = 0; 
+uint32_t locked_files = 0; 
 #define MAX_CACHE_SIZE 30
 
-char* read_block_c(uint32_t disk_block_number){
+char* read_block_c(uint32_t disk_block_number, cache_op cah_op){
   debug_print_v_fs("[df]Reading relative disk block %d\n", disk_block_number);
-  // printf("******fetch block********\n");
-  // printLinkedList(global_cache_buf);
-  // printf("******fetch block end********\n");
   c_elt* cache_elt = look_up_c_elt(disk_block_number);
   if (cache_elt == 0){
     cache_elt = fetch_block(disk_block_number);
@@ -25,17 +23,21 @@ char* read_block_c(uint32_t disk_block_number){
       return 0; 
     }
   }
-  cache_elt->usage++;
+  if (cah_op == LOCK){
+    cache_elt->usage++;
+    if (cache_elt->usage == 1){
+      locked_files++;
+    }
+  }
   return cache_elt->data;
 }
+
 int write_block(uint32_t disk_block_number, 
                   char* data,
                   size_t data_length,
-                  write_type type
+                  write_type type,
+                  cache_op cah_op
                   ){
-  // printf("******write BEFORE block********\n");
-  // printLinkedList(global_cache_buf);
-  // printf("******write BEFORE block end********\n");
   debug_print_v_fs("[df]Write block called on block %d\n", disk_block_number);
   if (data == 0 || data_length > 
             root_file_system->block_size){
@@ -48,8 +50,21 @@ int write_block(uint32_t disk_block_number,
       return 0;
     }
   }
+  // printf("-----disk write----\n");
+  // printf("Data add = %p\n", data);
+  // printf("cache Data add = %p\n", cache_elt->data);
+  // printb(data, 8);
+  // printb(cache_elt->data, 8);
   memcpy(cache_elt->data, data, data_length);
-  cache_elt->usage++;
+  // printb(cache_elt->data, 8);
+  //If the user want to lock in the save
+  //operation we don't don't anything
+  if (cah_op == UNLOCK){
+    cache_elt->usage--;
+    if (cache_elt->usage == 0){
+      locked_files--;
+    }
+  }
   if (type == WRITE_BACK){
     cache_elt->dirty = 1;
   }
@@ -59,12 +74,36 @@ int write_block(uint32_t disk_block_number,
       return -1;
     }
   }
-  // printf("******write AFTER block********\n");
-  // printLinkedList(global_cache_buf);
-  // printf("******write AFTER block end********\n");
   return 0;
 }
 
+int unlock_cache(uint32_t disk_block_number){
+  c_elt* cache_elt = look_up_c_elt(disk_block_number);
+  if (cache_elt == 0){
+    return -1;
+  }
+  if (cache_elt->usage > 0){
+    cache_elt->usage--;
+    if (cache_elt->usage == 0){
+      locked_files--;
+    }
+  }
+  return 0;
+}
+
+int unlock_using_address(char* block){
+  c_elt* cache_elt = look_up_c_elt_add(block);
+  if (cache_elt == 0){
+    return -1;
+  }
+  if (cache_elt->usage > 0){
+    cache_elt->usage--;
+    if (cache_elt->usage == 0){
+      locked_files--;
+    }
+  }
+  return 0;
+}
 
 c_elt* look_up_c_elt(uint32_t disk_block_number){
   if (global_cache_buf == 0){
@@ -78,7 +117,22 @@ c_elt* look_up_c_elt(uint32_t disk_block_number){
       return global_cache_iter;
     }
     global_cache_iter = global_cache_iter->next_c;
+  }
+  return 0;
+}
 
+c_elt* look_up_c_elt_add(char* add){
+  if (global_cache_buf == 0 || add == 0){
+    return 0;
+  }
+  c_elt* global_cache_iter = global_cache_buf;
+  while(global_cache_iter != 0){
+    if (global_cache_iter->data == add){
+      debug_print_v_fs("[df]element blk %d was found in cache\n",
+             global_cache_iter->blockNumber);
+      return global_cache_iter;
+    }
+    global_cache_iter = global_cache_iter->next_c;
   }
   return 0;
 }
@@ -140,24 +194,19 @@ c_elt* fetch_block(uint32_t disk_block_number){
   }
   // Perform disk read operation on the block taht contains the mbr
   elt->next_c = NULL;
+  elt->before_c = NULL;
   if(global_cache_buf == 0){
     global_cache_buf = elt;
-    global_cache_buf->next_c = NULL;
   }else{
     elt->next_c = global_cache_buf;
+    global_cache_buf->before_c = elt;
     global_cache_buf = elt;
   }
   nb_elements_cache++;
-  // // printf("###########block addidtion#######\n");
-  // // printLinkedList(global_cache_buf);
-  // // printf("###########block addidtion end#######\n");
   return elt;
 }
 
 int sync_elt(c_elt* cache_elt){
-  // // printf("******sync BEFORE block********\n");
-  // // printLinkedList(global_cache_buf);
-  // // printf("******sync BEFORE block end********\n");
   if(cache_elt == 0){
     return -1;
   }
@@ -179,9 +228,6 @@ int sync_elt(c_elt* cache_elt){
     cache_elt->disk_res = 0;
   }
   cache_elt->dirty = 0;
-  // // printf("******sync AFTER block********\n");
-  // // printLinkedList(global_cache_buf);
-  // // printf("******sync AFTER block end********\n");
   return 0;
 }
 
@@ -210,32 +256,46 @@ int free_cache_list(){
   }
   c_elt* buf_iter = global_cache_buf;
   c_elt* buf_iter_next = global_cache_buf->next_c;
-  while (buf_iter_next != NULL){
-    if (buf_iter->dirty){
-      if (sync_elt(buf_iter)<0){
-        return -1;
-      }  
-    }
-    free(buf_iter);
-    buf_iter = buf_iter_next;
-    buf_iter_next = buf_iter_next->next_c;
-  }
-  if (buf_iter){
-    if (buf_iter->dirty){
-      if (sync_elt(buf_iter)<0){
-        return -1;
+  c_elt* buf_iter_before = global_cache_buf->before_c;
+  while (buf_iter != NULL){
+    buf_iter_next = buf_iter->next_c;
+    buf_iter_before = buf_iter->before_c;
+    if (buf_iter->usage == 0){
+      if (buf_iter->dirty){
+        if (sync_elt(buf_iter)<0){
+          return -1;
+        }  
       }
+      if (buf_iter == global_cache_buf 
+            && buf_iter_next == NULL 
+            && buf_iter_before == NULL){
+        global_cache_buf = NULL;
+      } else{
+        if (buf_iter_next != NULL){
+          buf_iter_next->before_c = buf_iter_before;
+        }
+        if (buf_iter_before != NULL){
+          buf_iter_before->next_c = buf_iter_next;
+        }
+        if (buf_iter == global_cache_buf){
+          global_cache_buf = buf_iter_next;
+        }
+      }
+      free(buf_iter);
+      buf_iter = buf_iter_next;
+      nb_elements_cache--;
     }
-    free(buf_iter);
+    else{
+      buf_iter = buf_iter_next;
+    }
   }
-  nb_elements_cache = 0;
-  global_cache_buf = 0;
   return 0;
 }
 
 int save_fs_block(char* data,
                   uint32_t data_size,
-                  uint32_t relative_b_nb
+                  uint32_t relative_b_nb,
+                  cache_op cah_op
                   ){
   if (data == 0 || data_size > root_file_system->block_size){
     printf("disk save failed");
@@ -243,7 +303,7 @@ int save_fs_block(char* data,
   }
   debug_print_v_fs("[df]Saving fs block %d into memory \n", relative_b_nb);
   if (write_block(relative_b_nb, data,
-      data_size, WRITE_THROUGH)<0){
+      data_size, WRITE_THROUGH, cah_op)<0){
     printf("A save operation failed");
     return -1;
   }
@@ -252,8 +312,8 @@ int save_fs_block(char* data,
 
 
 
-char* disk_read_block(uint32_t relative_b_n){
-  return read_block_c(relative_b_n);
+char* disk_read_block(uint32_t relative_b_n, cache_op cah_op){
+  return read_block_c(relative_b_n, cah_op);
 }
 
 void printLinkedList(c_elt* elt) {

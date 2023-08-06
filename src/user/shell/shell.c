@@ -1,4 +1,5 @@
 #include "../ulib/syscall.h"
+#include "../ulib/ufunc.h"
 #include "stdio.h"
 #include "string.h"
 
@@ -16,6 +17,12 @@ int builtin_cmd(char *cmd) {
 }
 
 int main(void) {
+  //stdin
+  assert(open("/dev/terminal", O_RDONLY, 0) == 0);
+  //stdout
+  assert(open("/dev/terminal", O_WRONLY, 0) == 1);
+  //stderr
+  assert(dup2(1, 2) == 2);
   char cmd[20];
   #define CURR_DIR_SIZE 50
   char current_dir[CURR_DIR_SIZE];
@@ -31,7 +38,8 @@ int main(void) {
       printf("%s", current_dir);
     }
     printf("#");
-    cons_read(cmd, 20);
+    my_fgets(cmd, 20, 0);
+    // cons_read(cmd, 20);
     if (memcmp(cmd, "ls", strlen(lsprog)) == 0){
       char curr_path[] = ".";
       print_dir_elements(curr_path);

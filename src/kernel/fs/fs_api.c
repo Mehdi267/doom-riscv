@@ -47,8 +47,10 @@ int open(const char *file_name, int flags, mode_t mode){
       }else{
         print_fsapi_no_arg("File already exists, deleting its data\n");
         file_inode = walk_and_get(file_name, 0);
-        if (free_inode_data(file_inode)<0){
-          return -1;
+        if (file_inode->i_mode == EXT2_S_IFREG){
+          if (free_inode_data(file_inode)<0){
+            return -1;
+          }
         }
       }
     }
@@ -85,7 +87,15 @@ int open(const char *file_name, int flags, mode_t mode){
   }
   //Permissions
   new_file->file_info->f_inode = file_inode;
-  if ((flags && O_TRUNC) != 0){
+  if (file_inode->i_mode == EXT2_S_IFREG || 
+      file_inode->i_mode == EXT2_S_IFDIR){
+    new_file->file_info->type = FS_FT_INODE_FILE; 
+  }
+  else if (file_inode->i_mode == EXT2_S_IFCHR){
+    new_file->file_info->type = FS_FT_CHRDEV; 
+  }
+  if (file_inode->i_mode == EXT2_S_IFREG && 
+      (flags && O_TRUNC) != 0){
     print_fsapi_no_arg("Deleting file data\n");
     if (free_inode_data(file_inode)<0){
       return -1;
@@ -112,7 +122,7 @@ int open(const char *file_name, int flags, mode_t mode){
   }
   new_file->file_info->inode_number = 
     get_inode_number(file_inode);
-  debug_print_fsapi("\033[0;34m[FSAPI]{open}Filed opened with success %s flags %x\033[0;0m\n",
+  debug_print_fsapi("\033[0;34m[FSAPI]{open}File opened with success %s flags %x\033[0;0m\n",
         file_name, flags);
   free_path_fs(path_data);
   return new_file->fd;
@@ -133,54 +143,56 @@ ssize_t write(int file_descriptor,
   if (fs_elt == 0 || count == 0 || fs_elt->can_write == false){
     return -1;
   }
-  uint32_t written_data = 0;
-  int actual_blocks = get_actual_blocks(fs_elt->f_inode);
-  if (actual_blocks < 0){
-    PRINT_RED("Failed while trying to get file size");
-    return -1;
-  }
-  debug_print_fsapi("\033[0;34m[FSAPI] Actual blocks on fd %d are %d\033[0;0m\n",
-       file_descriptor, actual_blocks);
-  while (written_data<count){
-    if (actual_blocks<(fs_elt->position/root_file_system->block_size + 1)){
-      if (add_data_block_inode(fs_elt->f_inode)<0){
-        PRINT_RED("Could not allocate new space, either file is full or disk is full\n");
-        return written_data;
-      } else{
-        put_inode(fs_elt->f_inode, 0, SAVE_INODE);
-        actual_blocks++;
+  if (fs_elt->type == FS_FT_CHRDEV){
+    return dev_op[(fs_elt->f_inode->i_osd1 & 0xffff0000) >> 16].write((uint64_t)buffer, count); 
+  } else if(fs_elt->type == FS_FT_INODE_FILE) {
+    uint32_t written_data = 0;
+    int actual_blocks = get_actual_blocks(fs_elt->f_inode);
+    if (actual_blocks < 0){
+      PRINT_RED("Failed while trying to get file size");
+      return -1;
+    }
+    debug_print_fsapi("\033[0;34m[FSAPI] Actual blocks on fd %d are %d\033[0;0m\n",
+        file_descriptor, actual_blocks);
+    while (written_data<count){
+      if (actual_blocks<(fs_elt->position/root_file_system->block_size + 1)){
+        if (add_data_block_inode(fs_elt->f_inode)<0){
+          PRINT_RED("Could not allocate new space, either file is full or disk is full\n");
+          return written_data;
+        } else{
+          put_inode(fs_elt->f_inode, 0, SAVE_INODE);
+          actual_blocks++;
+        }
       }
+      char* block_data = get_inode_relative_block(fs_elt->f_inode,
+          fs_elt->position/root_file_system->block_size, WRITE_OP);
+      if (block_data == 0){
+        PRINT_RED("Block is null\n");
+        debug_print_fsapi("\033[0;31m[FSAPI]Relative block does want not found written data =  %d\033[0;0m\n",
+          written_data);
+        return written_data;
+      }
+      uint32_t write_space = root_file_system->block_size-
+            (fs_elt->position%root_file_system->block_size);
+      if (write_space > count - written_data){
+        write_space = count - written_data;
+      }
+      memcpy(block_data+fs_elt->position%root_file_system->block_size,
+        buffer + written_data, write_space);
+      written_data += write_space;
+      fs_elt->position += write_space;
+      fs_elt->f_inode->i_size += write_space;
+      unlock_using_address(block_data);
     }
-    // if (fs_elt->position/root_file_system->block_size > 530){
-    //   printf("Writing to block %ld\n", 
-    //     fs_elt->position/root_file_system->block_size);
-    // }
-    char* block_data = get_inode_relative_block(fs_elt->f_inode,
-        fs_elt->position/root_file_system->block_size, WRITE_OP);
-    if (block_data == 0){
-      PRINT_RED("Block is null\n");
-      debug_print_fsapi("\033[0;31m[FSAPI]Relative block does want not found written data =  %d\033[0;0m\n",
-         written_data);
-      return written_data;
+    if (fs_elt->sync_directly){
+      sync_all();
     }
-    uint32_t write_space = root_file_system->block_size-
-          (fs_elt->position%root_file_system->block_size);
-    if (write_space > count - written_data){
-      write_space = count - written_data;
-    }
-    memcpy(block_data+fs_elt->position%root_file_system->block_size,
-      buffer + written_data, write_space);
-    written_data += write_space;
-    fs_elt->position += write_space;
-    fs_elt->f_inode->i_size += write_space;
+    debug_print_fsapi("\033[0;34m[FSAPI]Write ran normal and data written is equal to %d\033[0;0m\n",
+        written_data); 
+    assert(written_data <= count);
+    return written_data;
   }
-  if (fs_elt->sync_directly){
-    sync_all();
-  }
-  debug_print_fsapi("\033[0;34m[FSAPI]Write ran normal and data written is equal to %d\033[0;0m\n",
-       written_data); 
-  assert(written_data <= count);
-  return written_data;
+  return -1;
 }
 
 ssize_t read(int file_descriptor, void *buffer, size_t count){
@@ -193,39 +205,44 @@ ssize_t read(int file_descriptor, void *buffer, size_t count){
   if (fs_elt == 0 || count == 0 || fs_elt->can_read == false ){
     return -1;
   }
-  uint32_t read_data = 0;
-  
-  int actual_blocks = get_actual_blocks(fs_elt->f_inode);
-  if (actual_blocks < 0){
-    return -1;
+  if (fs_elt->type == FS_FT_CHRDEV){
+    return dev_op[(fs_elt->f_inode->i_osd1 & 0xffff0000) >> 16].read((uint64_t)buffer, count); 
+  } else if(fs_elt->type == FS_FT_INODE_FILE) {
+    uint32_t read_data = 0;
+    int actual_blocks = get_actual_blocks(fs_elt->f_inode);
+    if (actual_blocks < 0){
+      return -1;
+    }
+    debug_print_fsapi("\033[0;34m[FSAPI] Actual blocks on fd %d are %d\033[0;0m\n",
+        file_descriptor, actual_blocks);
+    while (read_data<count &&
+          fs_elt->position<fs_elt->f_inode->i_size){
+      if (actual_blocks<
+          (fs_elt->position/root_file_system->block_size + 1)){
+        return read_data;
+      }
+      char* block_data = get_inode_relative_block(fs_elt->f_inode,
+          fs_elt->position/root_file_system->block_size, READ_OP);
+      if (block_data == 0){
+        return read_data;
+      }
+      uint32_t read_iter = root_file_system->block_size-
+            (fs_elt->position%root_file_system->block_size);
+      if (read_iter > count - read_data){
+        read_iter = count - read_data;
+      }
+      memcpy( buffer + read_data, 
+              block_data+fs_elt->position%root_file_system->block_size,
+              read_iter);
+      read_data += read_iter;
+      fs_elt->position += read_iter;
+      unlock_using_address(block_data);
+    }
+    debug_print_fsapi("\033[0;34m[FSAPI]Read ran normal and data read is equal to %d\033[0;0m\n",
+        read_data); 
+    return read_data;
   }
-  debug_print_fsapi("\033[0;34m[FSAPI] Actual blocks on fd %d are %d\033[0;0m\n",
-      file_descriptor, actual_blocks);
-  while (read_data<count &&
-        fs_elt->position<fs_elt->f_inode->i_size){
-    if (actual_blocks<
-        (fs_elt->position/root_file_system->block_size + 1)){
-      return read_data;
-    }
-    char* block_data = get_inode_relative_block(fs_elt->f_inode,
-        fs_elt->position/root_file_system->block_size, READ_OP);
-    if (block_data == 0){
-      return read_data;
-    }
-    uint32_t read_iter = root_file_system->block_size-
-          (fs_elt->position%root_file_system->block_size);
-    if (read_iter > count - read_data){
-      read_iter = count - read_data;
-    }
-    memcpy( buffer + read_data, 
-            block_data+fs_elt->position%root_file_system->block_size,
-            read_iter);
-    read_data += read_iter;
-    fs_elt->position += read_iter;
-  }
-  debug_print_fsapi("\033[0;34m[FSAPI]Read ran normal and data read is equal to %d\033[0;0m\n",
-      read_data); 
-  return read_data;
+  return -1;
 }
 
 off_t lseek(int file_descriptor, off_t offset, int whence){
@@ -234,8 +251,8 @@ off_t lseek(int file_descriptor, off_t offset, int whence){
     return -1;
   }
   flip* fs_elt = get_fs_list_elt(file_descriptor); 
-  if (fs_elt == 0){
-    return 0;
+  if (fs_elt == 0 || fs_elt->type != FS_FT_INODE_FILE){
+    return -1;
   }
   if (whence == SEEK_SET) {
     fs_elt->position = offset;
@@ -347,7 +364,7 @@ int sys_link(const char *oldpath, const char *newpath){
   return 0;
 }
 
-static int conf_buf(struct stat *buf, inode_t* file_inode){
+static int conf_stat_buf(struct stat *buf, inode_t* file_inode){
   if (root_file_system == 0 && file_inode == 0){
     return -1;
   }
@@ -373,7 +390,7 @@ int stat(const char *pathname, struct stat *buf){
     return -1;
   }
   inode_t* file_inode = walk_and_get(pathname, 0);  
-  return conf_buf(buf, file_inode);
+  return conf_stat_buf(buf, file_inode);
 }
 
 int fstat(unsigned int fd, struct stat *buf){
@@ -384,7 +401,7 @@ int fstat(unsigned int fd, struct stat *buf){
   if (fs_elt == 0){
     return -1;
   }
-  return conf_buf(buf, fs_elt->f_inode);
+  return conf_stat_buf(buf, fs_elt->f_inode);
 }
 
 int dup(int file_descriptor){
@@ -456,7 +473,7 @@ void print_dir_elements(const char* path){
   inode_t* dir = walk_and_get(path, 0);
   if (dir != 0){
     debug_print_fsapi("\033[0;33m[FSAPI] inode found dir with id = %d\n\033[0;0m", get_inode_number(dir));
-    print_dir_list(dir, true);
+    print_dir_list(dir, false);
     return;
   }
   else{

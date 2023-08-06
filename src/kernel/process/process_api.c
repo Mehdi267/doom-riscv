@@ -1,30 +1,37 @@
-#include "../memory/frame_dist.h"
-#include "hash.h"
-#include "helperfunc.h"
-#include "memory_api.h"
-#include "process.h"
-#include "process_memory.h"
-#include "scheduler.h"
-#include "stdbool.h"
-#include "stdio.h"
-#include <assert.h>
-
-#define FLOAT_TO_INT(x) (int)((x) + 0.5)
-
-#include "assert.h"
-#include "riscv.h"
-#include "stdlib.h"
+//Basic import
+#include "assert.h" //for assert func
+#include "riscv.h" //for riscv related inst and special values
+#include "stdlib.h" // for uint
 #include "string.h" // for strcpy strlen
+#include "stdbool.h" // for the bool type
+#include "stdio.h" // for print and related files
+#include "hash.h" //hash table
 
+//
+#include "helperfunc.h"
+#include "process.h"
+#include "scheduler.h"
+
+//Memory related
 #include "../memory/frame_dist.h"
 #include "../memory/pages.h"
 #include "../memory/virtual_memory.h"
+#include "memory_api.h"
+#include "process_memory.h"
+
+//Other imports
 #include "bios/info.h"
 #include "drivers/splash.h"
 #include "encoding.h"
+#include "traps/trap.h"
 #include "../sync/semaphore_api.h"
 #include "timer.h"
-#include "traps/trap.h"
+
+//Fs imports
+#include "../fs/fs_api.h" //for open and dup2 syscall
+
+#define FLOAT_TO_INT(x) (int)((x) + 0.5)
+
 
 struct process_management_global proc_mang_g;
 
@@ -439,23 +446,25 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
   //------------Add process to the activatable queue-------
   new_process->state = ACTIVATABLE;
   //------------File system related configuration----------
-  //Bad code improve later
-  char root_char[1] = "/";
-  //The reason as to why we use 2 is for the null terminator
-  new_process->root_dir.inode = get_inode(EXT2_GOOD_OLD_FIRST_INO);
-  new_process->root_dir.dir_name = (char*) malloc(2);
-  new_process->root_dir.name_size = 2;
-  strcpy(new_process->root_dir.dir_name, root_char);
-  new_process->root_dir.dir_name[1] = '\0';
-  new_process->cur_dir.inode = get_inode(EXT2_GOOD_OLD_FIRST_INO);
-  new_process->cur_dir.dir_name = (char*) malloc(2);
-  new_process->cur_dir.name_size = 2;
-  strcpy(new_process->cur_dir.dir_name, root_char);
-  new_process->cur_dir.dir_name[1] = '\0';
-  new_process->open_files_table = NULL;
-  //The file descriptors from zero to 3 are reserved  
-  memset(new_process->fd_bitmap, 0, SIZE_BIT_MAP);
-  *new_process->fd_bitmap = 0x07;
+  #ifdef VIRTMACHINE
+    //Bad code improve later
+    char root_char[1] = "/";
+    //The reason as to why we use 2 is for the null terminator
+    new_process->root_dir.inode = get_inode(EXT2_GOOD_OLD_FIRST_INO);
+    new_process->root_dir.dir_name = (char*) malloc(2);
+    new_process->root_dir.name_size = 2;
+    strcpy(new_process->root_dir.dir_name, root_char);
+    new_process->root_dir.dir_name[1] = '\0';
+    new_process->cur_dir.inode = get_inode(EXT2_GOOD_OLD_FIRST_INO);
+    new_process->cur_dir.dir_name = (char*) malloc(2);
+    new_process->cur_dir.name_size = 2;
+    strcpy(new_process->cur_dir.dir_name, root_char);
+    new_process->cur_dir.dir_name[1] = '\0';
+    new_process->open_files_table = NULL;
+    //The file descriptors from zero to 3 are reserved  
+    memset(new_process->fd_bitmap, 0, SIZE_BIT_MAP);
+    *new_process->fd_bitmap = 0x00;
+  #endif
   //---Add process to activatable queue
   queue_add(new_process, &activatable_process_queue, process, next_prev, prio);
 

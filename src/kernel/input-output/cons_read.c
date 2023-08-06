@@ -119,7 +119,7 @@ unsigned copy(char *dest, unsigned long length) {
  * @param length  The maximum number of characters to read.
  * @return The number of characters actually read and copied.
  */
-unsigned long cons_read(char *string, unsigned long length) {
+unsigned long cons_read(const char *string, unsigned long length) {
   if (!length)
     return 0;
   while (!detected_eol() && !is_buffer_full() && length > buffer_current_size()) {
@@ -129,6 +129,6 @@ unsigned long cons_read(char *string, unsigned long length) {
     scheduler();
   }
   // printf("String is equal to %s", string);
-  return copy(string, length);
+  return copy((char*)string, length);
 }
 

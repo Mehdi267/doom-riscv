@@ -8,6 +8,11 @@
 #include "disk_buffer.h"
 #include "inode.h"
 #include "logger.h"
+
+//Used for initialization
+#include "fs_api.h"
+#include "dir_api.h"
+
 /*
   Source: https://www.nongnu.org/ext2-doc/ext2.pdf
   This example of taken for the link above and 
@@ -75,6 +80,14 @@ int configure_ext2_file_system(uint8_t partition){
     PRINT_RED("[EXT2] configure_root_inode failed\n");
     return -1;
   }
+  if (create_base_dirs()<0){
+    PRINT_RED("[EXT2] make_elementry_inodes failed\n");
+    return -1;
+  }
+  if (create_base_files()<0){
+    PRINT_RED("[EXT2] create_base_files failed\n");
+    return -1;
+  }
   PRINT_GREEN("Root directory was built\n");
   print_fs_details();
   print_fs_no_arg("[ext2]conf finished\n");
@@ -82,12 +95,27 @@ int configure_ext2_file_system(uint8_t partition){
   return 0;
 }
 
+int create_base_dirs(){
+  if (mkdir("/dev", 0)<0){return -1;}
+  if (mkdir("/bin", 0)<0){return -1;}
+  if (mkdir("/tmp", 0)<0){return -1;}
+  if (mkdir("/usr", 0)<0){return -1;}
+  if (mkdir("/usr/bin", 0)<0){return -1;}
+  if (mkdir("/usr/include", 0)<0){return -1;}
+  if (mkdir("/usr/lib", 0)<0){return -1;}
+  return 0;
+}
 
+int create_base_files(){
+  uint32_t dev = 0x00010000;
+  if (mknod("/dev/terminal", 0, dev)<0){return -1;}
+  return 0;
+}
 
 int configure_reserved_data(){
   block_group_descriptor* desc_table = get_desc_table();
   uint32_t block_bitmap = desc_table->bg_block_bitmap;
-  char* data_bitmap = disk_read_block(block_bitmap);
+  char* data_bitmap = disk_read_block(block_bitmap, LOCK);
   *(data_bitmap) = 0x01;
   super_block* super = (super_block*) get_super_block();
   super->s_free_blocks_count--;
@@ -100,13 +128,13 @@ int configure_reserved_data(){
   }
   return save_fs_block(data_bitmap,
            root_file_system->block_size, 
-           block_bitmap);
+           block_bitmap, UNLOCK);
 }
 
 int configure_reserved_inodes(){
   block_group_descriptor* desc_table = get_desc_table();
   uint32_t inode_bitmap_b = desc_table->bg_inode_bitmap;
-  char* block_inode = disk_read_block(inode_bitmap_b);
+  char* block_inode = disk_read_block(inode_bitmap_b, LOCK);
   *(block_inode) = 0xff;
   *(block_inode+1) = 0x0f;
   super_block* super = (super_block*) get_super_block();
@@ -120,7 +148,7 @@ int configure_reserved_inodes(){
   }
   return save_fs_block(block_inode,
            root_file_system->block_size, 
-           inode_bitmap_b);
+           inode_bitmap_b, UNLOCK);
 }
 
 int configure_root_inode(){
@@ -154,7 +182,7 @@ int save_boot_record(uint32_t boot_loc){
   //Master boot record
   char* block =(char*) malloc(EXT2_BLOCK_SIZE);
   memset(block, 0, EXT2_BLOCK_SIZE);
-  if (save_fs_block(block, EXT2_BLOCK_SIZE, boot_loc)<0){
+  if (save_fs_block(block, EXT2_BLOCK_SIZE, boot_loc, UNLOCK)<0){
     free(block);
     return -1;
   }
@@ -264,7 +292,7 @@ int superblock_conf(uint32_t block_loc,
   super->s_feature_incompat = 0xffff; // Incompatible feature set flags
   debug_print_v_fs("[ext2]super->s_feature_incompat = %d\n", super->s_feature_incompat);
   super->s_uuid[0] = 22; // random value
-  if(save_fs_block((char*)super, sizeof(super_block), block_loc)<0){
+  if(save_fs_block((char*)super, sizeof(super_block), block_loc, UNLOCK)<0){
     PRINT_RED("fs superblock failed to save\n");
     return -1;
   }
@@ -288,7 +316,7 @@ int superblock_conf(uint32_t block_loc,
   root_file_system->desc_table = blk_des;
   if(save_fs_block((char*)blk_des,
      sizeof(block_group_descriptor),
-      block_loc+1)<0){
+      block_loc+1, UNLOCK)<0){
     PRINT_RED("fs block_group_descriptor failed to save\n");
     return -1;
   }
@@ -298,7 +326,7 @@ int superblock_conf(uint32_t block_loc,
         blk<blk_des->bg_inode_table; blk++){
     if(save_fs_block((char*)empty_block,
       root_file_system->block_size,
-        blk)<0){
+        blk, UNLOCK)<0){
       PRINT_RED("Failed to save a bit map\n");
       return -1;
     }
@@ -327,7 +355,7 @@ int config_super_block(){
   print_fs_no_arg("\033[0;32m--conf super block--\033[0;0m\n");
   if (root_file_system != 0&& root_file_system->super_block == 0){
     char* block = 
-        disk_read_block(root_file_system->superblock_loc);
+        disk_read_block(root_file_system->superblock_loc, LOCK);
     if (block == 0){
       return -1;
     }
@@ -339,6 +367,7 @@ int config_super_block(){
     memcpy(root_file_system->super_block, 
       block, sizeof(super_block));
     print_fs_no_arg("\033[0;32m--conf super block end--\033[0m\n");
+    unlock_cache(root_file_system->superblock_loc);
     return 0;
   }
   return -1;
@@ -348,7 +377,7 @@ int config_blk_desc_table(){
   print_fs_no_arg("\033[0;32m--conf desc table--\n\033[0;0m");
   if (root_file_system != 0&& root_file_system->desc_table == 0){
     char* block = 
-          disk_read_block(root_file_system->desc_table_loc);
+          disk_read_block(root_file_system->desc_table_loc, LOCK);
     if (block == 0){
       return -1;
     }
@@ -360,6 +389,7 @@ int config_blk_desc_table(){
     memcpy(root_file_system->desc_table, 
         block, sizeof(block_group_descriptor));
     print_fs_no_arg("\033[0;32m--conf desc table end--\033[0;0m\n");
+    unlock_cache(root_file_system->desc_table_loc);
     return 0;
   }
   return -1;
@@ -370,7 +400,7 @@ int save_super_block(){
   if (root_file_system->super_block !=0){
     if(save_fs_block((char*)root_file_system->super_block,
         sizeof(super_block),
-        root_file_system->superblock_loc)<0){
+        root_file_system->superblock_loc, UNLOCK)<0){
       return -1;
     }
     print_fs_no_arg("\033[0;33m--saving super block end--\033[0m\n");
@@ -384,7 +414,7 @@ int save_blk_desc_table(){
   if (root_file_system->desc_table !=0){
     if(save_fs_block((char*)root_file_system->desc_table,
         sizeof(block_group_descriptor),
-        root_file_system->desc_table_loc)<0){
+        root_file_system->desc_table_loc, UNLOCK)<0){
       return -1;
     }
     print_fs_no_arg("\033[0;35m--saving desc table end--\033[0;0m\n");

@@ -6,11 +6,13 @@
 #include <stdint.h> //uint
 #include <string.h> // memset
 #include "drivers/disk_device.h" //to do disk operations
-#include "ext2.h" 
-#include "super_block.h"
-#include "hash.h"
-#include "logger.h"
-#include "inode.h"
+#include "ext2.h"  // 
+#include "super_block.h" // 
+#include "chdev.h" // 
+#include "hash.h" // hash table related
+#include "logger.h" // Used to log and print fs conf 
+#include "inode.h" 
+
 file_system_t* root_file_system = 0;
 
 int set_up_file_system() {
@@ -21,6 +23,9 @@ int set_up_file_system() {
     return set_up_mbr();
   } else {
     printf("\033[0;32mMbr was found\033[0m\n");      // Print in green
+  }
+  if (init_fs_drivers()<0){
+    return -1;
   }
   print_partition_status();
   return 0;
@@ -97,8 +102,9 @@ void load_and_print_superblock(){
     return;
   }
   char* data = disk_read_block(
-          root_file_system->superblock_loc);
+          root_file_system->superblock_loc, LOCK);
   print_super_block((super_block*) data);
+  unlock_cache(root_file_system->superblock_loc);
 }
 
 void load_and_print_desc_table(){
@@ -107,14 +113,17 @@ void load_and_print_desc_table(){
     return;
   }
   char* data = disk_read_block(
-          root_file_system->desc_table_loc);
+          root_file_system->desc_table_loc, LOCK);
   printblock_group_descriptor((block_group_descriptor*) data);
+  unlock_cache(root_file_system->desc_table_loc);
 }
 
 void print_fs_details(){
   load_and_print_superblock();
   load_and_print_desc_table();
   print_cache_details(root_file_system->inode_list);
+  print_data_bitmap();
+  print_inode_bitmap();
 }
 
 
@@ -134,7 +143,7 @@ int configure_root_file_system(
       PRINT_RED("No space when alloc root fs");
       return -1;
     }
-  }else{
+  } else{
     print_fs_no_arg("[fs]root_file_system was found\n");
     if (root_file_system->super_block != 0){
       free(root_file_system->super_block);

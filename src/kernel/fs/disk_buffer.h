@@ -13,14 +13,23 @@ typedef enum write_type{
   WRITE_THROUGH //Saves data in the disk directly
 }write_type;
 
+typedef enum cache_statut_type{
+  LOCK,//Means that the current usage locks the block
+       //and the cache cannot freely remove it
+  UNLOCK //Means that the current use case has finished
+         //we can free the cache
+} cache_op;
+
 typedef struct cache_element{
   uint8_t disk_res; //indicates if this buffer is reserved 
                     //by the disk
   uint32_t blockNumber; //the disk block being used
   bool dirty; //indicates if the buffer is being used
-  uint16_t usage; // how many are using the current disk
+  uint32_t usage; // how many are using the current disk
   char data[EXT2_BLOCK_SIZE]; // the data of the buffer
+  bool locked;//Inidicated if it can be freed or not
   struct cache_element* next_c;
+  struct cache_element* before_c;
 } c_elt;
 
 extern c_elt* global_cache_buf; 
@@ -31,6 +40,14 @@ extern c_elt* global_cache_buf;
  * @return c_elt* the dick buffer element
  */
 c_elt* look_up_c_elt(uint32_t disk_block_number);
+
+/**
+ * @brief Checks if a block is in the disk buffer using the 
+ * block address
+ * @param add address of the data block
+ * @return c_elt* the dick buffer element
+ */
+c_elt* look_up_c_elt_add(char* add);
 
 /**
  * @brief Fetch the block number from the disk
@@ -48,7 +65,8 @@ c_elt* fetch_block(uint32_t disk_block_number);
  * @param type the type of the write operation write through or write back
  * @return int operation status 
  */
-int write_block(uint32_t disk_block_number, char* data, size_t data_length, write_type type);
+int write_block(uint32_t disk_block_number, char* data,
+     size_t data_length, write_type type, cache_op cah_op);
 
 /**
  * @brief Save buffer to disk
@@ -69,7 +87,7 @@ int sync();
  * @return char* the pointer to the data equal to the file system
  * block size
  */
-char* read_block_c(uint32_t disk_block_number);
+char* read_block_c(uint32_t disk_block_number, cache_op cah_op);
 
 /**
  * @brief Saves the data equal to the size of block used in the 
@@ -84,7 +102,8 @@ char* read_block_c(uint32_t disk_block_number);
  */
 int save_fs_block(char* data,
                   uint32_t data_size,
-                  uint32_t relative_b_nb
+                  uint32_t relative_b_nb,
+                  cache_op cah_op
                   );
 
 /**
@@ -93,7 +112,7 @@ int save_fs_block(char* data,
  * @return char* the pointer to the data that was read or 0
  * if no data was found
  */
-char* disk_read_block(uint32_t relative_b_n);
+char* disk_read_block(uint32_t relative_b_n, cache_op cah_op);
 
 
 /**
@@ -125,4 +144,21 @@ int set_dirty_block(uint32_t disk_block_number);
  * and then least used in order. 
  */
 void check_if_cache_is_full();
+
+
+/**
+ * @brief Unlocks the cache elements by decreasing it usage
+ * if the usage reaches zero that means we can free it
+ * @return int status 
+ */
+int unlock_cache(uint32_t disk_block_number);
+
+/**
+ * @brief Does the same thing as unlock_cache but this time
+ * it uses the address of the data block to locate the cache block 
+ * @param block address of the data block of a cache element
+ * @return int status
+ */
+int unlock_using_address(char* block);
+
 #endif

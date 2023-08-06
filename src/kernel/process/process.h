@@ -23,7 +23,8 @@
 #include "../input-output/cons_read.h" //for cons_read declation
 //File system related 
 #include "../fs/inode.h" //Used for inode pointer
-#include "../fs/ext2.h" 
+#include "../fs/ext2.h" //Used to extract ext2 values
+
 /**
  * @brief global function constants
  * @param MAXPRIO the maximun priority of a process
@@ -72,6 +73,15 @@ typedef struct id_list{
   struct id_list* next_id;
 } id_list_t;
 
+typedef enum open_file_type {
+  FS_FT_UNKNOWN = 0, //Unknown File Type
+  FS_FT_INODE_FILE = 2, //Regular File inode 
+  FS_FT_CHRDEV = 3, //Character Device
+  FS_FT_BLKDEV = 4, //Block Device
+  FS_FT_PIPE = 5, //PIPE File
+  FS_FT_FIFO = 5, //Buffer File(not present at the moment)
+  FS_FT_SOCK = 6, //Socket File
+} file_type_fd;
 
 /**
  * @brief this data structure is inspired for the Andrew Tanenbaum's book
@@ -81,7 +91,7 @@ typedef struct id_list{
  * later one one it works as we wish it does 
  */
 typedef struct open_file_mang{
-  // int fd;
+  file_type_fd type;
   int64_t position;
   inode_t* f_inode;
   uint32_t inode_number;
@@ -394,7 +404,7 @@ extern int chprio(int pid, int newprio);
  */
 extern void exit_process(int retval);
 
-extern unsigned long cons_read(char *string, unsigned long length);
+extern unsigned long cons_read(const char *string, unsigned long length);
 
 
 /**

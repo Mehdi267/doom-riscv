@@ -403,6 +403,10 @@ int add_dot_directories(inode_t* dir, inode_t* previous_directory);
  */
 int sync_inodes();
 
+//These two functions print the bitmaps of 
+//the data block and inode blocks
+void print_data_bitmap();
+void print_inode_bitmap();
 
 
 #endif

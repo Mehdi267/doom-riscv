@@ -234,9 +234,20 @@ extern int sync();
 extern int clear_disk_cache();
 extern void print_fs_details();
 
-typedef long ssize_t;
 typedef long long off_t;
 typedef unsigned int mode_t;
+typedef int pid_t;
+typedef long ssize_t;
+typedef unsigned long int ino_t;
+typedef unsigned int   uid_t;      // User ID of owner
+typedef unsigned int   gid_t;      // Group ID of owner
+typedef unsigned int   dev_t;      // Device ID (if file is character or block special)
+typedef int            blksize_t;  // Block size for filesystem I/O
+typedef long           blkcnt_t;   // Number of 512B blocks allocated
+typedef long           time_t;     // Time type (usually represents POSIX timestamp)
+typedef unsigned short nlink_t;    // Number of hard links
+
+
 // Messages from users
 enum FileOpenFlags {
     O_RDONLY = 0x0000,      // Read-only
@@ -253,6 +264,23 @@ enum SEEK_OPERATION {
   SEEK_CUR = 1,
   SEEK_END = 2,
 };
+
+struct stat {
+    dev_t     st_dev;         // ID of device containing file
+    ino_t     st_ino;         // Inode number
+    mode_t    st_mode;        // File type and mode
+    nlink_t   st_nlink;       // Number of hard links
+    uid_t     st_uid;         // User ID of owner
+    gid_t     st_gid;         // Group ID of owner
+    dev_t     st_rdev;        // Device ID (if file is character or block special)
+    off_t     st_size;        // Total size, in bytes
+    blksize_t st_blksize;     // Block size for filesystem I/O
+    blkcnt_t  st_blocks;      // Number of 512B blocks allocated
+    time_t    st_atime;       // Time of last access
+    time_t    st_mtime;       // Time of last modification
+    time_t    st_ctime;       // Time of last status change
+};
+
 //Fs api 
 int open(const char *file_name, int flags, mode_t mode);
 int close(int file_descriptor);
@@ -263,6 +291,8 @@ int unlink(const char *file_name);
 int link(const char *oldpath, const char *newpath);
 int dup(int file_descriptor);
 int dup2(int file_descriptor, int new_file_descriptor);
+int stat(const char *pathname, struct stat *buf);
+int fstat(unsigned int fd, struct stat *buf);
 
 //Dir api
 char *getcwd(char *buf, size_t size);

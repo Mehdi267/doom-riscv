@@ -133,4 +133,18 @@ int config_super_block();
  * @return int funtion status 
  */
 int config_blk_desc_table();
+
+/**
+ * @brief Adds basic directories to the file system
+ * @return int status
+ */
+int create_base_dirs();
+
+/**
+ * @brief Create a basic files like the terminal device driver
+ * and many other that will added later on
+ * @return int status
+ */
+int create_base_files();
+
 #endif /* INODE_H */

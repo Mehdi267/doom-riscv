@@ -38,9 +38,10 @@ inode_t* get_inode(uint32_t inode_number){
     debug_print_inode("[IN]Read disk block %d while getting inode %d\n", desc_table->bg_inode_table 
                                         +(inode_number*INODE_SIZE)
                                         /root_file_system->block_size, inode_number);
-    char *block_inode = disk_read_block(desc_table->bg_inode_table 
+    uint32_t block_nb = desc_table->bg_inode_table 
                                         +(inode_number*INODE_SIZE)
-                                        /root_file_system->block_size);
+                                        /root_file_system->block_size;
+    char *block_inode = disk_read_block(block_nb, LOCK);
     if (block_inode == 0){
       return 0;
     }
@@ -54,6 +55,7 @@ inode_t* get_inode(uint32_t inode_number){
           block_inode+(inode_number*INODE_SIZE)%root_file_system->block_size, 
           INODE_SIZE);
     add_inode_list(return_inode, inode_number);
+    unlock_cache(block_nb);
     return return_inode;
   }
   return 0;
@@ -159,7 +161,7 @@ int put_inode(inode_t* inode, uint32_t inode_number, put_op op_type){
                     /root_file_system->block_size;
   debug_print_inode("[IN]Saving Inode num %d, inode mode %x\n",
              inode_number, inode->i_mode);
-  char* block_inode = disk_read_block(block_number);
+  char* block_inode = disk_read_block(block_number, LOCK);
   if (block_inode ==0){
     return -1;
   }
@@ -175,8 +177,8 @@ int put_inode(inode_t* inode, uint32_t inode_number, put_op op_type){
   } 
   if (save_fs_block(block_inode, 
           root_file_system->block_size,
-          block_number
-          )<0){
+          block_number,
+          UNLOCK)<0){
     return -1;
   }
   debug_print_inode("\033[0;34m[IN]Put inode reached end on %d, \033[0;0m\n", inode_number);
@@ -191,16 +193,11 @@ int alloc_bit_bitmap(char* block){
   uint64_t mask_max = 0xffffffffffffffff;
   for (int i = 0; i<root_file_system->block_size/sizeof(uint64_t); i++){
     char* iter_address = block+i*sizeof(uint64_t);
-    // printf("iter_address %p\n", iter_address);
     uint64_t mask_op = mask_max&*((uint64_t*)(iter_address));
-    // printb(&mask_op, 8);
     if (mask_op < 0xffffffffffffffff){
-      // printf("Inside \n");
       //We found an empty node
       uint64_t mask = 1; 
       for (int j = 0; j < 64; ++j) {
-        // printb(&mask_op, 8);
-        // printf("looking for bit j = %d\n",j);
         if ((mask_op & mask) == 0) {
             // Found the first zero bit
             return j+i*8*sizeof(uint64_t);
@@ -227,7 +224,7 @@ inode_t* alloc_inode(){
   uint32_t inode_number = 0; 
   for (int blk_iter = desc_table->bg_inode_bitmap;
     blk_iter<desc_table->bg_inode_table; blk_iter++){
-    char* block_inode = disk_read_block(blk_iter);
+    char* block_inode = disk_read_block(blk_iter, LOCK);
     if (block_inode == 0){
       PRINT_RED("Failed to read op while alloc inode");
       return 0;
@@ -238,7 +235,7 @@ inode_t* alloc_inode(){
       *(block_inode+free_inode/8) |= (1<<(free_inode%8));
       if (save_fs_block(block_inode,
            root_file_system->block_size, 
-           blk_iter) < 0){
+           blk_iter, UNLOCK) < 0){
         PRINT_RED("[IN]Failed to save inode bitmap changes\n");
         return 0;
       }
@@ -270,7 +267,7 @@ inode_t* alloc_inode(){
   int block_number = desc_table->bg_inode_table 
                     + (inode_number*INODE_SIZE)
                     /root_file_system->block_size;
-  char* block_inode = disk_read_block(block_number);
+  char* block_inode = disk_read_block(block_number, LOCK);
   if (block_inode ==0){
     return 0;
   }
@@ -279,8 +276,7 @@ inode_t* alloc_inode(){
   memcpy(inode_ptr, inode, sizeof(inode_t));
   if (save_fs_block(block_inode, 
           root_file_system->block_size,
-          block_number
-          )<0){return 0;}
+          block_number, UNLOCK)<0){return 0;}
   super->s_free_inodes_count--;
   desc_table->bg_free_inodes_count--;
   save_super_block();
@@ -319,15 +315,15 @@ int free_inode(inode_t* inode, uint32_t inode_number){
     //Free inode in the bit map
     uint32_t inode_bitmap = desc_table->bg_inode_bitmap + 
                               inode_number/(8*root_file_system->block_size);
-    char* inode_bitmap_data = disk_read_block(inode_bitmap);
+    char* inode_bitmap_data = disk_read_block(inode_bitmap, LOCK);
     if (inode_bitmap == 0){
       return -1;
     }
     *(inode_bitmap_data+(inode_number%(root_file_system->block_size*8))/8) 
-                  &= 0xff - (1<<inode_number%8);
+                  &= 0xff - (1<<(inode_number%8));
     if (save_fs_block(inode_bitmap_data,
             root_file_system->block_size, 
-            inode_bitmap) < 0){
+            inode_bitmap, UNLOCK) < 0){
       return -1;
     }
     super->s_free_inodes_count++;
@@ -362,7 +358,7 @@ int free_inode_data(inode_t* inode){
     debug_print_inode("\033[0;36m[IN]Freeing indirect blocks inode->i_blocks = %d\n\033[0;0m", inode->i_blocks);
     char* indirect_block_data = disk_read_block(
                                   super->s_first_data_block+
-                                  inode->i_block[INDIRECT_BLOCKS_INDEX]);
+                                  inode->i_block[INDIRECT_BLOCKS_INDEX], LOCK);
     if (indirect_block_data == 0){
       return -1;
     }
@@ -374,6 +370,7 @@ int free_inode_data(inode_t* inode){
       }
       freed_blocks++;
     }
+    unlock_cache(super->s_first_data_block+inode->i_block[INDIRECT_BLOCKS_INDEX]);
     if (free_data_block(inode->i_block[INDIRECT_BLOCKS_INDEX])<0){
       return -1;
     }
@@ -388,7 +385,7 @@ int free_inode_data(inode_t* inode){
       return -1;
     }
     char* main_double_block = disk_read_block(super->s_first_data_block+
-          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
+          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX], LOCK);
     if (main_double_block == 0){return -1;}
     for (int itr = 0; itr < nb_elts_blk; itr++){
       if (*(((uint32_t*)main_double_block)+itr) != 0){
@@ -403,7 +400,7 @@ int free_inode_data(inode_t* inode){
       }
       //Get indirect block
       char* blk_data_indir = disk_read_block(super->s_first_data_block+
-            *(((uint32_t*)main_double_block)+itr));
+            *(((uint32_t*)main_double_block)+itr), LOCK);
       if (blk_data_indir == 0){
         continue;
       }
@@ -415,12 +412,16 @@ int free_inode_data(inode_t* inode){
           freed_blocks++;
         }
       }
+      unlock_cache(super->s_first_data_block+
+            *(((uint32_t*)main_double_block)+itr));
       if (free_data_block(*(((uint32_t*)main_double_block)+itr))<0){
         return -1;
       }
       debug_print_inode("Free double indirect exit %d\n", freed_blocks);
       freed_blocks++;
     }
+    unlock_cache(super->s_first_data_block+
+        inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
     if (free_data_block(inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX])<0){
       return -1;
     }
@@ -475,7 +476,7 @@ int add_data_block_inode(inode_t* inode){
     }
     char* indirect_block_data = disk_read_block(
                                   super->s_first_data_block+
-                                  inode->i_block[INDIRECT_BLOCKS_INDEX]);
+                                  inode->i_block[INDIRECT_BLOCKS_INDEX], LOCK);
     if (indirect_block_data == 0){
       return -1;
     }
@@ -487,7 +488,8 @@ int add_data_block_inode(inode_t* inode){
     if (save_fs_block(indirect_block_data, 
         root_file_system->block_size,
         super->s_first_data_block+
-        inode->i_block[INDIRECT_BLOCKS_INDEX]
+        inode->i_block[INDIRECT_BLOCKS_INDEX],
+        UNLOCK
         )<0){
       return -1;
     }
@@ -505,15 +507,17 @@ int add_data_block_inode(inode_t* inode){
       inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX] =
         double_direct_block;
       main_double_block = disk_read_block(super->s_first_data_block+
-        inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
+        inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX], LOCK);
       if (main_double_block == 0){return -1;}
       memset(main_double_block, 0, root_file_system->block_size);
       inode->i_blocks++;
     }
+    //If we are not allocating for the first time 
+    //we read it directly
     uint32_t double_ind_blk_nb = 0;
     if (main_double_block == 0){
       main_double_block = disk_read_block(super->s_first_data_block+
-            inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
+            inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX], LOCK);
     }
     if (main_double_block == 0){return -1;}
     for (int itr = 0; itr < nb_elt_block;
@@ -537,17 +541,19 @@ int add_data_block_inode(inode_t* inode){
         double_ind_blk_nb++;
         double_written = true;
         indirect_block_block = disk_read_block(super->s_first_data_block+
-          *(((uint32_t*)main_double_block)+double_ind_blk_nb-1));
+          *(((uint32_t*)main_double_block)+double_ind_blk_nb-1), LOCK);
         memset(indirect_block_block, 0, root_file_system->block_size);
       }
       else{
+        unlock_cache(super->s_first_data_block+
+            inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
         printf("File reached max size");
         return -1;
       }
     }
     if (indirect_block_block == 0){
       indirect_block_block = disk_read_block(super->s_first_data_block+
-              *(((uint32_t*)main_double_block)+double_ind_blk_nb-1));      
+              *(((uint32_t*)main_double_block)+double_ind_blk_nb-1), LOCK);      
     }
     if (indirect_block_block == 0){
       return -1;
@@ -557,9 +563,12 @@ int add_data_block_inode(inode_t* inode){
       if (save_fs_block(main_double_block, 
           root_file_system->block_size,
           super->s_first_data_block+
-          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX])<0){
+          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX], UNLOCK)<0){
           return -1;
         }  
+    }else{
+      unlock_cache(super->s_first_data_block+
+            inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
     }
     debug_print_inode("\033[0;36m[IN] double indirect block Allocated = %d //final block %d\n\033[0;0m", 
           inode->i_blocks, blk);
@@ -567,7 +576,7 @@ int add_data_block_inode(inode_t* inode){
         root_file_system->block_size,
         super->s_first_data_block+
         *(((uint32_t*)main_double_block)+
-          double_ind_blk_nb-1))<0){
+          double_ind_blk_nb-1), UNLOCK)<0){
           return -1;
     }
     inode->i_blocks++;
@@ -597,7 +606,7 @@ int save_dir_entry( dir_entry* entry,
                     uint32_t block_nb){
   super_block* super = (super_block*) get_super_block();
   char* block_data = disk_read_block(super->s_first_data_block
-                      +block_nb);
+                      +block_nb, LOCK);
   if (block_data == 0){
     return -1;
   }
@@ -607,7 +616,7 @@ int save_dir_entry( dir_entry* entry,
   return save_fs_block(block_data,
           root_file_system->block_size, 
           super->s_first_data_block+
-                          +block_nb);
+                          +block_nb, UNLOCK);
 }
 
 int add_inode_directory(inode_t* dir, 
@@ -651,7 +660,7 @@ int add_inode_directory(inode_t* dir,
   //we will not be able to add a directory entry
   uint32_t file_size = dir_entry.rec_len;
   dir->i_size += file_size;
-  debug_print_inode("[IN]rec_lec = %d\n",dir_entry.rec_len);  
+  debug_print_inode("[IN]Init rec_lec = %d\n",dir_entry.rec_len);  
   if (dir->i_blocks == 0){
     print_inode_no_arg("[IN]---Adding inode to dir block 0--\n");
     if (add_data_block_inode(dir)<0){
@@ -666,9 +675,8 @@ int add_inode_directory(inode_t* dir,
     //We look for elemnts in the present direct blocks
     for (int blk = 0; blk<dir->i_blocks; blk++){
       uint32_t pos = 0;
-      char* block_data = disk_read_block(
-            super->s_first_data_block+
-            dir->i_block[blk]);
+      uint32_t blk_num = super->s_first_data_block+dir->i_block[blk];
+      char*  block_data = disk_read_block(blk_num, LOCK);
       if (block_data == 0){
         PRINT_RED("[IN]Failed to read op while adding dir\n");
         return -1;
@@ -678,8 +686,6 @@ int add_inode_directory(inode_t* dir,
       char* limit = block_data+root_file_system->block_size;
       bool hit = 0;
       while (((char*)list_elt)<limit){
-        // printf("-------Inside %p \n",limit);
-        // print_dir_entry(list_elt);
         //We look for a freed spot first
         uint32_t list_elt_size = SIZE_DIR_NO_NAME +
                list_elt->name_len;
@@ -717,12 +723,13 @@ int add_inode_directory(inode_t* dir,
           return save_fs_block(block_data,
             root_file_system->block_size, 
             super->s_first_data_block+
-                dir->i_block[blk]);
+                dir->i_block[blk], UNLOCK);
         }
         uint32_t jump_by = list_elt->rec_len;
         pos+=jump_by;
         list_elt = (dir_entry_basic*)((char*)list_elt+jump_by);
       }
+      unlock_cache(blk_num);
     }
     //WE see if we can add a new direct block
     if (dir->i_blocks<L_DIRECT){
@@ -763,9 +770,9 @@ uint32_t look_for_inode_dir(inode_t* dir,
     //We look for elemnts in the present direct blocks
     for (int blk = 0; blk<dir->i_blocks; blk++){
       uint32_t pos = 0;
-      char* block_data = disk_read_block(
-            super->s_first_data_block+
-            dir->i_block[blk]);
+      uint32_t blk_num = super->s_first_data_block+
+            dir->i_block[blk];
+      char* block_data = disk_read_block(blk_num, LOCK);
       if (block_data == 0){
         PRINT_RED("[IN]Failed to read op while adding dir\n");
         return -1;
@@ -786,6 +793,7 @@ uint32_t look_for_inode_dir(inode_t* dir,
           pos+=jump_by;
           list_elt = (dir_entry_basic*)((char*)list_elt+jump_by);
       }
+      unlock_cache(blk_num);
     }
   }
   return 0;
@@ -822,15 +830,15 @@ int remove_inode_dir(inode_t* dir,
   //search direct blocks
   else {
     if (dir->i_blocks > L_DIRECT){
-      assert(0); //Something went wrong
+      assert(0); //Something went wrong we cannot reach this size
       return -1;
     }
     //We look for elements in the present direct blocks
     for (int blk = 0; blk<dir->i_blocks; blk++){
       uint32_t pos = 0;
-      char* block_data = disk_read_block(
-            super->s_first_data_block+
-            dir->i_block[blk]);
+      uint32_t block_num = super->s_first_data_block+
+            dir->i_block[blk];
+      char* block_data = disk_read_block(block_num, LOCK);
       if (block_data == 0){
         PRINT_RED("[IN]Failed to read op while adding dir\n");
         return -1;
@@ -883,6 +891,7 @@ int remove_inode_dir(inode_t* dir,
             //If the block is on the edge we free it otherwise
             //We just set it variables to zero
             if (blk == dir->i_blocks - 1){
+              unlock_cache(block_num);
               if (free_data_block(dir->i_block[blk])<0){
                   return -1;
                 }
@@ -900,13 +909,14 @@ int remove_inode_dir(inode_t* dir,
           return save_fs_block(block_data,
             root_file_system->block_size, 
             super->s_first_data_block+
-                dir->i_block[blk]);
+                dir->i_block[blk], UNLOCK);
         }
         uint32_t jump_by = list_elt->rec_len;
         pos+=jump_by;
         previous_elt = list_elt;
         list_elt = (dir_entry_basic*)((char*)list_elt+jump_by);
       }
+      unlock_cache(block_num);
     }
   }
   //File does not exist
@@ -925,27 +935,34 @@ uint32_t get_data_block(){
   uint32_t block_number = 0;
   for (int blk_iter = desc_table->bg_block_bitmap;
       blk_iter< desc_table->bg_inode_bitmap; blk_iter++){
-    char* block_data_bitmap = disk_read_block(blk_iter);
+    char* block_data_bitmap = disk_read_block(blk_iter, LOCK);
     if (block_data_bitmap == 0){
       PRINT_RED("Failed to read op while alloc inode");
       return 0;
     }
     int free_block = alloc_bit_bitmap(block_data_bitmap);
     if (free_block != -1){
-      debug_print_inode("[IN]Found data block num %d in relative bitmap\n", free_block);
-      *(block_data_bitmap+free_block/8) |= (1<<free_block%8);
+      debug_print_inode("[IN]Found data block num %d in relative bitmap %d\n", 
+          free_block, blk_iter);
+      *(block_data_bitmap+free_block/8) |= (1<<(free_block%8));
       if (save_fs_block(block_data_bitmap,
            root_file_system->block_size, 
-           blk_iter) < 0){
+           blk_iter, UNLOCK) < 0){
         PRINT_RED("[IN]Failed to save data bitmap changes");
         return 0;
       }
-      block_number = super->s_first_data_block + 
-                  (uint32_t) free_block;
+      block_number = super->s_first_data_block +
+                    root_file_system->block_size*8*(blk_iter-desc_table->bg_block_bitmap)+ 
+                    (uint32_t) free_block;
       break;
+    }else{
+      unlock_cache(blk_iter);
     }
   }
-  char* block_data = disk_read_block(block_number);
+  if (block_number == 0){
+    return 0;
+  }
+  char* block_data = disk_read_block(block_number,LOCK);
   if (block_data == 0){
     return 0;
   }
@@ -953,8 +970,8 @@ uint32_t get_data_block(){
     root_file_system->block_size);
   if (save_fs_block(block_data, 
     root_file_system->block_size,
-    block_number
-    )<0){
+    block_number,
+    UNLOCK)<0){
     return -1;
   }
   super->s_free_blocks_count--;
@@ -962,8 +979,8 @@ uint32_t get_data_block(){
   save_super_block();
   save_blk_desc_table();
   debug_print_inode("\033[0;35m[IN]End block location %d \n\033[0;0m", block_number);
-  //We return the relative block number
-  return block_number-super->s_first_data_block;
+  //We return the relative bitmap block number because it is simpler to use 
+  return block_number - super->s_first_data_block;
 }
 
 int get_actual_blocks(inode_t* inode){
@@ -984,7 +1001,7 @@ int get_actual_blocks(inode_t* inode){
      inode->i_blocks<=L_DOUBLE_INDIRECT){
     uint32_t double_ind_blk_nb = 0;
     char* main_double_block = disk_read_block(super->s_first_data_block+
-          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
+          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX], LOCK);
     if (main_double_block == 0){return -1;}
     for (int itr = 0; itr < root_file_system->block_size/sizeof(uint32_t);
          itr++){
@@ -994,6 +1011,8 @@ int get_actual_blocks(inode_t* inode){
         break;
       }
     }
+    unlock_cache(super->s_first_data_block+
+          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
     //-1 is for the doule indirect blocks and single indirect block;
     return inode->i_blocks-double_ind_blk_nb-1-1;
   }
@@ -1017,11 +1036,13 @@ char* get_inode_relative_block(inode_t* inode,
     uint32_t rel_indirect = relative_block-REL_NB_DIRECT;
     char* indirect_block_data = 
       disk_read_block(super->s_first_data_block+
-          inode->i_block[INDIRECT_BLOCKS_INDEX]);
+          inode->i_block[INDIRECT_BLOCKS_INDEX], LOCK);
     if (indirect_block_data == 0){
       return 0;
     }
     block_number = *(((uint32_t*)indirect_block_data)+rel_indirect);
+    unlock_cache(super->s_first_data_block+
+          inode->i_block[INDIRECT_BLOCKS_INDEX]);
   }
   else if (relative_block>= REL_NB_INDIRECT + REL_NB_DIRECT && 
       relative_block<REL_NB_DOUB_INDIRECT+REL_NB_INDIRECT+REL_NB_DIRECT){
@@ -1033,17 +1054,21 @@ char* get_inode_relative_block(inode_t* inode,
             (root_file_system->block_size/sizeof(uint32_t)); 
     char* double_block_data = 
       disk_read_block(super->s_first_data_block+
-          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
+          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX], LOCK);
     if (double_block_data == 0){
       return 0;
     }
     char* indirect_block_data = 
       disk_read_block(super->s_first_data_block+
           *(((uint32_t*)double_block_data)
-          +indirect_block));
+          +indirect_block), LOCK);
     if (indirect_block_data == 0){
       return 0;
     }
+    unlock_cache(super->s_first_data_block+
+          *(((uint32_t*)double_block_data)));
+    unlock_cache(super->s_first_data_block+
+          inode->i_block[DOUBLE_DIRECT_BLOCKS_INDEX]);
     block_number = 
         *(((uint32_t*)indirect_block_data)+indirect_index);
   }else{
@@ -1053,7 +1078,7 @@ char* get_inode_relative_block(inode_t* inode,
   if (block_number != 0){
     block_number += super->s_first_data_block;
     char* block_data = 
-        disk_read_block(block_number);
+        disk_read_block(block_number, LOCK);
     if (block_data == 0){
       return 0;
     }
@@ -1083,19 +1108,24 @@ int free_data_block(uint32_t data_block){
   }
   uint32_t block_bitmap = desc_table->bg_block_bitmap + 
                             data_block/(8*root_file_system->block_size);
-  char* data_bitmap = disk_read_block(block_bitmap);
+  char* data_bitmap = disk_read_block(block_bitmap, LOCK);
   if (data_bitmap == 0){
     return -1;
   }
+  //We look for the block and the location 
+  //in the block we use the address
   *(data_bitmap+(data_block%(root_file_system->block_size*8))/8) &= 
-              0xff - (1<<data_block%8);
+              0xff - (1<<(data_block%8));
   super->s_free_blocks_count++;
   desc_table->bg_free_blocks_count++;
   save_super_block();
   save_blk_desc_table();
-  return save_fs_block(data_bitmap,
+  if (save_fs_block(data_bitmap,
            root_file_system->block_size, 
-           block_bitmap);
+           block_bitmap, UNLOCK)<0){
+    return -1;
+  }
+  return 0;
 }
 
 void print_dir_list(inode_t* dir, bool verbose){
@@ -1114,8 +1144,8 @@ void print_dir_list(inode_t* dir, bool verbose){
       printf("Dir is empty\n");
   } 
   for (int blk = 0; blk<dir->i_blocks; blk++){
-    char* block_data = disk_read_block(
-        super->s_first_data_block+dir->i_block[blk]);
+    uint32_t block_nb = super->s_first_data_block+dir->i_block[blk];
+    char* block_data = disk_read_block(block_nb, LOCK);
     if (block_data == 0){
       PRINT_RED("Failed to read op while printing dir");
       return ;
@@ -1125,10 +1155,6 @@ void print_dir_list(inode_t* dir, bool verbose){
     char* limit = block_data+root_file_system->block_size;
     // int i = 0;
     while (((char*)list_elt)<limit){
-      // printf("(char*)list_elt %ld \n", (unsigned long )list_elt);
-      // printf("(char*)limit %ld \n", (unsigned long )limit);
-      // printf("list_elt - limit = %ld\n", (char*)list_elt-limit);
-      // i++;if (i == 10){break;}
       if (list_elt->file_type != EXT2_FT_FREE){
         if (verbose){
           printf("------------\n");
@@ -1143,14 +1169,19 @@ void print_dir_list(inode_t* dir, bool verbose){
              list_elt->name_len);
         filename[list_elt->name_len] = '\0';
         if (list_elt->file_type == EXT2_FT_REG_FILE){
-          printf("file_name = %s\n",filename);
+          printf("file_name = ");
         } else if (list_elt->file_type == EXT2_FT_DIR){
-          printf("dir_name = %s\n",filename);
+          printf("dir_name = ");
         }
+        else if (list_elt->file_type == EXT2_FT_CHRDEV){
+          printf("chdev_name = ");
+        }
+        printf("%s\n",filename);
       }
       uint32_t jump_by = list_elt->rec_len;
       list_elt = (dir_entry_basic*)((char*)list_elt+jump_by);
     }
+    unlock_cache(block_nb);
   }
   print_inode_no_arg("------Printing dir list end------\n");
 }
@@ -1161,6 +1192,8 @@ int add_dot_directories(inode_t* dir, inode_t* previous_directory){
     print_inode_no_arg("add dot dirs failed because arg is null\n");
     return -1;
   }
+  debug_print_inode("[IN] DOT DIR main = %d, prev dir %d\n", 
+        get_inode_number(dir), get_inode_number(previous_directory));
   if (dir->i_mode != EXT2_S_IFDIR || previous_directory->i_mode != EXT2_S_IFDIR){
     print_inode_no_arg("add dot dirs failed because an inode is not a dir\n");
     return -1;
@@ -1169,14 +1202,67 @@ int add_dot_directories(inode_t* dir, inode_t* previous_directory){
   char doubledot[] =  "..";
   if (add_inode_directory(dir, get_inode_number(dir), 
                     EXT2_FT_DIR, dot, 1)<0){
+    PRINT_RED("Failed Addin dir 1\n");
     return -1;
   }
   if (add_inode_directory(dir, get_inode_number(previous_directory), 
                     EXT2_FT_DIR, doubledot, 2)<0){
+    PRINT_RED("Failed Addin dir 2\n");
     return -1;
   }
   return 0;
   print_inode_no_arg("------DOT DIRECTORIES WERE ADDED------\n");
 }
 
+
+void print_data_bitmap(){
+  block_group_descriptor* desc_table = get_desc_table();
+  super_block* super = (super_block*) get_super_block();
+  if (desc_table == 0 || super == 0 ){
+    return;
+  }
+  PRINT_GREEN("-----Data bit map----\n");
+  for (int blk_iter = desc_table->bg_block_bitmap;
+      blk_iter< desc_table->bg_inode_bitmap; blk_iter++){
+    char* block_data_bitmap = disk_read_block(blk_iter, LOCK);
+    if (block_data_bitmap == 0){
+      PRINT_RED("Failed to read op while print bitmap");
+      return;
+    }
+    for (int i = 0; i<root_file_system->block_size/sizeof(uint64_t); i++){
+      char* iter_address = block_data_bitmap+i*sizeof(uint64_t);
+      printf("Block num = %d, line = %d\n", 
+            blk_iter-desc_table->bg_block_bitmap, i);
+      printb(((uint64_t*)(iter_address)), sizeof(uint64_t));
+      break;
+    }
+    unlock_cache(blk_iter); 
+  }
+}
+
+
+void print_inode_bitmap(){
+  block_group_descriptor* desc_table = get_desc_table();
+  super_block* super = (super_block*) get_super_block();
+  if (desc_table == 0 || super == 0 ){
+    return;
+  }
+  PRINT_GREEN("----Inode bit map----\n");
+  for (int blk_iter = desc_table->bg_inode_bitmap;
+      blk_iter< desc_table->bg_inode_table; blk_iter++){
+    char* block_data_bitmap = disk_read_block(blk_iter, LOCK);
+    if (block_data_bitmap == 0){
+      PRINT_RED("Failed to read op while print bitmap");
+      return;
+    }
+    for (int i = 0; i<root_file_system->block_size/sizeof(uint64_t); i++){
+      char* iter_address = block_data_bitmap+i*sizeof(uint64_t);
+      printf("Inode num = %d, line = %d\n", 
+            blk_iter-desc_table->bg_block_bitmap, i);
+      printb(((uint64_t*)(iter_address)), sizeof(uint64_t));
+      break;
+    } 
+    unlock_cache(blk_iter);
+  }
+}
 
