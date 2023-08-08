@@ -2,7 +2,7 @@
  * Ensimag - Projet Systeme 
  * Test 29
  *
- * Test 29 - docs
+ * Test 29 - docs * Test 29 - dup2 and dup simple tests.
  *
  ******************************************************************************/
 

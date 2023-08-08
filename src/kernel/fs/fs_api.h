@@ -172,19 +172,42 @@ int dup(int file_descriptor);
  */
 int dup2(int file_descriptor, int new_file_descriptor);
 
+/**
+ * @brief Create a pipe for inter-process communication.
+ *
+ * This function creates a pipe and returns two file descriptors in the
+ * `file_descriptors` array. The first file descriptor (index 0) is used for
+ * reading from the pipe, and the second file descriptor (index 1) is used for
+ * writing to the pipe.
+ *
+ * @param file_descriptors An array of two integers where the file descriptors
+ *                         for the read and write ends of the pipe will be stored.
+ * @return On success, 0 is returned. On failure, -1 is returned, 
+ */
+int sys_pipe(int file_descriptors[2]);
+
+/**
+ * @brief Delete a name from the file system.
+ *
+ * This function removes the file named by `file_name` from the file system.
+ * If the name refers to a file, the file is deleted. If the name refers to
+ * a symbolic link, the symbolic link is removed and not the file it points to.
+ *
+ * @param file_name The name of the file to be unlinked.
+ * @return On success, 0 is returned. On failure, -1 is returned, 
+ */
+int unlink(const char *file_name);
+
 
 int fcntl(int file_descriptor, int function_code, int arg);
-
 int ioctl(int file_descriptor, int function_code, int arg);
 //will try to implement but the the current design choices make this very hard to implement
 int mount(const char *special_file, const char *mount_point, int ro_flag);
-// int pipe(int file_descriptors[2]);
 int rename(const char *old_name, const char *new_name);
 int rmdir(const char *dir_name);
 // int stat(const char *file_name, struct stat *status_buffer);
 mode_t umask(mode_t mask);
 int umount(const char *special_file);
-int unlink(const char *file_name);
 //int utime(const char *file_name, const struct utimbuf *times);
 
 // Messages from PM

@@ -204,7 +204,6 @@ int memcmp(const void *, const void *, size_t);
 
 /* printf.h */
 void cons_gets(char *s, unsigned long length);
-
 /* assert.c */
 int assert_failed(const char *cond, const char *file, int line);
 
@@ -293,6 +292,7 @@ int dup(int file_descriptor);
 int dup2(int file_descriptor, int new_file_descriptor);
 int stat(const char *pathname, struct stat *buf);
 int fstat(unsigned int fd, struct stat *buf);
+int pipe(int file_descriptors[2]);
 
 //Dir api
 char *getcwd(char *buf, size_t size);

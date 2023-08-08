@@ -80,6 +80,7 @@
 #define SYSC_link               60
 #define SYSC_dup                61
 #define SYSC_dup2               62
+#define SYSC_pipe               63
 
 #define SYSC_print_dir_elements 66 
 #define SYSC_fs_info            67

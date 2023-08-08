@@ -23,6 +23,7 @@
 #include "../input-output/cons_read.h" //for cons_read declation
 //File system related 
 #include "../fs/inode.h" //Used for inode pointer
+#include "../fs/pipe.h" //Used for inode pointer
 #include "../fs/ext2.h" //Used to extract ext2 values
 
 /**
@@ -75,10 +76,10 @@ typedef struct id_list{
 
 typedef enum open_file_type {
   FS_FT_UNKNOWN = 0, //Unknown File Type
+  FS_FT_PIPE = 1, //PIPE File
   FS_FT_INODE_FILE = 2, //Regular File inode 
   FS_FT_CHRDEV = 3, //Character Device
   FS_FT_BLKDEV = 4, //Block Device
-  FS_FT_PIPE = 5, //PIPE File
   FS_FT_FIFO = 5, //Buffer File(not present at the moment)
   FS_FT_SOCK = 6, //Socket File
 } file_type_fd;
@@ -94,6 +95,7 @@ typedef struct open_file_mang{
   file_type_fd type;
   int64_t position;
   inode_t* f_inode;
+  pipe* f_pipe;
   uint32_t inode_number;
   uint32_t usage_counter;
   /**Flags*/

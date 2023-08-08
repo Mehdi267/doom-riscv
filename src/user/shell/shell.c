@@ -38,8 +38,8 @@ int main(void) {
       printf("%s", current_dir);
     }
     printf("#");
-    my_fgets(cmd, 20, 0);
-    // cons_read(cmd, 20);
+    // my_fgets(cmd, 20, 0);
+    cons_read(cmd, 20);
     if (memcmp(cmd, "ls", strlen(lsprog)) == 0){
       char curr_path[] = ".";
       print_dir_elements(curr_path);

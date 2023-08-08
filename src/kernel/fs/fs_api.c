@@ -9,12 +9,10 @@
 #include "../process/process.h"
 #include "../process/helperfunc.h"
 #include "inode.h"
+#include "pipe.h"
 #include "inode_util.h"
 #include "../process/fs_bridge.h"
 #include "assert.h"
-
-
-
 
 // Messages from users
 int open(const char *file_name, int flags, mode_t mode){
@@ -145,6 +143,9 @@ ssize_t write(int file_descriptor,
   }
   if (fs_elt->type == FS_FT_CHRDEV){
     return dev_op[(fs_elt->f_inode->i_osd1 & 0xffff0000) >> 16].write((uint64_t)buffer, count); 
+  } 
+  else if (fs_elt->type == FS_FT_PIPE){
+    return write_pipe(fs_elt->f_pipe, buffer, count); 
   } else if(fs_elt->type == FS_FT_INODE_FILE) {
     uint32_t written_data = 0;
     int actual_blocks = get_actual_blocks(fs_elt->f_inode);
@@ -207,6 +208,8 @@ ssize_t read(int file_descriptor, void *buffer, size_t count){
   }
   if (fs_elt->type == FS_FT_CHRDEV){
     return dev_op[(fs_elt->f_inode->i_osd1 & 0xffff0000) >> 16].read((uint64_t)buffer, count); 
+  } else if (fs_elt->type == FS_FT_PIPE){
+    return read_pipe(fs_elt->f_pipe, buffer, count); 
   } else if(fs_elt->type == FS_FT_INODE_FILE) {
     uint32_t read_data = 0;
     int actual_blocks = get_actual_blocks(fs_elt->f_inode);
@@ -450,9 +453,30 @@ int rename(const char *old_name, const char *new_name){
   return 0; 
 }
 
-#define PIPE_SIZE 4096;
-int pipe(int file_descriptors[2]){
+int sys_pipe(int file_descriptors[2]){
+  if (file_descriptors == 0){
+    return -1;
+  }
+  open_fd* file0 = add_new_element_open_files();
+  if (file0 == 0){goto fail;}
+  open_fd* file1 = add_new_element_open_files();
+  if (file1 == 0){goto fail;}
+  pipe* pipe = create_pipe();
+  if (pipe == 0){goto fail;}
+  file0->file_info->type = FS_FT_PIPE;
+  file1->file_info->type = FS_FT_PIPE;
+  file0->file_info->can_read = true;
+  file1->file_info->can_write = true;
+  file0->file_info->f_pipe = pipe;
+  file1->file_info->f_pipe = pipe;
+  file_descriptors[0] = file0->fd;
+  file_descriptors[1] = file1->fd;
   return 0;
+  fail:
+    if (file0){free(file0);};
+    if (file1){free(file1);};
+    if (pipe){close_pipe(pipe, CLOSE_ALL);};
+    return -1;
 }
 // int create(const char *file_name, mode_t mode);
 // //will try to implement but the the current design choices make this very hard to implement

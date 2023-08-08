@@ -168,6 +168,8 @@ unsigned long static syscall_handler(struct trap_frame *tf) {
       return dup(tf->a0);
     case SYSC_dup2:
       return dup2(tf->a0, tf->a1);
+    case SYSC_pipe:
+      return sys_pipe((int*)tf->a0);
     case SYSC_print_dir_elements:
       print_dir_elements((const char*)tf->a0);    
       break;

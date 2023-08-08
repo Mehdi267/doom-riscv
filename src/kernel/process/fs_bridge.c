@@ -275,6 +275,9 @@ int remove_fd_list(int fd, rem_type op_type){
   if (fd_elt->file_info->usage_counter != 0){
     debug_print_fsapi("[FSAPI]Fd usage is not equal to zero, removing it from proc = %d\n", 
         fd_elt->file_info->usage_counter);
+    if (fd_elt->file_info->type == FS_FT_PIPE){
+      // close_pipe();
+    }
   }
   else{
     debug_print_fsapi("[FSAPI]Tyring to remove inode number = %d\n",
@@ -309,7 +312,7 @@ int remove_fd_list(int fd, rem_type op_type){
     debug_print_fsapi("[FSAPI]Open files list num %d was removed\n", fd);
   }
   else if (op_type == REMOVE_ALL){
-    debug_print_fsapi("[FSAPI]Close the file but did not remoe the link, fd = %d\n", fd);
+    debug_print_fsapi("[FSAPI]Close the file but did not remove the link, fd = %d\n", fd);
   }
   return 0;
 }

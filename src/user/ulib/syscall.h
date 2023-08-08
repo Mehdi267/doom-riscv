@@ -176,7 +176,7 @@ int dup(int file_descriptor);
 int dup2(int file_descriptor, int new_file_descriptor);
 int stat(const char *pathname, struct stat *buf);
 int fstat(unsigned int fd, struct stat *buf);
-
+int pipe(int file_descriptors[2]);
 
 //dir api
 char *getcwd(char *buf, size_t size);
