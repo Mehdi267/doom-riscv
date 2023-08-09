@@ -76,10 +76,23 @@ int write_pipe(pipe* pipe, const char* data, int length){
           pipe->lock_buf = true;
           int current_write = MIN(PIPE_BUFFER_SIZE -
                               pipe->cur_buf_cap, length - written_length);
-          //if this is negative something has went terriblaly wrong
           assert(current_write >= 0);
-          memcpy(pipe->buffer, data + written_length, current_write);
-          written_length += current_write; 
+          if ((pipe->nb_written+current_write)/PIPE_BUFFER_SIZE > 0){
+            memcpy(pipe->buffer + pipe->nb_written, 
+                  data + written_length,
+                  PIPE_BUFFER_SIZE-
+                  (pipe->nb_written+current_write)%PIPE_BUFFER_SIZE);
+            written_length += PIPE_BUFFER_SIZE-
+                  (pipe->nb_written+current_write)%PIPE_BUFFER_SIZE;
+            memcpy(pipe->buffer, data + written_length, (pipe->nb_written+current_write)%PIPE_BUFFER_SIZE);
+            pipe->nb_written = (pipe->nb_written+current_write)%PIPE_BUFFER_SIZE;
+          }else{
+            memcpy(pipe->buffer + pipe->nb_written,
+                data + written_length, current_write);
+            written_length += current_write; 
+            pipe->nb_written += current_write;
+          }
+          //if this is negative something has went terribly wrong
           pipe->cur_buf_cap += current_write;
           pipe->lock_buf = false;
           signal(pipe->semaphore_id);
@@ -113,11 +126,22 @@ int read_pipe(pipe* pipe, const char* data, int length){
           pipe->lock_buf = true;
           int current_read = MIN(pipe->cur_buf_cap,
                               length - read_length);
-          //if this is negative something has went terriblaly wrong
           assert(current_read >= 0);
-          //wrong
-          memcpy((char*)(data + read_length), pipe->buffer, current_read);
-          read_length += current_read; 
+          if ((pipe->nb_read+current_read)/PIPE_BUFFER_SIZE > 0){
+            memcpy((char*)(data + read_length), 
+                  pipe->buffer+pipe->nb_read,
+                  PIPE_BUFFER_SIZE
+                  -(pipe->nb_read+current_read)%PIPE_BUFFER_SIZE);
+            read_length += PIPE_BUFFER_SIZE
+                  -(pipe->nb_read+current_read)%PIPE_BUFFER_SIZE; 
+            memcpy((char*)(data + read_length), data, (pipe->nb_read+current_read)%PIPE_BUFFER_SIZE);
+            pipe->nb_read = (pipe->nb_read+current_read)%PIPE_BUFFER_SIZE;
+          } else{
+            memcpy((char*)(data + read_length), 
+                  pipe->buffer + pipe->nb_read, current_read);
+            read_length += current_read; 
+            pipe->nb_read += current_read;
+          }
           pipe->cur_buf_cap -= current_read;
           pipe->lock_buf = false;
           signal(pipe->semaphore_id);
