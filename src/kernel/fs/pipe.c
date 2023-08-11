@@ -65,7 +65,7 @@ int write_pipe(pipe* pipe, const char* data, int length){
   }
   int written_length = 0;
   if (wait(pipe->semaphore_id)>=0){
-    while (written_length != length){
+    while (written_length != length&& (pipe->can_read)){
       if (pipe->cur_buf_cap == PIPE_BUFFER_SIZE){
         //The other process must read the data 
         //before we write more into it
@@ -78,14 +78,17 @@ int write_pipe(pipe* pipe, const char* data, int length){
                               pipe->cur_buf_cap, length - written_length);
           assert(current_write >= 0);
           if ((pipe->nb_written+current_write)/PIPE_BUFFER_SIZE > 0){
+            int remaining_space = PIPE_BUFFER_SIZE-pipe->nb_written;
+            /*
+                    |ffffrrfff|
+              We write here ^(remaining_space)
+    then We write here ^
+            */
             memcpy(pipe->buffer + pipe->nb_written, 
-                  data + written_length,
-                  PIPE_BUFFER_SIZE-
-                  (pipe->nb_written+current_write)%PIPE_BUFFER_SIZE);
-            written_length += PIPE_BUFFER_SIZE-
-                  (pipe->nb_written+current_write)%PIPE_BUFFER_SIZE;
-            memcpy(pipe->buffer, data + written_length, (pipe->nb_written+current_write)%PIPE_BUFFER_SIZE);
-            pipe->nb_written = (pipe->nb_written+current_write)%PIPE_BUFFER_SIZE;
+                  data + written_length, remaining_space);
+            written_length += remaining_space;
+            memcpy(pipe->buffer, data + written_length, current_write - remaining_space);
+            pipe->nb_written = current_write - remaining_space;
           }else{
             memcpy(pipe->buffer + pipe->nb_written,
                 data + written_length, current_write);
@@ -115,7 +118,7 @@ int read_pipe(pipe* pipe, const char* data, int length){
   }
   int read_length = 0;
   if (wait(pipe->semaphore_id)>=0){
-    while (read_length != length){
+    while ((read_length != length) && (pipe->can_write)){
       if (pipe->cur_buf_cap == 0){
         //The other process must read the data 
         //before we write more into it
@@ -128,14 +131,13 @@ int read_pipe(pipe* pipe, const char* data, int length){
                               length - read_length);
           assert(current_read >= 0);
           if ((pipe->nb_read+current_read)/PIPE_BUFFER_SIZE > 0){
+            int remaining_space = PIPE_BUFFER_SIZE-pipe->nb_read;
             memcpy((char*)(data + read_length), 
                   pipe->buffer+pipe->nb_read,
-                  PIPE_BUFFER_SIZE
-                  -(pipe->nb_read+current_read)%PIPE_BUFFER_SIZE);
-            read_length += PIPE_BUFFER_SIZE
-                  -(pipe->nb_read+current_read)%PIPE_BUFFER_SIZE; 
-            memcpy((char*)(data + read_length), data, (pipe->nb_read+current_read)%PIPE_BUFFER_SIZE);
-            pipe->nb_read = (pipe->nb_read+current_read)%PIPE_BUFFER_SIZE;
+                  remaining_space);
+            read_length += remaining_space; 
+            memcpy((char*)(data + read_length), data, current_read-remaining_space);
+            pipe->nb_read = current_read-remaining_space;
           } else{
             memcpy((char*)(data + read_length), 
                   pipe->buffer + pipe->nb_read, current_read);

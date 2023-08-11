@@ -10,7 +10,7 @@
 
 #include "sysapi.h"
 #include "test24.h"
-#define NUM_ELT_TEST24 400000
+#define NUM_ELT_TEST24 300000
 
 int main(void *arg) {
     (void)arg;

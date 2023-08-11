@@ -4,4 +4,5 @@
 .align 2
 process_call_wrapper_user:
 	move a0, s2
-    sret
+	move a1, s3
+  sret

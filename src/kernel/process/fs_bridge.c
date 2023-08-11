@@ -3,7 +3,7 @@
 #include "helperfunc.h"
 #include "logger.h"
 #include "../fs/inode_util.h"
-
+#include "assert.h"
 
 uint32_t get_root_dir_name_size(){
  process* proc =  get_process_struct_of_pid(getpid()); 
@@ -120,6 +120,7 @@ open_fd* dup_open_file(flip* open_file, int custom_fd){
   }
   if (custom_fd == 0){
     open_file_proc->fd = alloc_bit_fdmap(proc->fd_bitmap);
+    assert(proc->fd_bitmap + (open_file_proc->fd/8) < proc->fd_bitmap + SIZE_BIT_MAP);
     *((char*)((proc->fd_bitmap + (open_file_proc->fd/8)))) |=
          (1<<(open_file_proc->fd%8));
   }else{
@@ -163,6 +164,7 @@ open_fd* add_new_element_open_files(){
     return 0;
   }
   open_file_proc->fd = alloc_bit_fdmap(proc->fd_bitmap);
+  assert(proc->fd_bitmap + (open_file_proc->fd/8) < proc->fd_bitmap + SIZE_BIT_MAP);
   *((char*)((proc->fd_bitmap + (open_file_proc->fd/8)))) |=
          (1<<open_file_proc->fd%8);
   open_file_proc->next_file = 0;
@@ -275,15 +277,19 @@ int remove_fd_list(int fd, rem_type op_type){
   if (fd_elt->file_info->usage_counter != 0){
     debug_print_fsapi("[FSAPI]Fd usage is not equal to zero, removing it from proc = %d\n", 
         fd_elt->file_info->usage_counter);
-    if (fd_elt->file_info->type == FS_FT_PIPE){
-      // close_pipe();
-    }
   }
   else{
-    debug_print_fsapi("[FSAPI]Tyring to remove inode number = %d\n",
-       fd_elt->file_info->inode_number);
-    if (put_inode(fd_elt->file_info->f_inode, 0, RELEASE_INODE)<0){
-      return -1;
+    if (fd_elt->file_info->type == FS_FT_PIPE){
+        close_type close_t = fd_elt->file_info->can_read ?
+            CLOSE_READ : CLOSE_WRITE;   
+        close_pipe(fd_elt->file_info->f_pipe, close_t);
+    }
+    else { //Inode and device files that both use inodes
+      debug_print_fsapi("[FSAPI]Tyring to remove inode number = %d\n",
+        fd_elt->file_info->inode_number);
+      if (put_inode(fd_elt->file_info->f_inode, 0, RELEASE_INODE)<0){
+        return -1;
+      }
     }
     free(fd_elt->file_info);
   }
@@ -306,6 +312,8 @@ int remove_fd_list(int fd, rem_type op_type){
         proc->open_files_table = fd_elt_next;
       }
     }
+    assert(proc->fd_bitmap + (fd_elt->fd/8) < 
+        proc->fd_bitmap + SIZE_BIT_MAP);
     *((char*)(proc->fd_bitmap + (fd_elt->fd/8)))
           &= 0xff -(1<<fd_elt->fd%8);
     free(fd_elt);
@@ -315,4 +323,20 @@ int remove_fd_list(int fd, rem_type op_type){
     debug_print_fsapi("[FSAPI]Close the file but did not remove the link, fd = %d\n", fd);
   }
   return 0;
+}
+
+int close_all_files(process* proc){
+  if (proc == 0){
+    return -1;
+  }
+  int res = 0;
+  open_fd* fd_list_iter = proc->open_files_table;
+  while (fd_list_iter != 0){
+    open_fd* temp_next = fd_list_iter->next_file;
+    if (remove_fd_list(fd_list_iter->fd, REMOVE_ALL)<0){
+      res = -1;
+    }
+    fd_list_iter = temp_next;
+  }
+  return res;
 }

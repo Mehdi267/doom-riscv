@@ -120,4 +120,12 @@ uint32_t get_root_dir_name_size();
  */
 uint32_t get_current_dir_name_size();
 
+/**
+ * @brief Close all of the files that are occupied by the process
+ * given as function argument
+ * @param proc the process that we wish to close its files
+ * @return int function status
+ */
+int close_all_files(process* proc);
+
 #endif

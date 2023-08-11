@@ -23,6 +23,7 @@
 #include "encoding.h"
 #include "../memory/virtual_memory.h"
 #include "memory_api.h"
+#include "fs_bridge.h"
 
 
 /**
@@ -604,12 +605,30 @@ int free_frames_page_table(page_table_link_list_t* page_table_link){
     return 0;
 }
 
+int free_fs_proc(process* proc){
+  if (close_all_files(proc)<0){
+    return -1;
+  }
+  if (proc->root_dir.dir_name != 0){
+    free(proc->root_dir.dir_name);
+  }
+  if (proc->cur_dir.dir_name != 0){
+    free(proc->cur_dir.dir_name);
+  }
+  return 0;
+}
+
 int free_process_memory(process* proc)
 {
     print_memory_no_arg("--------------Free process memory-------------\n");
     if (proc == NULL){
         return -1;
     }
+    #ifdef VIRTMACHINE
+      if (free_fs_proc(proc)<0){
+        return -1;
+      }
+    #endif
     proc_mang_g.nb_proc_running--;
     debug_print_memory("--------Inside free_process_memory, current process: %s\n", getname());
     debug_print_memory("--------Freeing memory for the process/ id -> %d -------- : %s\n", 

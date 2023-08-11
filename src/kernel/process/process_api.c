@@ -396,6 +396,7 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
   new_process->context_process->sepc = 0x40000000;
   // new_process->context_process->sepc = (uint64_t)idle;
   new_process->context_process->s[2] = (uint64_t)arg;
+  // new_process->context_process->s[3] = (uint64_t)20;
   new_process->context_process->satp =
       0x8000000000000000 |
       ((long unsigned int)new_process->page_table_level_2 >> 12) |

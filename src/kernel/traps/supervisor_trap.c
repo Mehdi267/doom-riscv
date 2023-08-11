@@ -273,6 +273,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
           break;
         }
 			default:
+        while(1){};
         //The cause is treated we exit immediately
 				blue_screen(tf);
     }

@@ -73,19 +73,22 @@ int test_pipe() {
     printf("pipe");
     return -1;
   }
-
-  for (int i = 0; i < 50; i++){
+  for (int i = 0; i < 500; i++){
     write_pipe(pipe_fd[1]);
   }
-  for (int i = 0; i < 45; i++){
+  printf("Completed write_pipe(pipe_fd[1]\n");
+  for (int i = 0; i < 400; i++){
     read_pipe(pipe_fd[0]);
   }
-  for (int i = 0; i < 50; i++){
+  printf("Completed read_pipe(pipe_fd[0]\n");
+  for (int i = 0; i < 500; i++){
     write_pipe(pipe_fd[1]);
   }
-  for (int i = 0; i < 60; i++){
+  printf("Completed write_pipe(pipe_fd[1]\n");
+  for (int i = 0; i < 600; i++){
     read_pipe(pipe_fd[0]);
   }
+  printf("Completed read_pipe(pipe_fd[0]\n");
   // Close the read end of the pipe
   close(pipe_fd[1]);
   close(pipe_fd[0]);
@@ -94,10 +97,12 @@ int test_pipe() {
 
 
 
-int main() {
+int main(int argc, char *argv) {
   // for (int i = 0; i < 100; i++){
   //   assert(test_pipe_simple() == 0);
   // }
+  printf("argc %d\n", argc);
+  printf("argv %ld\n", (uint64_t)argv);
   assert(test_pipe() == 0);
   return 0;
 }

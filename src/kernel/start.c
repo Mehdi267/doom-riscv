@@ -50,10 +50,10 @@ int kernel_start() {
       }
       print_fs_details();
       // test_ext2_fs();
-      //print_fs_details();
+      print_fs_details();
+      print_dir_list(get_inode(11), true);
     #endif
   #endif
-  print_dir_list(get_inode(11), true);
 
   //kernel_drivers_tests(0);
   splash_screen();
