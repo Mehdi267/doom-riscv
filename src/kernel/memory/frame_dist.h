@@ -5,6 +5,7 @@
 #ifndef _FRAME_DIST_H
 #define _FRAME_DIST_H
 
+#define PAGE_SIZE 4096
 //Sizes of the different blocks of the ppn memory
 #define PPN0_SIZE 9
 #define PPN1_SIZE 9
@@ -22,6 +23,9 @@
 #define PT_SIZE 512 //nb of ptes per pt
 #define FRAME_SIZE_EXP 12
 #define FRAME_SIZE ((unsigned long)1<<FRAME_SIZE_EXP)
+#include "stdint.h"
+extern uint64_t mem_usage;
+extern uint64_t mem_total;
 
 /**
  * @brief Divides the free memory into chucks, the size of the chucks is depedant on the   
@@ -43,5 +47,12 @@ void * get_frame();
  * @param frame_ptr the adress of the frame that we want to release 
  */
 void release_frame(void *frame_ptr);
+
+/**
+ * @brief Print the current memory usage 
+ * display the number of used frames and the total
+ * avaliable memory
+ */
+void print_mem_usage();
 
 #endif

@@ -210,11 +210,6 @@ mode_t umask(mode_t mask);
 int umount(const char *special_file);
 //int utime(const char *file_name, const struct utimbuf *times);
 
-// Messages from PM
-int exec(pid_t pid);
-pid_t fork(pid_t parent_pid);
-pid_t setsid(pid_t pid);
-
 void print_dir_elements(const char* path);
 typedef struct disk_info{
  uint32_t total_blocks;

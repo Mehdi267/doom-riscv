@@ -5,7 +5,8 @@
 
 #include "sysapi.h"
 
-const char *tests[] = {
+const char *tests[] = 
+{
         "test0",
         "test1",
         "test2",
@@ -62,10 +63,14 @@ int main(void) {
     pid = start(tests[i], 4000, 128, NULL);
     waitpid(pid, &ret);
     test_res[i] = (int)ret;
-    if (ret != 0 && has_failed == 0)
+    if (ret != 0 && has_failed == 0){
+      printf("Test failed on i", i );
       has_failed = 1;
+    }
   }
   printf("Auto test done.\n");
   tests_report();
-  power_off(has_failed);
+  if (has_failed == 1){
+    power_off(has_failed);
+  }
 }

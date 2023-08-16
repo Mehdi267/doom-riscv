@@ -252,6 +252,8 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
         csr_clear(sstatus, MSTATUS_SPP);
         break;
       case CAUSE_FETCH_PAGE_FAULT:
+        // while(1){}
+        // blue_screen(tf);
         if (user){
           PRINT_RED("Killing process = (CAUSE_FETCH_PAGE_FAULT)\n");
           kill(getpid());
@@ -259,6 +261,8 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
           break;
         }
       case CAUSE_LOAD_PAGE_FAULT:
+        // while(1){}
+        // blue_screen(tf);
         if (user){
           PRINT_RED("Killing proces = (CAUSE_LOAD_PAGE_FAULTs)\n");
           kill(getpid());
@@ -266,6 +270,8 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
           break;
         }
       case CAUSE_STORE_PAGE_FAULT:
+        // while(1){}
+        // blue_screen(tf);
         if (user){
           PRINT_RED("Killing process = (CAUSE_STORE_PAGE_FAULT)\n");
           kill(getpid());
@@ -273,7 +279,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
           break;
         }
 			default:
-        while(1){};
+        // while(1){};
         //The cause is treated we exit immediately
 				blue_screen(tf);
     }

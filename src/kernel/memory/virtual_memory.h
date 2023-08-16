@@ -67,23 +67,39 @@ extern int set_up_virtual_memory();
  */
 extern void debug_memory_overlap();
 
+typedef enum _page_type {
+    CODE_PAGE,
+    STACK_PAGE,
+    HEAP_PAGE,
+    SHARED_PAGE,
+    NONE_PAGE,
+} page_t;
+
 /**
  * @brief A linked list for page tables that will be used for level 1 and level 0.
- * 
- * This structure represents a linked list of page tables used in the virtual memory system. It contains various fields to manage the page tables and track their usage.
+ * This structure represents a linked list of page tables used in the virtual memory system.
+ * It contains various fields to manage the page tables and track their usage.
  */
 typedef struct page_table_link_list {
-    page_table* table;
+    page_table* table; //Contains 512 entries
+    page_t page_type;
     struct page_table_link_list* parent_page;
     struct page_table_link_list* head_page;
     struct page_table_link_list* tail_page;
     struct page_table_link_list* next_page;
-    uint16_t usage; // Used for total usage
+    struct page_table_link_list* previous_page;
+    // Used for total usage for the lvl1 page and lvl0 pages
+    // each lvl0 page contains 512 page entries and thus each lvl0 page 
+    // is attached to 2MB and each lvl1 page can allocated 512*2Mb = 1GB
+    uint16_t usage; 
+    //Lvl1 fields
+    uint16_t code_usage; //Used to indicate how many pages were used for the stack
     uint16_t stack_usage; // Used for stack usage. Associated with level 1 
     uint16_t heap_usage; // Used for heap usage. Associated with level 1
     uint16_t shared_memory_usage; // Used for shared memory usage
     int index;
 } page_table_link_list_t;
+
 
 extern int print_mem_symbols();
 

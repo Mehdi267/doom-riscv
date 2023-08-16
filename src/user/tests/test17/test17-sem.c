@@ -10,6 +10,7 @@
 
 int main(void *arg)
 {
+  printf("sem test");
         int pid[6];
         int i;
         struct test17_buf_st *st = NULL;

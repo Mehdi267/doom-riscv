@@ -40,7 +40,8 @@
 
 /**
  * @brief the following macro are used to debug the processes,
- *  meaning when we debug the scheduler we use the debug_print_process
+ * meaning when we debug some process realted functions
+ * we use the debug_print_process
  */
 #define DEBUG_PROCESS_LEVEL 0 // Indicates if debug type is active
 

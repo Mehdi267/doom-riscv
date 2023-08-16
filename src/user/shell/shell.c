@@ -16,7 +16,7 @@ int builtin_cmd(char *cmd) {
   return 1;
 }
 
-int main(void) {
+int main() {
   //stdin
   assert(open("/dev/terminal", O_RDONLY, 0) == 0);
   //stdout
@@ -65,7 +65,7 @@ int main(void) {
       unlink(curr_path);
     }
     else if (builtin_cmd(cmd) != 0) {
-      pid = start(cmd, 4000, 128, NULL);
+      pid = start(cmd, 8000, 128, NULL);
       if (pid == -1) {
         printf("shell: program not found: %s\n", cmd);
         ret = -1;

@@ -6,23 +6,26 @@
 */
 
 
-#include "stdint.h"
-#include "process.h"
-#include "../memory/pages.h"
 
 #ifndef _PROCESS_MEMORY_H_
 #define _PROCESS_MEMORY_H_
 
+#include "stdint.h"
+#include "process.h"
+#include "../memory/pages.h"
+#include "../memory/virtual_memory.h"
 
-typedef enum _page_type {
-    STACK_CODE_PAGE,
-    HEAP_PAGE,
-    SHARED_PAGE
-} page_t;
 
-#define STACK_FRAME_SIZE 128
-#define HEAP_FRAME_SIZE 128
-#define SHARED_FRAME_SIZE 256 
+typedef struct frame_info{
+  uint16_t lvl2_index;
+  uint16_t lvl1_index;
+  uint16_t lvl0_index;
+  page_table* page_table; 
+} frame_loc;
+
+#define STACK_FRAME_SIZE 128U
+#define HEAP_FRAME_SIZE 128U
+#define SHARED_FRAME_SIZE 256U 
 
 
 //These indicies will be used to index elements 
@@ -59,7 +62,13 @@ extern int process_memory_allocator(process* process_conf, unsigned long size);
  *  we save the index of the certain process structs) 
  * @return int a positve value if the operation was successful and negative value otherwise 
  */
-extern int add_frame_to_process(process* proc_conf, page_t page_type);
+extern int add_frame_to_process(process* proc_conf, page_t page_type, frame_loc* frame_info);
 
+
+/**Copy the data used by the src_proc into the dest_proc,
+ * copies the code and all of the used
+ * pages in the stack and heap 
+*/
+extern int copy_process_memory(process* dest_proc, process* src_proc);
 
 #endif

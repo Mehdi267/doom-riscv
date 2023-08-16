@@ -241,6 +241,7 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio,
   }
 
   // new_process->context_process->sp = (uint64_t) frame_pointer;
+  new_process->stack_shift = STACK_FRAME_SIZE*PT_SIZE;
   new_process->context_process->sp =
       (uint64_t)0x40000000 + FRAME_SIZE * new_process->stack_shift;
   // During the context_switch we will call the process_call_wrapper that has
@@ -385,8 +386,9 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
     return -1;
   }
 
+  new_process->stack_shift = STACK_FRAME_SIZE*PT_SIZE;
   new_process->context_process->sp =
-      (uint64_t)0x40000000 + FRAME_SIZE * new_process->stack_shift;
+      (uint64_t)0x40000000 + FRAME_SIZE * new_process->stack_shift - 1;
   // During the context_switch we will call the process_call_wrapper that has
   // to call the method given as function argument that we placed in s1 also
   // the call has to be made the right argument that is in s2 and it also has
@@ -462,7 +464,6 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
     strcpy(new_process->cur_dir.dir_name, root_char);
     new_process->cur_dir.dir_name[1] = '\0';
     new_process->open_files_table = NULL;
-    //The file descriptors from zero to 3 are reserved  
     memset(new_process->fd_bitmap, 0, SIZE_BIT_MAP);
     *new_process->fd_bitmap = 0x00;
   #endif
@@ -477,6 +478,91 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
   // This function must be called a the very end
   check_if_new_prio_is_higher_and_call_scheduler(new_process->prio, true, 0);
   return new_process->pid;
+}
+
+int fork(int parent_pid){
+  process* parent_p = get_process_struct_of_pid(parent_pid);
+  if (!(getpid() == -1) && 
+    validate_action_process_valid(parent_p)){
+    return -1;
+  }
+  process *new_process;
+  secmalloc(new_process, sizeof(process));
+  new_process->next_prev.next = NULL;
+  new_process->next_prev.prev = NULL;
+  new_process->prio = parent_p->prio;
+  if (process_name_copy(new_process, parent_p->process_name) < 0){
+    return -1;
+  }
+  new_process->ssize = parent_p->ssize;
+  new_process->page_table_level_2 = NULL;
+  new_process->page_tables_lvl_1_list = NULL;
+  new_process->released_pages_list = NULL;
+  if (copy_process_memory(new_process, parent_p) < 0) {
+    print_memory_no_arg("Memory is full");
+    return -1;
+  }
+  new_process->context_process = (context_t *)malloc(sizeof(context_t));
+  if (new_process->context_process == NULL) {
+    return -1;
+  }
+  memcpy(new_process->context_process, parent_p->context_process, sizeof(sizeof(context_t)));
+  
+  void *interrupt_frame_pointer = get_frame();
+  debug_print_memory("sscratch frame %p \n", interrupt_frame_pointer);
+  if (interrupt_frame_pointer == NULL) {
+    return -1;
+  }
+  memcpy(interrupt_frame_pointer, parent_p->sscratch_frame, PAGE_SIZE);
+  new_process->parent = parent_p;
+  // We add the new process as a child to the parent process
+  if (new_process->parent->children_tail != NULL) {
+    new_process->parent->children_tail->next_sibling = new_process;
+    new_process->parent->children_tail = new_process;
+  } else {
+    new_process->parent->children_head = new_process;
+    new_process->parent->children_tail = new_process;
+  }
+  new_process->children_head = NULL;
+  new_process->children_tail = NULL;
+  new_process->next_sibling = NULL;
+
+  //--------------Return value----------------
+  new_process->return_value = NULL;
+
+  //-------------Shared pages-------------------
+  new_process->shared_pages = NULL;
+  new_process->released_pages_list = NULL;
+  new_process->proc_shared_hash_table = NULL;
+  //TODO ADD FUNCTION THAT CREATES AN OPENS THE SHARED PAGES
+  //--------------Semaphore signal-----------
+  new_process->sem_signal = 0;
+  //------------Add process to the activatable queue-------
+  new_process->state = ACTIVATABLE;
+
+  //------------File system related configuration----------
+  // #ifdef VIRTMACHINE
+    new_process->root_dir.inode = parent_p->root_dir.inode;
+    memcpy(new_process->root_dir.dir_name,
+          parent_p->root_dir.dir_name,
+          parent_p->root_dir.name_size);
+    new_process->root_dir.name_size = parent_p->root_dir.name_size;
+    
+    new_process->cur_dir.inode = parent_p->cur_dir.inode;
+    memcpy(new_process->cur_dir.dir_name,
+          parent_p->cur_dir.dir_name,
+          parent_p->cur_dir.name_size);
+    new_process->cur_dir.name_size = parent_p->cur_dir.name_size;
+    new_process->open_files_table = NULL;
+  // #endif
+  //---Add process to activatable queue
+  queue_add(new_process, &activatable_process_queue, process, next_prev, prio);
+  check_if_new_prio_is_higher_and_call_scheduler(new_process->prio, true, 0);
+  if (getpid() == parent_pid){
+    return new_process->pid;
+  } else{
+    return 0;
+  }
 }
 
 int waitpid(int pid, int *retvalp) {

@@ -280,7 +280,7 @@ typedef struct process_t {
   page_table_link_list_t
       *page_tables_lvl_1_list; // pointer to the list that holds the lvl1 page
                                // table (limited to 1 atm)
-  uint16_t stack_shift; // indicates how many frames we need to shift to place
+  uint32_t stack_shift; // indicates how many frames we need to shift to place
                         // the stack pointer
   // Process shared memory management
   hash_t *proc_shared_hash_table; // Hash table associated to the process link
@@ -557,6 +557,22 @@ extern void show_ps_info();
  * List all of the existing programs
  */
 extern void show_programs();
+
+int exec(int pid);
+
+/**
+ * @brief Create an identival copy of the current process
+ * the new proccess will be a child of the parent proccess given 
+ * as function argument and the new process will have the same
+ * memory layout and it will also have the same memory data 
+ * an exact copy of the file system will be created having 
+ * the same open files and also the two process will have the same 
+ * root and current directory.
+ * @param parent_pid 
+ * @return int 
+ */
+int fork(int parent_pid);
+int setsid(int pid);
 
 
 #endif

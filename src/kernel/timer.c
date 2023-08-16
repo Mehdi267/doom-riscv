@@ -64,15 +64,15 @@ void handle_mtimer_interrupt()
 		//for the cep machine 
 		//Timer interupts must come from user mode, if it is not the case we return 
 		//directly to the state at which we were in.
-		debug_print_no_arg("Inside machine mode time handler\n");
+		// debug_print_no_arg("Inside machine mode time handler\n");
 		sync_counter++;
 		if (sync_counter > SYNC_LIMIT){
 			sync_counter = 0;
 			// sync_all();
 		}
 		if (((csr_read(mstatus) & MSTATUS_MPP_0) != 0) && !first_call){
-			debug_print_no_arg("Int comming from supervisor mode and " 
-					"we are not in the first call \n");
+			// debug_print_no_arg("Int comming from supervisor mode and " 
+			// 		"we are not in the first call \n");
 			set_machine_timer_interrupt(TIC_PER);
 			return;
 		}

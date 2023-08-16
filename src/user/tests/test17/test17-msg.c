@@ -10,14 +10,12 @@ static int ids[1200];
 
 static const int heap_len = 200 << 20;
 
-int main(void *arg)
+int test17()
 {
         int i, n, nx;
         int l = sizeof(ids) / sizeof(int);
         int count;
         int prio;
-
-        (void)arg;
 
         n = 0;
         while (1) {
@@ -85,7 +83,9 @@ int main(void *arg)
                 int pid = start("no_run", 2000, 127, 0);
                 // printf("n = %d l = %d \n", n, l);
                 if (pid < 0) break;
+                // printf("n = %d\n", n);
                 ids[n++] = pid;
+                // printf("after\n");
                 if (n == l) {
                         assert(!"Maximum number of processes too high !");
                 }
@@ -96,6 +96,26 @@ int main(void *arg)
                 assert(waitpid(ids[i], 0) == ids[i]);
                 test_it();
         }
+        int old_n = n;
+        n = 0;
+        while (1) {
+                int pid = start("no_run", 2000, 127, 0);
+                // printf("n = %d l = %d \n", n, l);
+                if (pid < 0) break;
+                // printf("n = %d\n", n);
+                ids[n++] = pid;
+                // printf("after\n");
+                if (n == l) {
+                        assert(!"Maximum number of processes too high !");
+                }
+                test_it();
+        }
+        for (i=0; i<n; i++) {
+                assert(kill(ids[i]) == 0);
+                assert(waitpid(ids[i], 0) == ids[i]);
+                test_it();
+        }
+        assert(old_n == n);
         for (i=0; i<n; i++) {
                 int pid = start("proc_return", 2000, 129, (void *)i);
                 assert(pid > 0);
@@ -109,4 +129,13 @@ int main(void *arg)
                 test_it();
         }
         printf(", %d.\n", n);
+        return 0;
+}
+
+
+int main(){  
+  for (int i = 0; i<5; i++){
+    test17();
+  }
+  return 0;
 }

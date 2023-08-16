@@ -90,6 +90,7 @@ int test_pipe() {
   }
   printf("Completed read_pipe(pipe_fd[0]\n");
   // Close the read end of the pipe
+  printf("Closing pipes\n");
   close(pipe_fd[1]);
   close(pipe_fd[0]);
   return 0;
@@ -104,5 +105,6 @@ int main(int argc, char *argv) {
   printf("argc %d\n", argc);
   printf("argv %ld\n", (uint64_t)argv);
   assert(test_pipe() == 0);
+  printf("Finished pipe test \n");
   return 0;
 }

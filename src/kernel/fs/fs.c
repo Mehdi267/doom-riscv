@@ -13,6 +13,9 @@
 #include "logger.h" // Used to log and print fs conf 
 #include "inode.h" 
 
+#include "../memory/frame_dist.h" 
+
+
 file_system_t* root_file_system = 0;
 
 int set_up_file_system() {
@@ -119,6 +122,7 @@ void load_and_print_desc_table(){
 }
 
 void print_fs_details(){
+  print_mem_usage();
   load_and_print_superblock();
   load_and_print_desc_table();
   print_cache_details(root_file_system->inode_list);

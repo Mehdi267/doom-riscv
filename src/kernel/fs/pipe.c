@@ -44,13 +44,14 @@ int close_pipe(pipe* pipe, close_type type){
     default:
       break;
   }
-  if (pipe->can_write || pipe->can_write){
+  if (pipe->can_write || pipe->can_read){
     //The pipe is still accesible and should be closed
     //by all file descriptor for it to be used
     return -1;
+  }else{
+    sdelete(pipe->semaphore_id);
+    free(pipe);
   }
-  sdelete(pipe->semaphore_id);
-  free(pipe);
   return 0;
 }
 
