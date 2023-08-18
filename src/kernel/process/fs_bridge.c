@@ -5,66 +5,73 @@
 #include "../fs/inode_util.h"
 #include "assert.h"
 
-uint32_t get_root_dir_name_size(){
- process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return 0;
-  }
+uint32_t get_root_dir_name_size(process* proc_arg){
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return 0;}
   return proc->root_dir.name_size;
 }
 
-uint32_t get_current_dir_name_size(){
- process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return 0;
-  }
+uint32_t get_current_dir_name_size(process* proc_arg){
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return 0;}
   return proc->cur_dir.name_size;
 }
 
-inode_t* get_current_dir(){
- process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return 0;
-  }
+inode_t* get_current_dir(process* proc_arg){
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return 0;}
   if (get_inode_number(proc->cur_dir.inode) != 0){
     return proc->cur_dir.inode;
   }
   return walk_and_get(proc->cur_dir.dir_name, 0);
 }
 
-char* get_current_dir_name(){
- process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return 0;
-  }
+char* get_current_dir_name(process* proc_arg){
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return 0;}
   return proc->cur_dir.dir_name;
 }
 
 
-inode_t* get_root_dir(){
-  process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return 0;
-  }
+inode_t* get_root_dir(process* proc_arg){
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return 0;}
   if (get_inode_number(proc->root_dir.inode) != 0){
     return proc->root_dir.inode;
   }
   return walk_and_get(proc->root_dir.dir_name, 0);
 }
 
-char* get_root_dir_name(){
- process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return 0;
-  }
+char* get_root_dir_name(process* proc_arg){
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return 0;}
   return proc->root_dir.dir_name;
 }
 
-int set_current_dir(char* new_name, uint32_t name_size, inode_t* inode){
- process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return -1;
-  }
+int set_current_dir(process * proc_arg, char* new_name, uint32_t name_size, inode_t* inode){
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return 0;}
   if (new_name == 0 || name_size == 0 || inode == 0){
     return -1;
   }
@@ -107,8 +114,11 @@ static int alloc_bit_fdmap(char* fd_map){
 }
 
 
-open_fd* dup_open_file(flip* open_file, int custom_fd){
-  process* proc =  get_process_struct_of_pid(getpid()); 
+open_fd* dup_open_file(process* proc_arg, flip* open_file, int custom_fd){
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
   if (open_file == 0 || proc == 0 || 
       custom_fd<0 || custom_fd>=MAX_FS){
     return 0;
@@ -151,11 +161,12 @@ open_fd* dup_open_file(flip* open_file, int custom_fd){
 
 
 
-open_fd* add_new_element_open_files(){
-  process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return 0;
-  }
+open_fd* add_new_element_open_files(process* proc_arg){
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return 0;}
   flip* open_file = (flip*) 
             malloc(sizeof(flip));
   open_fd* open_file_proc = (open_fd*) 
@@ -197,15 +208,16 @@ open_fd* add_new_element_open_files(){
   }
 }
 
-flip* get_fs_list_elt(int fd){
+flip* get_fs_list_elt(process* proc_arg, int fd){
   debug_print_fsapi("[FSAPI]Get fs api elt num %d\n", fd);
   if (fd<0){
     return 0;
   }
-  process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return 0;
-  }
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return 0;}
   open_fd* fd_list_iter = proc->open_files_table;
   while (fd_list_iter != 0){
     if (fd_list_iter->fd == fd){
@@ -217,15 +229,16 @@ flip* get_fs_list_elt(int fd){
   return 0;
 }
 
-open_fd* get_open_fd_elt(int fd){
+open_fd* get_open_fd_elt(process* proc_arg, int fd){
   debug_print_fsapi("[FSAPI]Get fs api elt num %d\n", fd);
   if (fd<0 || fd>=MAX_FS){
     return 0;
   }
-  process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return 0;
-  }
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return 0;}
   open_fd* fd_list_iter = proc->open_files_table;
   while (fd_list_iter != 0){
     if (fd_list_iter->fd == fd){
@@ -238,14 +251,15 @@ open_fd* get_open_fd_elt(int fd){
 }
 
 
-bool check_if_inode_is_being_used(uint32_t inode_number){
+bool check_if_inode_is_being_used(process* proc_arg, uint32_t inode_number){
   if (inode_number == 0){
     return 0;
   }
-  process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return 0;
-  }
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return 0;}
   debug_print_fsapi("[FSAPI]Cheking if inode n %d is being used\n",
        inode_number);
   open_fd* fd_list_iter =  proc->open_files_table;
@@ -260,22 +274,23 @@ bool check_if_inode_is_being_used(uint32_t inode_number){
   return false;
 }
 
-int remove_fd_list(int fd, rem_type op_type){
+int remove_fd_list(process* proc_arg, int fd, rem_type op_type){
   if (fd < 0){
     return -1;
   }
   debug_print_fsapi("[FSAPI]Remove fd list called on fd = %d\n", fd);
-  open_fd* fd_elt = get_open_fd_elt(fd);
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return -1;}
+  open_fd* fd_elt = get_open_fd_elt(proc, fd);
   if (fd_elt == 0){
     return -1;
   }
-  process* proc =  get_process_struct_of_pid(getpid()); 
-  if (proc == 0){
-    return 0;
-  }
   fd_elt->file_info->usage_counter--;
   if (fd_elt->file_info->usage_counter != 0){
-    debug_print_fsapi("[FSAPI]Fd usage is not equal to zero, removing it from proc = %d\n", 
+    debug_print_fsapi("[FSAPI]Fd usage is not equal to 0, rm it only from the cur proc; usage = %d\n", 
         fd_elt->file_info->usage_counter);
   }
   else{
@@ -325,18 +340,46 @@ int remove_fd_list(int fd, rem_type op_type){
   return 0;
 }
 
-int close_all_files(process* proc){
-  if (proc == 0){
-    return -1;
-  }
+int close_all_files(process* proc_arg){
+  process* proc;
+  if (proc_arg == NULL){
+    proc = get_process_struct_of_pid(getpid()); 
+  } else {proc = proc_arg;}
+  if (proc == 0){return -1;}
   int res = 0;
   open_fd* fd_list_iter = proc->open_files_table;
   while (fd_list_iter != 0){
     open_fd* temp_next = fd_list_iter->next_file;
-    if (remove_fd_list(fd_list_iter->fd, REMOVE_ALL)<0){
+    if (remove_fd_list(proc, fd_list_iter->fd, REMOVE_ALL)<0){
       res = -1;
     }
     fd_list_iter = temp_next;
   }
   return res;
+}
+
+int copy_proc_fds(process* dest_proc, process* src_proc){
+  if (src_proc == 0 || dest_proc == 0){
+    return -1;
+  }
+  open_fd* fd_list_iter = src_proc->open_files_table;
+  while (fd_list_iter != 0){
+    open_fd* open_file_proc = (open_fd*) 
+            malloc(sizeof(open_fd));
+    if (open_file_proc == 0){return -1;}
+    open_file_proc->fd = fd_list_iter->fd;
+    open_file_proc->file_info = fd_list_iter->file_info;
+    fd_list_iter->file_info->usage_counter++;
+    open_file_proc->next_file = NULL;
+    open_file_proc->file_previous = NULL;
+    if (dest_proc->open_files_table == NULL){
+      dest_proc->open_files_table =  open_file_proc;
+    } else {
+      open_file_proc->next_file = dest_proc->open_files_table;
+      dest_proc->open_files_table->file_previous = open_file_proc;
+      dest_proc->open_files_table = open_file_proc;
+    }
+    fd_list_iter = fd_list_iter->next_file;
+  }
+  return 0;
 }

@@ -5,6 +5,24 @@
 
 long int ret = 0;
 
+#include <stdio.h>
+#include <stdlib.h>
+
+int dis(char *prog) {
+  const char *filename = prog;
+  int fd = open(filename, O_RDONLY, 0);
+  if (fd == NULL) {
+    printf("Error opening file");
+    return 1;
+  }
+  char buffer[10]; // Adjust buffer size as needed
+  while (my_fgets(buffer, sizeof(buffer), fd) != NULL) {
+    printf("%s", buffer);
+  }
+  close(fd);
+  return 0;
+}
+
 /**
  * @brief if cmd is a builtin, executes the builtin and returns 0, returns 1 if not
  */
@@ -32,6 +50,9 @@ int main() {
   char cdprog[] = "cd";
   char rmdirprog[] = "rmdir";
   char unlinkprog[] = "unlink";
+  char disprog[] = "dis";
+  char exitshell[] = "exit";
+  char voidsysprog[] = "voidsys";
   while (1) {
     printf("shell$");
     if (getcwd(current_dir, CURR_DIR_SIZE) != 0){
@@ -63,6 +84,16 @@ int main() {
       char* curr_path = cmd + strlen(unlinkprog) + 1;
       printf("curr_path = %s\n", curr_path);
       unlink(curr_path);
+    }
+    else if (memcmp(cmd, "dis", strlen(disprog)) == 0){
+      char* curr_path = cmd + strlen(disprog) + 1;
+      dis(curr_path);
+    }
+    else if (memcmp(cmd, "exit", strlen(exitshell)) == 0){
+      exit(0);
+    }
+    else if (memcmp(cmd, "voidsys", strlen(voidsysprog)) == 0){
+      void_call();
     }
     else if (builtin_cmd(cmd) != 0) {
       pid = start(cmd, 8000, 128, NULL);

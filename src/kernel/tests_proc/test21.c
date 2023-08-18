@@ -15,7 +15,7 @@ int shm_checker(void *arg)
         (void)arg;
         char *shared_area = NULL;
 
-        shared_area = shm_acquire("test21-shm");
+        shared_area = shm_acquire(0, "test21-shm");
         assert(shared_area != NULL);
 
         /* Check we get the memory filled by the main process */
@@ -44,7 +44,7 @@ int test21(void *arg)
 
         printf("\n%s\n", "Test 21: checking shared memory space ...");
 
-        shared_area = shm_create("test21-shm");
+        shared_area = shm_create(0, "test21-shm");
         assert(shared_area != NULL);
 
         /* We have to be able to fill at least 1 page */

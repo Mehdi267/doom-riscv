@@ -2,6 +2,7 @@
 #include <stddef.h>
 #ifndef FILE_SYS_CALLS_H
 #define FILE_SYS_CALLS_H
+#include "../process/fs_bridge.h"
 
 typedef enum {
     PERMISSION_NONE = 0,
@@ -43,7 +44,7 @@ enum FileOpenFlags {
  * @param mode The file mode to be used if O_CREAT flag is specified.
  * @return On success, returns the file descriptor of the opened or created file. On failure, returns -1 and sets 'errno' to indicate the specific error.
  */
-int open(const char *file_name, int flags, mode_t mode);
+int open(process*, const char *file_name, int flags, mode_t mode);
 
 /**
  * Closes the file associated with the given file descriptor.
@@ -152,7 +153,7 @@ int fstat(unsigned int fd, struct stat *buf);
  * @note The new file descriptor shares the same file offset, file status flags,
  * and file access mode with the original file descriptor.
  */
-int dup(int file_descriptor);
+int dup(process*, int file_descriptor);
 
 /**
  * @brief Duplicate a file descriptor to a specific file descriptor number.
@@ -170,7 +171,7 @@ int dup(int file_descriptor);
  * @note The new file descriptor shares the same file offset, file status flags,
  * and file access mode with the original file descriptor.
  */
-int dup2(int file_descriptor, int new_file_descriptor);
+int dup2(process*, int file_descriptor, int new_file_descriptor);
 
 /**
  * @brief Create a pipe for inter-process communication.

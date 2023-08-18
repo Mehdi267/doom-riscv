@@ -16,7 +16,7 @@
 int acquire(void *arg)
 {
         volatile unsigned long *page = NULL;
-        page = shm_acquire("test_memory");
+        page = shm_acquire(0, "test_memory");
         assert(page != NULL);
         *page = 0xdeadbeef;
         shm_release("test_memory");
@@ -30,13 +30,13 @@ int test_memory(void *arg)
         int pid1;
         volatile unsigned long *page = NULL;
 
-        page = shm_create("test_memory");
+        page = shm_create(0, "test_memory");
         assert(page != NULL);
         pid1 = start(acquire, 4000, 127, "acquire", 0);
         assert(pid1 > 0);
         assert(waitpid(pid1, NULL) == pid1);
         assert(*page == 0xdeadbeef);
         shm_release("test_memory");
-        assert(shm_acquire("test_memory")==NULL);
+        assert(shm_acquire(0, "test_memory")==NULL);
         return 0;
 }

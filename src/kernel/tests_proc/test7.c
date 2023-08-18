@@ -49,7 +49,7 @@ int timer1(void *arg)
 int timer_test(void *arg)
 {
         volatile unsigned long *timer = NULL;
-        timer = shm_acquire("test7_shm");
+        timer = shm_acquire(0, "test7_shm");
         assert(timer != NULL);
 
         (void)arg;
@@ -72,7 +72,7 @@ int test7(void *arg)
         volatile unsigned long *timer = NULL;
 
         (void)arg;
-        timer = shm_create("test7_shm");
+        timer = shm_create(0, "test7_shm");
         assert(timer != NULL);
 
         assert(getprio(getpid()) == 128);

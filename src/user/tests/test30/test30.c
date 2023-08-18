@@ -2,7 +2,7 @@
  * Ensimag - Projet Systeme 
  * Test 30
  *
- * Test 30 - docs
+ * Test 30 - pipe test
  *
  ******************************************************************************/
 
@@ -99,12 +99,14 @@ int test_pipe() {
 
 
 int main(int argc, char *argv) {
-  // for (int i = 0; i < 100; i++){
-  //   assert(test_pipe_simple() == 0);
-  // }
-  printf("argc %d\n", argc);
-  printf("argv %ld\n", (uint64_t)argv);
-  assert(test_pipe() == 0);
-  printf("Finished pipe test \n");
+  (void)argv;
+  (void)argc;
+  for (int i = 0; i < 10; i++){
+    assert(test_pipe_simple() == 0);
+  }
+  for (int i = 0; i < 10; i++){
+    assert(test_pipe() == 0);
+  }
+
   return 0;
 }

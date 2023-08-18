@@ -72,11 +72,11 @@ char * get_final_string(const char* new_directory){
   // Check if the path is absolute or relative and set the starting directory accordingly
   char* temp_directory = 0;
   if (is_absolute_directory(new_directory)){
-    temp_directory = (char *)malloc(get_root_dir_name_size()); 
-    memcpy(temp_directory, get_root_dir_name(), get_root_dir_name_size()); 
+    temp_directory = (char *)malloc(get_root_dir_name_size(NULL)); 
+    memcpy(temp_directory, get_root_dir_name(NULL), get_root_dir_name_size(NULL)); 
   } else{
-    temp_directory = (char *)malloc(get_current_dir_name_size()); //WRONG !!!!
-    memcpy(temp_directory, get_current_dir_name(), get_current_dir_name_size()); 
+    temp_directory = (char *)malloc(get_current_dir_name_size(NULL)); //WRONG !!!!
+    memcpy(temp_directory, get_current_dir_name(NULL), get_current_dir_name_size(NULL)); 
   }
   path_fs* path_data = extract_files(new_directory);
   if (path_data == 0){
@@ -124,7 +124,7 @@ int chdir(const char *new_directory){
           dir_inode->i_mode);
     return -1;
   }
-  if (set_current_dir(final_string, strlen(final_string)+1,
+  if (set_current_dir(NULL, final_string, strlen(final_string)+1,
                    dir_inode)<0){
     return -1;
   }
@@ -188,14 +188,14 @@ char *getcwd(char *buf, size_t size){
   if (buf == 0 || size <= 0){
     return 0;
   }
-  if (size < get_current_dir_name_size()){
+  if (size < get_current_dir_name_size(NULL)){
     return 0;
   }
-  char* current_dir_name = get_current_dir_name();
+  char* current_dir_name = get_current_dir_name(NULL);
   if (current_dir_name == 0){
     return 0;
   }
-  memcpy(buf, current_dir_name, get_current_dir_name_size());
+  memcpy(buf, current_dir_name, get_current_dir_name_size(NULL));
   return buf;
 }
 

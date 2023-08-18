@@ -180,7 +180,7 @@ inode_t* walk_and_get(const char* path, uint32_t backward_steps){
     inode = get_inode(EXT2_GOOD_OLD_FIRST_INO);  
   } else {
     print_inode_no_arg("Path is a relative dir \n");
-    inode = get_current_dir();
+    inode = get_current_dir(NULL);
   }
   debug_print_inode("[IN]Walk Exploration depth = %d, cur dir inode %d\n", 
       path_data->nb_files - backward_steps, get_inode_number(inode));

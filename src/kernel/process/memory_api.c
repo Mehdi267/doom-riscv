@@ -170,7 +170,7 @@ static int link_shared_page_to_process(process* proc_conf, shared_page_t* page_i
 
 
 void shm_release(const char *key){
-  print_memory_api_no_arg("Inside Frame release function\n");
+  debug_print_memory_api("Inside Frame release function, key = [%s]\n", key);
   if (key ==NULL){
     return ;
   }
@@ -199,7 +199,7 @@ void shm_release(const char *key){
   }
   //We check if the process is even sharing this page
   shared_pages_proc_t* proc_page_shared = get_shared_page_proc(current_proc, key_no_c);
-  print_shared_page_node("Shm release test",proc_page_shared);
+  print_shared_page_node("Shm release",proc_page_shared);
   if (proc_page_shared == NULL){
     return;
   }
@@ -334,7 +334,7 @@ static int create_hash_table_and_shared_pages_wrapper(process* current_proc){
   return 0;
 }
 
-void *shm_acquire(const char *key){
+void *shm_acquire(process *proc, const char *key){
   debug_print_memory_api("Acquiring a share page with name = [%s] \n", key);
   if (key ==NULL){
     return NULL;
@@ -346,9 +346,11 @@ void *shm_acquire(const char *key){
   if  (page_info == NULL){
     return NULL;
   }
-  process* current_proc = get_process_struct_of_pid(getpid());
-  if (current_proc ==NULL){
-    return NULL;
+  process* current_proc;
+  if (proc == NULL){
+    current_proc = get_process_struct_of_pid(getpid());
+  }else{
+    current_proc = proc;
   }
   //We create the hash table
   if (create_hash_table_and_shared_pages_wrapper(current_proc)<0){
@@ -371,7 +373,7 @@ void *shm_acquire(const char *key){
 }
 
 
-void *shm_create(const char *key){
+void *shm_create(process* proc, const char *key){
   debug_print_memory_api("Creating a share page with name = [%s] \n", key);
   if (key ==NULL){
     return NULL;
@@ -389,8 +391,13 @@ void *shm_create(const char *key){
     //No space for the frame or the malloc probably
     return NULL;
   }
-  process* current_proc = get_process_struct_of_pid(getpid());
-  if (current_proc ==NULL){
+  process* current_proc;
+  if (proc == NULL){
+    current_proc = get_process_struct_of_pid(getpid());
+  }else{
+    current_proc = proc;
+  }
+  if (current_proc == NULL){
     //get pid is not working probably
     return NULL;
   }

@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "frame_dist.h"
 #include "pages.h"
+#include "hash.h"
 
 #ifndef _VIRTUAL_MEMORY_
 #define _VIRTUAL_MEMORY_
@@ -88,6 +89,8 @@ typedef struct page_table_link_list {
     struct page_table_link_list* tail_page;
     struct page_table_link_list* next_page;
     struct page_table_link_list* previous_page;
+    hash_t *link_index_table; //Will be used for lvl 1 nodes and it will point 
+                              //an index to the address of the child node
     // Used for total usage for the lvl1 page and lvl0 pages
     // each lvl0 page contains 512 page entries and thus each lvl0 page 
     // is attached to 2MB and each lvl1 page can allocated 512*2Mb = 1GB

@@ -162,8 +162,8 @@ unsigned long long div64(unsigned long long num, unsigned long long div, unsigne
   void test_it(void);
 
   /* Shared memory */
-  void *shm_create(const char*);
-  void *shm_acquire(const char*);
+  void *shm_create(0, const char*);
+  void *shm_acquire(0, const char*);
   void shm_release(const char*);
 
   /*

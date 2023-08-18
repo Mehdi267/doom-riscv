@@ -32,4 +32,9 @@ extern const struct uapps symbols_table[];
  */
 extern const struct uapps *find_app(const char *name);
 
+/**
+ * @brief Write the user apps into the disk
+ * @return int status
+ */
+extern int write_user_apps_fs();
 #endif

@@ -27,7 +27,7 @@ int proc17_1(void *arg)
 
         (void)arg;
 
-        st = (struct test17_buf_st*) shm_acquire("test17_shm");
+        st = (struct test17_buf_st*) shm_acquire(0, "test17_shm");
         // __asm__ __volatile__("rdtsc":"=A"(tsc));
         tsc = get_stime(); 
         tsc2 = tsc + 10000;
@@ -64,7 +64,7 @@ int proc17_2(void *arg)
 
         (void)arg;
 
-        st = (struct test17_buf_st*) shm_acquire("test17_shm");
+        st = (struct test17_buf_st*) shm_acquire(0, "test17_shm");
         assert(st != NULL);
 
         while(1) {
@@ -86,7 +86,7 @@ int test17_sem(void *arg)
         int count = 0;
 
         (void)arg;
-        st = (struct test17_buf_st*) shm_create("test17_shm");
+        st = (struct test17_buf_st*) shm_create(0, "test17_shm");
         assert(st != NULL);
 
         assert(getprio(getpid()) == 128);

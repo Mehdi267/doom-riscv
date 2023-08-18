@@ -54,7 +54,6 @@ int kernel_start() {
       print_dir_list(get_inode(11), true);
     #endif
   #endif
-
   //kernel_drivers_tests(0);
   splash_screen();
   splash_vga_screen();

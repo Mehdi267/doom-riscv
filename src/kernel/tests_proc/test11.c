@@ -16,7 +16,7 @@ int proc_mutex(void *arg)
         int msg;
 
         (void)arg;
-        shared = (struct test11_shared*) shm_acquire("test11_shm");
+        shared = (struct test11_shared*) shm_acquire(0, "test11_shm");
         assert(shared != NULL);
         p = getprio(getpid());
         assert(p > 0);
@@ -62,7 +62,7 @@ int test11(void *arg)
         int pid1, pid2, pid3, pid4;
 
         (void)arg;
-        shared = (struct test11_shared*) shm_create("test11_shm");
+        shared = (struct test11_shared*) shm_create(0, "test11_shm");
         assert(shared != NULL);
         assert(getprio(getpid()) == 128);
         xscreate(&shared->sem);

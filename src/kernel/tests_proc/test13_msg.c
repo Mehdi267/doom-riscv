@@ -16,7 +16,7 @@ int preceiver(void *arg)
         unsigned i;
         size_t n;
 
-        ps = shm_acquire("test13_shm");
+        ps = shm_acquire(0, "test13_shm");
         assert(ps != NULL);
         n = strlen(ps[ps_index].data);
 
@@ -37,7 +37,7 @@ int psender(void *arg)
         unsigned i;
         size_t n;
 
-        ps = shm_acquire("test13_shm");
+        ps = shm_acquire(0, "test13_shm");
         assert(ps != NULL);
         n = strlen(ps[ps_index].data);
 
@@ -57,7 +57,7 @@ int test13_msg(void *arg)
         int i, msg;
 
         (void)arg;
-        ps = (struct psender*) shm_create("test13_shm");
+        ps = (struct psender*) shm_create(0, "test13_shm");
         assert(ps != NULL);
 
         printf("1");

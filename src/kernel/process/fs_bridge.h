@@ -1,15 +1,9 @@
-#include "process.h"
-#include "../fs/inode.h"
 
 #ifndef FS_BRIDGE 
 #define FS_BRIDGE
 
-/**
- * @brief Get the inode of the current
- *  directory that we are in.
- * @return inode_t* the directory pointer
- */
-inode_t* get_current_dir();
+#include "process.h"
+#include "../fs/inode.h"
 
 /**
  * @brief Adds a new elements to the link list
@@ -17,7 +11,7 @@ inode_t* get_current_dir();
  * the newly added element which is the head list 
  * @return flip* the newly create open file
  */
-open_fd* add_new_element_open_files();
+open_fd* add_new_element_open_files(process* proc);
 
 typedef enum rem_type{
   REMOVE_ALL = 0, //Closes the inode 
@@ -34,7 +28,7 @@ typedef enum rem_type{
  * that we would like to close 
  * @return int function status 
  */
-int remove_fd_list(int fd, rem_type op_type);
+int remove_fd_list(process*, int fd, rem_type op_type);
 
 /**
  * @brief Get the open file system details
@@ -42,7 +36,7 @@ int remove_fd_list(int fd, rem_type op_type);
  * @return flip* the open file sructure, and 0 if 
  * canot be found
  */
-flip* get_fs_list_elt(int fd);
+flip* get_fs_list_elt(process*, int fd);
 
 /**
  * @brief Create a new open file 
@@ -51,7 +45,7 @@ flip* get_fs_list_elt(int fd);
  * @param open_file 
  * @return open_fd* 
  */
-open_fd* dup_open_file(flip* open_file, int custom_fd);
+open_fd* dup_open_file(process*, flip* open_file, int custom_fd);
 
 /**
  * @brief Checks if the inode number given as argument is currently being used i.e.
@@ -60,7 +54,7 @@ open_fd* dup_open_file(flip* open_file, int custom_fd);
  * @return true the inode is being used
  * @return false the inode is not being used
  */
-bool check_if_inode_is_being_used(uint32_t inode_number);
+bool check_if_inode_is_being_used(process*, uint32_t inode_number);
 
 /**
  * @brief Set the diectory of the current process to the 
@@ -70,32 +64,39 @@ bool check_if_inode_is_being_used(uint32_t inode_number);
  * @param inode 
  * @return int function status 
  */
-int set_current_dir(char* new_name, uint32_t name_size, inode_t* inode);
+int set_current_dir(process*,char* new_name, uint32_t name_size, inode_t* inode);
 
 /**
  * @brief Get the open fd object for the file descriptor given
  * @param fd 
  * @return open_fd* 
  */
-open_fd* get_open_fd_elt(int fd);
+open_fd* get_open_fd_elt(process*, int fd);
+
+/**
+ * @brief Get the inode of the current
+ *  directory that we are in.
+ * @return inode_t* the directory pointer
+ */
+inode_t* get_current_dir(process*);
 
 /**
  * @brief Get the name of the current directory
  * @return char* the pointer to the new file name
  */
-char* get_current_dir_name();
+char* get_current_dir_name(process*);
 
 /**
  * @brief Get the root inode
  * @return inode_t* 
  */
-inode_t* get_root_dir();
+inode_t* get_root_dir(process*);
 
 /**
  * @brief Get the name of the root directory
  * @return char* the pointer to root dir
  */
-char* get_root_dir_name();
+char* get_root_dir_name(process*);
 
 
 /**
@@ -107,7 +108,7 @@ char* get_root_dir_name();
  * @return The size of the root directory name in bytes.
  *         If the process structure for the current process is not found or invalid, returns 0.
  */
-uint32_t get_root_dir_name_size();
+uint32_t get_root_dir_name_size(process*);
 
 /**
  * @brief Get the size of the name of the current directory for the current process.
@@ -118,7 +119,7 @@ uint32_t get_root_dir_name_size();
  * @return The size of the current directory name in bytes.
  *         If the process structure for the current process is not found or invalid, returns 0.
  */
-uint32_t get_current_dir_name_size();
+uint32_t get_current_dir_name_size(process*);
 
 /**
  * @brief Close all of the files that are occupied by the process
@@ -127,5 +128,14 @@ uint32_t get_current_dir_name_size();
  * @return int function status
  */
 int close_all_files(process* proc);
+
+/**
+ * @brief Copies the file descriptors from the source process 
+ * to the destination process 
+ * @param dest_proc the process to which we will copy the files 
+ * @param src_proc the process tha contains the file that we wish to copy
+ * @return int status
+ */
+int copy_proc_fds(process* dest_proc, process* src_proc);
 
 #endif

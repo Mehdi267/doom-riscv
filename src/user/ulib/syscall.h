@@ -177,6 +177,7 @@ int dup2(int file_descriptor, int new_file_descriptor);
 int stat(const char *pathname, struct stat *buf);
 int fstat(unsigned int fd, struct stat *buf);
 int pipe(int file_descriptors[2]);
+pid_t fork(void);
 
 //dir api
 char *getcwd(char *buf, size_t size);
@@ -192,5 +193,6 @@ typedef struct disk_info{
  uint32_t free_inodes;
 } disk_info;    
 void fs_info(disk_info* info);
+void void_call();
 
 #endif

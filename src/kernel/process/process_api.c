@@ -8,9 +8,9 @@
 #include "hash.h" //hash table
 
 //
-#include "helperfunc.h"
-#include "process.h"
-#include "scheduler.h"
+#include "helperfunc.h"//Contains usefull functions
+#include "process.h"//Main header file
+#include "scheduler.h"//Called when we need to communicate with the scheduler
 
 //Memory related
 #include "../memory/frame_dist.h"
@@ -480,7 +480,64 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
   return new_process->pid;
 }
 
-int fork(int parent_pid){
+
+// int block_forked;
+// struct trap_frame trap_return;
+void return_from_trap_frame(){
+  printf("[fork]Inside child process\n");
+  fork_d* fork_iter = proc_mang_g.forked_data_list;
+  struct trap_frame frame;
+  while(fork_iter != NULL){
+    if (getpid() == fork_iter->pid){
+      memcpy(&frame, &fork_iter->trap_return, 
+            sizeof(struct trap_frame));
+      //We remove the linked list node
+      fork_d* node_next = fork_iter->next_data;
+      fork_d* node_previous = fork_iter->previous_data;
+      if (fork_iter == proc_mang_g.forked_data_list 
+            && node_next == NULL 
+            && node_previous == NULL){
+        proc_mang_g.forked_data_list = NULL;
+      }else{
+        if (node_next != NULL){
+          node_next->previous_data = node_previous;
+        }
+        if (node_previous != NULL){
+          node_previous->next_data = node_next;
+        }
+        if (fork_iter == proc_mang_g.forked_data_list){
+          proc_mang_g.forked_data_list = node_next;
+        }
+      }
+      free(fork_iter);
+      init_fork(&frame);
+      //No need for break because the next function 
+      //will jump in user mode and keeps no trace of this current position
+    }
+    fork_iter = fork_iter->next_data;
+  }
+}
+
+int add_fork_data_node(int new_pid, struct trap_frame* tf){
+  fork_d* new_node = (fork_d*) malloc(sizeof(fork_d));
+  if (new_node == 0){return -1;}
+  new_node->pid = new_pid;
+  memcpy(&new_node->trap_return, tf, sizeof(struct trap_frame));
+  new_node->next_data = NULL;
+  new_node->previous_data = NULL;
+  if (proc_mang_g.forked_data_list == 0){
+    proc_mang_g.forked_data_list = new_node;
+  }
+  else{
+    proc_mang_g.forked_data_list->previous_data = new_node;
+    new_node->next_data = proc_mang_g.forked_data_list; 
+    proc_mang_g.forked_data_list = new_node;
+  }
+  return 0;
+}
+
+int fork(int parent_pid, struct trap_frame* tf){
+  debug_print("##Fork syscall was used parent pid = %d##\n", parent_pid);
   process* parent_p = get_process_struct_of_pid(parent_pid);
   if (!(getpid() == -1) && 
     validate_action_process_valid(parent_p)){
@@ -490,6 +547,10 @@ int fork(int parent_pid){
   secmalloc(new_process, sizeof(process));
   new_process->next_prev.next = NULL;
   new_process->next_prev.prev = NULL;
+  //---------Create a new pid and and new process to hashtable----------------
+  new_process->pid = increment_pid_and_get_new_pid();
+  hash_set(get_process_hash_table(), cast_int_to_pointer(new_process->pid),
+           new_process);
   new_process->prio = parent_p->prio;
   if (process_name_copy(new_process, parent_p->process_name) < 0){
     return -1;
@@ -506,14 +567,29 @@ int fork(int parent_pid){
   if (new_process->context_process == NULL) {
     return -1;
   }
-  memcpy(new_process->context_process, parent_p->context_process, sizeof(sizeof(context_t)));
-  
   void *interrupt_frame_pointer = get_frame();
   debug_print_memory("sscratch frame %p \n", interrupt_frame_pointer);
-  if (interrupt_frame_pointer == NULL) {
+  if (interrupt_frame_pointer == NULL) {return -1;}
+  if (getpid() != parent_pid){
+    memcpy(new_process->context_process, parent_p->context_process, sizeof(context_t));
+  } else{
+    new_process->context_process->sp = (uint64_t)interrupt_frame_pointer + FRAME_SIZE;
+    new_process->context_process->ra = (uint64_t)return_from_trap_frame;
+  }
+  new_process->context_process->satp =
+      0x8000000000000000 |
+      ((long unsigned int)new_process->page_table_level_2 >> 12) |
+      ((long unsigned int)new_process->pid << 44);
+  new_process->sscratch_frame = interrupt_frame_pointer;
+  new_process->context_process->sscratch = 
+        (uint64_t) interrupt_frame_pointer + FRAME_SIZE;
+  
+  if (add_fork_data_node(new_process->pid, tf)<0){
     return -1;
   }
-  memcpy(interrupt_frame_pointer, parent_p->sscratch_frame, PAGE_SIZE);
+  // block_forked = new_process->pid;
+  // memcpy(&trap_return, tf, sizeof(struct trap_frame));
+
   new_process->parent = parent_p;
   // We add the new process as a child to the parent process
   if (new_process->parent->children_tail != NULL) {
@@ -541,28 +617,32 @@ int fork(int parent_pid){
   new_process->state = ACTIVATABLE;
 
   //------------File system related configuration----------
-  // #ifdef VIRTMACHINE
+  #ifdef VIRTMACHINE
     new_process->root_dir.inode = parent_p->root_dir.inode;
+    new_process->root_dir.dir_name = (char *)malloc(parent_p->root_dir.name_size);
     memcpy(new_process->root_dir.dir_name,
           parent_p->root_dir.dir_name,
           parent_p->root_dir.name_size);
     new_process->root_dir.name_size = parent_p->root_dir.name_size;
     
     new_process->cur_dir.inode = parent_p->cur_dir.inode;
+    new_process->cur_dir.dir_name = (char *)malloc(parent_p->cur_dir.name_size);
     memcpy(new_process->cur_dir.dir_name,
           parent_p->cur_dir.dir_name,
           parent_p->cur_dir.name_size);
     new_process->cur_dir.name_size = parent_p->cur_dir.name_size;
-    new_process->open_files_table = NULL;
-  // #endif
+    memcpy(new_process->fd_bitmap, parent_p->fd_bitmap, SIZE_BIT_MAP); 
+    new_process->open_files_table = NULL;   
+    if (copy_proc_fds(new_process, parent_p) < 0) {
+      print_memory_no_arg("Counld not copy files");
+      return -1;
+    }
+  #endif
   //---Add process to activatable queue
   queue_add(new_process, &activatable_process_queue, process, next_prev, prio);
   check_if_new_prio_is_higher_and_call_scheduler(new_process->prio, true, 0);
-  if (getpid() == parent_pid){
-    return new_process->pid;
-  } else{
-    return 0;
-  }
+  printf("Fork finished\n");
+  return new_process->pid;
 }
 
 int waitpid(int pid, int *retvalp) {
@@ -870,7 +950,8 @@ static int process_name_copy(process *p, const char *name) {
   size_t size = strlen(name);
   if (size > MAX_SIZE_NAME)
     return -1;
-  secmalloc(p->process_name, size);
+  secmalloc(p->process_name, size + 1);
   strcpy(p->process_name, name);
+  p->process_name[size] = 0;
   return 0;
 }

@@ -57,7 +57,7 @@ extern int initialize_shared_pages_table();
  * @param key the key associated to the share page
  * @return void* The adress of the page is operation was succeful and a null pointer otherwise
  */
-extern void *shm_create(const char *key);
+extern void *shm_create(process*, const char *key);
 
 /**
  * @brief This functions maps the page that is related to function argument to the process 
@@ -67,7 +67,7 @@ extern void *shm_create(const char *key);
  * @return void* returns the adress of the page if it is found 
  * and in the case it does not find the page it returns NULL
  */
-void *shm_acquire(const char *key);
+void *shm_acquire(process*, const char *key);
 
 /**
  * @brief Releases the frame from the current process the function checks that the current process has acquired 

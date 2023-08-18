@@ -187,6 +187,7 @@ int init_global_variables(){
   proc_mang_g.nb_proc_running = 0;
   proc_mang_g.process_id_list = NULL;
   proc_mang_g.killed_counter = 0;
+  proc_mang_g.forked_data_list = 0;
   return 0;
 }
 

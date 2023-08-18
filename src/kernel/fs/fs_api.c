@@ -15,7 +15,7 @@
 #include "assert.h"
 
 // Messages from users
-int open(const char *file_name, int flags, mode_t mode){
+int open(process* proc, const char *file_name, int flags, mode_t mode){
   debug_print_fsapi("\033[0;35m[FSAPI]Trying to open a file with the name %s flags %x\n\033[0;0m",
          file_name, flags);
   if (file_name == 0){
@@ -78,7 +78,7 @@ int open(const char *file_name, int flags, mode_t mode){
     free_path_fs(path_data);
     return -1;
   }
-  open_fd* new_file = add_new_element_open_files();
+  open_fd* new_file = add_new_element_open_files(proc);
   if (new_file == 0){
     free_path_fs(path_data);
     return -1;
@@ -130,14 +130,14 @@ int close(int file_descriptor){
   debug_print_fsapi("\033[0;35m[FSAPI]Close file was called on fd = %d\n\033[0;0m",
        file_descriptor);
   sync_all();
-  return remove_fd_list(file_descriptor, REMOVE_ALL);
+  return remove_fd_list(NULL, file_descriptor, REMOVE_ALL);
 }
 
 ssize_t write(int file_descriptor, 
               const void *buffer, size_t count){
   debug_print_fsapi("\033[0;34m[FSAPI] write syscall was called on fd %d, write size = %ld\033[0;0m\n",
        file_descriptor, count);
-  flip* fs_elt = get_fs_list_elt(file_descriptor); 
+  flip* fs_elt = get_fs_list_elt(NULL, file_descriptor); 
   if (fs_elt == 0 || count == 0 || fs_elt->can_write == false){
     return -1;
   }
@@ -202,7 +202,7 @@ ssize_t read(int file_descriptor, void *buffer, size_t count){
   }
   debug_print_fsapi("\033[0;34m[FSAPI] read syscall was called on fd %d, read size = %ld\033[0;0m\n",
          file_descriptor, count);
-  flip* fs_elt = get_fs_list_elt(file_descriptor); 
+  flip* fs_elt = get_fs_list_elt(NULL, file_descriptor); 
   if (fs_elt == 0 || count == 0 || fs_elt->can_read == false ){
     return -1;
   }
@@ -253,7 +253,7 @@ off_t lseek(int file_descriptor, off_t offset, int whence){
     PRINT_RED("L SEEK OPERATION FAILED");
     return -1;
   }
-  flip* fs_elt = get_fs_list_elt(file_descriptor); 
+  flip* fs_elt = get_fs_list_elt(NULL, file_descriptor); 
   if (fs_elt == 0 || fs_elt->type != FS_FT_INODE_FILE){
     return -1;
   }
@@ -298,7 +298,7 @@ int unlink(const char *file_name){
         free_path_fs(path_data);
         return -1;
       }
-      bool used = check_if_inode_is_being_used(get_inode_number(file_inode));
+      bool used = check_if_inode_is_being_used(NULL, get_inode_number(file_inode));
       if (file_inode->i_mode == EXT2_S_IFREG && 
            used == false){
         if (remove_inode_dir(dir_inode, path_data->files[path_data->nb_files -1],
@@ -400,19 +400,19 @@ int fstat(unsigned int fd, struct stat *buf){
   if (fd == 0 || buf == 0){
     return -1;
   }
-  flip* fs_elt = get_fs_list_elt(fd); 
+  flip* fs_elt = get_fs_list_elt(NULL, fd); 
   if (fs_elt == 0){
     return -1;
   }
   return conf_stat_buf(buf, fs_elt->f_inode);
 }
 
-int dup(int file_descriptor){
+int dup(process* proc, int file_descriptor){
   if (file_descriptor<0){
     return -1;
   }
   open_fd* op_file = 
-      dup_open_file(get_fs_list_elt(file_descriptor), 0);
+      dup_open_file(NULL, get_fs_list_elt(proc, file_descriptor), 0);
   if(op_file!=0){
     return op_file->fd;
   }else{
@@ -420,27 +420,27 @@ int dup(int file_descriptor){
   }
 }
 
-int dup2(int file_descriptor, int new_file_descriptor){
+int dup2(process* proc, int file_descriptor, int new_file_descriptor){
   if (file_descriptor<0 || new_file_descriptor<0 ||
        file_descriptor>=MAX_FS || new_file_descriptor>=MAX_FS){
     return -1;
   }
-  flip* file_dup = get_fs_list_elt(file_descriptor);
+  flip* file_dup = get_fs_list_elt(proc, file_descriptor);
   if (file_dup == 0){
     //File is not open
     return -1;
   }
   //We check if it is already open for ths process
-  open_fd* new_file = get_open_fd_elt(new_file_descriptor);
+  open_fd* new_file = get_open_fd_elt(proc, new_file_descriptor);
   if (new_file == 0){
-    new_file = dup_open_file(file_dup, new_file_descriptor);
+    new_file = dup_open_file(proc, file_dup, new_file_descriptor);
     if (new_file == 0){
       return -1;
     }
     file_dup->usage_counter++;
     return new_file_descriptor;
   } else{
-    if (remove_fd_list(file_descriptor, ONLY_CLOSE_FILE)<0){
+    if (remove_fd_list(proc, file_descriptor, ONLY_CLOSE_FILE)<0){
       return -1;
     }
     file_dup->usage_counter++;
@@ -449,6 +449,7 @@ int dup2(int file_descriptor, int new_file_descriptor){
   }
   return -1;
 }
+
 int rename(const char *old_name, const char *new_name){
   return 0; 
 }
@@ -457,9 +458,9 @@ int sys_pipe(int file_descriptors[2]){
   if (file_descriptors == 0){
     return -1;
   }
-  open_fd* file0 = add_new_element_open_files();
+  open_fd* file0 = add_new_element_open_files(NULL);
   if (file0 == 0){goto fail;}
-  open_fd* file1 = add_new_element_open_files();
+  open_fd* file1 = add_new_element_open_files(NULL);
   if (file1 == 0){goto fail;}
   pipe* pipe = create_pipe();
   if (pipe == 0){goto fail;}
@@ -478,18 +479,6 @@ int sys_pipe(int file_descriptors[2]){
     if (pipe){close_pipe(pipe, CLOSE_ALL);};
     return -1;
 }
-// int create(const char *file_name, mode_t mode);
-// //will try to implement but the the current design choices make this very hard to implement
-// int mount(const char *special_file, const char *mount_point, int ro_flag);
-// mode_t umask(mode_t mask);
-// int umount(const char *special_file);
-// int utime(const char *file_name, const struct utimbuf *times);
-
-// // Messages from PM
-// int exec(pid_t pid);
-// pid_t fork(pid_t parent_pid);
-// pid_t setsid(pid_t pid);
-
 
 //Custom api
 void print_dir_elements(const char* path){

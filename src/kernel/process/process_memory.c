@@ -76,7 +76,9 @@ static int configure_page_table_linked_list_entry(page_table_link_list_t** link_
   node_conf->tail_page = tail_page;
   node_conf->next_page = next_page;
   node_conf->previous_page = previous_page;
+  node_conf->link_index_table = 0;
   if (parent_page != NULL){
+    //Used for lvl 0 pages
     switch (page_type){
       case CODE_PAGE:
         node_conf->index = STACK_CODE_SPACE_START + parent_page->code_usage;
@@ -97,9 +99,21 @@ static int configure_page_table_linked_list_entry(page_table_link_list_t** link_
       default:
         break;
     }
+    // printf("Setting node conf index %d\n", node_conf->index);
+    hash_set(parent_page->link_index_table, 
+          (void *)((uint64_t)node_conf->index), link_to_configure);
     parent_page->usage++;
   }
   else {
+    if (page_type == NONE_PAGE){
+      node_conf->link_index_table = (hash_t *)malloc(sizeof(hash_t));
+      if (node_conf->link_index_table == 0){
+        free(node_conf->table); 
+        free(node_conf); 
+        return -1;
+      }
+      hash_init_direct(node_conf->link_index_table);
+    }
     node_conf->index = custom_index;
   }
   return 0;
@@ -248,6 +262,8 @@ int add_frame_to_process(process* proc_conf, page_t page_type, frame_loc* frame_
         if (frame_info != 0){save_frame_data(lvl0_iterator, frame_info, page_type);}
         //We found a empty page, and we then increase its usage
         lvl0_iterator->usage++;
+        debug_print_memory("Found an empty slot index %d, usage %d\n", 
+                lvl0_iterator->index, lvl0_iterator->usage);
         return 0;
       }
     }
@@ -288,6 +304,8 @@ int add_frame_to_process(process* proc_conf, page_t page_type, frame_loc* frame_
  */
 static int allocate_memory_final(process* proc_conf, int start_index,
        int end_index, void* data, int data_size, page_t page_type){
+  //WARNING THIS FUNCTION SHOULD ONLY BE USED AT INITIALIZATION OTHERWISE USE
+  //USE THE MANUAL METHODS.
   if (proc_conf->page_tables_lvl_1_list == NULL){
     return -1;
   }
@@ -423,6 +441,7 @@ static int process_frames_alloc(process* process_conf){
     //This is used because we need additional space for bss
     //and some other efl related directories
     lvl_1_node->head_page->usage++;
+    process_conf->mem_info.code_usage++;
     if (allocate_memory_final(process_conf,
               STACK_CODE_SPACE_START, 
               STACK_CODE_SPACE_START +process_conf->page_tables_lvl_1_list->code_usage,
@@ -474,39 +493,38 @@ static int process_frames_alloc(process* process_conf){
  * @param size_stack the size of the stack
  * @return 0 if successfull and -1 otherwise
  */
-static int add_frames_process(process *process_conf, int temp_code_size, int heap_size, int size_stack){
+static int add_frames_process(process *process_conf, int temp_code_size, int size_stack, int heap_size){
   debug_print_memory("Reserving space for process code size = %d heap size = %d stack size = %d \n",
       temp_code_size, heap_size, size_stack);
-      
+  process_conf->mem_info.code_usage = CUSTOM_MOD_DIV(temp_code_size, FRAME_SIZE);
+  process_conf->mem_info.stack_usage = CUSTOM_MOD_DIV(size_stack, FRAME_SIZE);
+  process_conf->mem_info.heap_usage = CUSTOM_MOD_DIV(heap_size, FRAME_SIZE);
   #ifdef USER_PROCESSES_ON
   //We add process' code
-    do{
+    while(temp_code_size > 0){
       if (add_frame_to_process(process_conf, CODE_PAGE, 0)<0){
         print_memory_no_arg("problem with memory allocator :  code space allocator\n");
         return -1;
       }
       temp_code_size -= FRAME_SIZE;
     }
-    while(temp_code_size > 0);
   #endif 
   //We add stack' memory
-  do{
+  while(size_stack > 0){
     if (add_frame_to_process(process_conf, STACK_PAGE, 0)<0){
       print_memory_no_arg("problem with memory allocator :  stack allocator\n");
       return -1;
     }
     size_stack -= FRAME_SIZE;
   }
-  while(size_stack > 0);
   //We associate the necessary frames and the page tables for the heap  
-  do{
+  while(heap_size > 0){
     if (add_frame_to_process(process_conf, HEAP_PAGE, 0)<0){
       print_memory_no_arg("problem with memory allocator :  frame allocator heap\n");
       return -1;
     }
     heap_size -= FRAME_SIZE;
   }
-  while(heap_size > 0);
   return 0;
 }
 
@@ -525,7 +543,7 @@ static int init_mem_proc(process* process_conf){
   if (user_page_table_level_2 == NULL){
     return -1;
   }
-  print_memory_no_arg("--------------Starting Memory allocation-------------\n");
+  print_memory_no_arg("--------------Starting Process Memory allocation-------------\n");
   debug_print_memory("Lvl2 address %p for process name %s // pid : %d \n",
        user_page_table_level_2, process_conf->process_name, process_conf->pid);
   process_conf->page_table_level_2 = user_page_table_level_2;
@@ -570,6 +588,8 @@ static int init_mem_proc(process* process_conf){
   return 0;
 }
 
+
+
 int process_memory_allocator(process* process_conf, unsigned long size){
   //We initiate the lvl2 page and we link to the only lvl1 page that will use
   //this page will be linked to lvl0 pages that contain 2Mb of data
@@ -589,12 +609,16 @@ int process_memory_allocator(process* process_conf, unsigned long size){
     //which will be copied from else where
     int code_size = (int) ((long) process_conf->app_pointer->end - (long) process_conf->app_pointer->start);
     debug_print_memory("Code needs to be added to the process // code size =  %d \n", code_size);
-    if (add_frames_process(process_conf, code_size, heap_size, size)<0){
+    //The + FRAME SIZE is used as a temporary measure because
+    //some elf headers are not added to the code size and we need to find 
+    //a way to compute their size
+    if (add_frames_process(process_conf, code_size, size, heap_size)<0){
       return -1;
     };
+
   #endif
   #ifdef KERNEL_PROCESSES_ON
-    if (add_frames_process(process_conf, 0, heap_size, size)<0){
+    if (add_frames_process(process_conf, 0, size, heap_size)<0){
       return -1;
     };
   #endif
@@ -781,11 +805,104 @@ int free_process_memory(process* proc)
   return 0;
 }
 
-int copy_process_memory(process* dest_proc, process* src_proc){
-  if (init_mem_proc(src_proc)<0){
+
+int copy_process_memory(process* new_proc, process* old_proc){
+  //We initiate the basic structure for the memory setup
+  if (init_mem_proc(new_proc)<0){
     return -1;
   }
-  // memcpy(proc->page_tables_lvl_1_list)
+  //We create the necessary links for pages and we allocate them
+  if (add_frames_process(new_proc, 
+        FRAME_SIZE*old_proc->mem_info.code_usage,
+        FRAME_SIZE*old_proc->mem_info.stack_usage,
+        FRAME_SIZE*old_proc->mem_info.heap_usage)<0){
+    return -1;
+  }
+  // printf("code_usage dest %d, src %d \n", new_proc->mem_info.code_usage,
+  //              old_proc->mem_info.code_usage);
+  // printf("stack_usage dest %d, src %d \n", new_proc->mem_info.stack_usage,
+  //              old_proc->mem_info.stack_usage);
+  // printf("heap_usage dest %d, src %d \n", new_proc->mem_info.heap_usage,
+  //              old_proc->mem_info.heap_usage);
+  
+  assert(new_proc->mem_info.code_usage == old_proc->mem_info.code_usage);
+  assert(new_proc->mem_info.stack_usage == old_proc->mem_info.stack_usage);
+  assert(new_proc->mem_info.heap_usage == old_proc->mem_info.heap_usage);
+  page_table_link_list_t* lvl0_parent = old_proc->page_tables_lvl_1_list->head_page;
+  while(lvl0_parent != NULL){
+    debug_print_memory("[]Parent lvl0 page, page usage %d, index %d, type = %d\n",
+        lvl0_parent->usage, lvl0_parent->index, lvl0_parent->page_type);
+   page_table_link_list_t* lvl0_src = hash_get(old_proc->page_tables_lvl_1_list->link_index_table,
+                             (void*)((uint64_t)lvl0_parent->index), NULL);
+    debug_print_memory("[Src]parent by index, page usage %d, index %d type = %d\n",
+        lvl0_src->usage, lvl0_src->index, lvl0_src->page_type);
+    lvl0_parent = lvl0_parent->next_page;
+  }
+
+  page_table_link_list_t* lvl0_iter = new_proc->page_tables_lvl_1_list->head_page;
+  while(lvl0_iter != NULL){
+    debug_print_memory("[Dest]Copying lvl0 page, page usage %d, index %d, type = %d\n",
+        lvl0_iter->usage, lvl0_iter->index, lvl0_iter->page_type);
+    bool reverse_order = false;
+    bool exec_perm = false;
+    if (lvl0_iter->page_type == STACK_PAGE){
+      reverse_order = true;
+    } 
+    if (lvl0_iter->page_type == CODE_PAGE){
+      exec_perm = true;
+    }
+    (void)exec_perm;
+    page_table_link_list_t* lvl0_src = 0;
+    page_table_link_list_t* lvl0_parent = old_proc->page_tables_lvl_1_list->head_page;
+    while(lvl0_parent != NULL){
+      if (lvl0_parent->index == lvl0_iter->index){
+        lvl0_src = lvl0_parent;
+        break;
+      }
+      lvl0_parent = lvl0_parent->next_page;
+    }
+    // page_table_link_list_t* lvl0_src = 
+    // hash_get(old_proc->page_tables_lvl_1_list->link_index_table,
+                            //  (void*)((uint64_t)lvl0_iter->index), NULL);
+    debug_print_memory("[Src]Copying lvl0 page, page usage %d, index %d type = %d\n",
+        lvl0_src->usage, lvl0_src->index, lvl0_src->page_type);
+    if (lvl0_src == NULL){
+      assert(0);
+      return -1;
+    }
+    //We make sure everything is well configured
+    assert(lvl0_src->usage == lvl0_iter->usage);
+    page_table_entry* mega_entry = new_proc->page_tables_lvl_1_list->table->pte_list+(lvl0_iter->index);
+    configure_page_entry(mega_entry,
+          (long unsigned int) lvl0_iter->table, 
+          false,false,false,//No R,W,X 
+          true,
+          KILO);
+    for(int tab_iter = 0; tab_iter<lvl0_iter->usage; tab_iter++){
+      void* frame_pointer = get_frame();
+      if (frame_pointer == 0){return -1;}
+      int index_kilo = 0;
+      if (reverse_order){
+        index_kilo = (PT_SIZE-1-tab_iter);
+      } else {index_kilo = tab_iter;}
+      memcpy(frame_pointer, find_pte_adress(lvl0_src->table->pte_list+index_kilo),
+                      FRAME_SIZE);
+      // assert(memcmp(frame_pointer, find_app("test31")->start, FRAME_SIZE) == 0); 
+      configure_page_entry(lvl0_iter->table->pte_list+index_kilo,
+        (long unsigned int) frame_pointer, 
+        true,true, exec_perm,
+        true,
+        KILO);
+    }
+    lvl0_iter = lvl0_iter->next_page;
+  }
+  if (old_proc->shared_pages != NULL){
+    shared_pages_proc_t* shared_iter = old_proc->shared_pages->head_shared_page;
+      while (shared_iter!=NULL){
+        shm_acquire(new_proc, shared_iter->key);
+        shared_iter = shared_iter->next_shared_page;
+      }
+  } else {new_proc->shared_pages = NULL;}
   return 0;
 }
 

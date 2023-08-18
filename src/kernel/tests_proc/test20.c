@@ -118,7 +118,7 @@ int philosophe(void *arg)
         int k;
         struct philo *p;
 
-        p = shm_acquire("shm_philo");
+        p = shm_acquire(0, "shm_philo");
         assert(p != (void*)0);
 
         for (k = 0; k < 6; k++) {
@@ -157,7 +157,7 @@ int test20(void *arg)
 
         (void)arg;
 
-        p = (struct philo*) shm_create("shm_philo");
+        p = (struct philo*) shm_create(0, "shm_philo");
         assert(p != (void*)0);
 
         xscreate(&p->mutex_philo); /* semaphore d'exclusion mutuelle */

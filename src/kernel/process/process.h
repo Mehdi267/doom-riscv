@@ -16,6 +16,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "logger.h" //Import the logging functions
+#include "traps/trap.h" //Use in the fork syscall to get register values
 #include "../memory/virtual_memory.h" 
 #include "../memory/pages.h" // used to access structs for page managements
 #include "../sync/msgqueue.h" // for message_t
@@ -117,6 +118,17 @@ typedef struct fd_file_proc{
   struct fd_file_proc* file_previous;
 } open_fd;
 
+/**
+ * @brief This linked list will be used
+ * to save the initilization data of new processes
+ */
+typedef struct fork_init_data {
+  int pid;
+  struct trap_frame trap_return;
+  struct fork_init_data* next_data;
+  struct fork_init_data* previous_data;
+} fork_d;
+
 struct process_management_global {
   hash_t *pid_process_hash_table;    // Hash table that associates to every pid the process struct associated to it
   int current_running_process_pid;   // Id of the process that is currently running (changed dynamically by the scheduler)
@@ -124,6 +136,7 @@ struct process_management_global {
   int nb_proc_running;               // Counts the currently running processes
   id_list_t *process_id_list;        // Saves all the used ids of the processes
   int killed_counter;                // Counter indicating the order at which processes were killed
+  fork_d* forked_data_list;          // Linked list to save the init data for forked processes
 };
 extern struct process_management_global proc_mang_g;
 
@@ -233,9 +246,19 @@ typedef struct process_directory{
   inode_t* inode;
 } p_dir_t;
 
+/**
+ * @brief This struct is used to keep track of memory usage 
+ * of the process that we are currectly using.
+ */
+typedef struct mem_proc{
+  uint32_t code_usage;
+  uint32_t stack_usage;
+  uint32_t heap_usage;
+  uint32_t shared_pages_usage;
+} mem_proc;
 
 /**
-  * @brief this structure is given to all processesn it will stored at the kernel level
+  * @brief , struct trape_frame*this structure is given to all processesn it will stored at the kernel level
   * @param pid  id of the process
   * @param process_name  process name
   * @param state  state of the process
@@ -274,6 +297,7 @@ typedef struct process_t {
                      // next and prev pointer
   // Process return value
   int return_value; // return value of the process, used in waitpid
+  mem_proc mem_info;//Used to track process memory usage
   // Process memory management
   page_table *page_table_level_2; // Pointer to the level  2 page table
                                   // associated with the process
@@ -374,6 +398,13 @@ extern void process_call_wrapper_user(void);
  * to execute \n
  */
 extern void context_switch(context_t *current, context_t *future);
+
+/**
+ * @brief Copies the registers in the new context from the parents 
+ * current execution it will be used in the fork syscall
+ * @param new_context 
+ */
+extern void init_fork(struct trap_frame *parent_frame);
 
 /**
  * @brief This method is called when we want to jump to the context of a process
@@ -558,21 +589,44 @@ extern void show_ps_info();
  */
 extern void show_programs();
 
-int exec(int pid);
+/**
+ * @brief Create an identical copy of the current process.
+ *
+ * This function creates a new process (child process) that is an exact
+ * copy of the calling process (parent process) in terms of memory layout,
+ * memory data, and file system state. The new process will be a child of
+ * the parent process provided as a function argument. The child process
+ * will have an identical memory layout and data as the parent process.
+ * Additionally, an exact copy of the file system(open files and so on) will be created, including
+ * the same open files. Both processes will share the same root and current
+ * directory.
+ *
+ * @param parent_pid The process ID of the parent process.
+ * @return On success, the process ID of the newly created child process is
+ *         returned in the parent process, and 0 is returned in the child
+ *         process. On failure, -1 is returned in the parent process, and no
+ *         child process is created. The global 'errno' variable is set to
+ *         indicate the error.
+ */
+int fork(int parent_pid, struct trap_frame*);
 
 /**
- * @brief Create an identival copy of the current process
- * the new proccess will be a child of the parent proccess given 
- * as function argument and the new process will have the same
- * memory layout and it will also have the same memory data 
- * an exact copy of the file system will be created having 
- * the same open files and also the two process will have the same 
- * root and current directory.
- * @param parent_pid 
- * @return int 
+ * @brief Execute a new program in the current process.
+ *
+ * This function replaces the current process image with a new program
+ * specified by the given executable filename. The new program is loaded
+ * into the current process's memory space, and its execution begins.
+ *
+ * @param filename The path to the executable file to be executed.
+ * @param argv An array of pointers to null-terminated strings that
+ *        represent the command-line arguments to be passed to the new program.
+ *        The last element of the array must be a null pointer.
+ * @param envp An array of pointers to null-terminated strings that represent
+ *        the environment variables to be passed to the new program. The last
+ *        element of the array must be a null pointer.
+ * @return On success, this function does not return; the new program starts
+ *         executing. On failure, -1 is returned.
  */
-int fork(int parent_pid);
-int setsid(int pid);
-
+int execve(const char *filename, char *const argv[], char *const envp[]);
 
 #endif

@@ -16,7 +16,7 @@ int malicious(void *arg)
 
         assert(arg == NULL);
 
-        shared_area = shm_acquire("test22-shm");
+        shared_area = shm_acquire(0, "test22-shm");
         assert(shared_area != NULL);
 
         /* The parent process should have filled the shared area */
@@ -100,7 +100,7 @@ int test22(void *arg)
         /*
          * Check virtual memory mappings consistency.
          */
-        shared_area = shm_create("test22-shm");
+        shared_area = shm_create(0, "test22-shm");
         assert(shared_area != NULL);
 
         /* The malicious process will check this value */

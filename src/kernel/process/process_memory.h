@@ -27,7 +27,12 @@ typedef struct frame_info{
 #define HEAP_FRAME_SIZE 128U
 #define SHARED_FRAME_SIZE 256U 
 
-
+#define CUSTOM_MOD_DIV(number, divisor) \
+    ({ \
+        int remainder = (number) % (divisor); \
+        (remainder > 0) ? ((number) / (divisor) + 1) : ((number) / (divisor)); \
+    })
+    
 //These indicies will be used to index elements 
 //that are present in the lvl 1 page table
 #define STACK_CODE_SPACE_START 0
