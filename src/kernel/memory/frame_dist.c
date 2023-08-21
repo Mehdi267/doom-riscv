@@ -51,7 +51,7 @@ void *get_frame() {
     mem_usage++;
     void *ptr = mem_ptr;
     mem_ptr = *(char**)ptr;
-    // printf("Getting frame %p\n", ptr);
+    //printf("Getting frame %p\n", ptr);
     return ptr;
 }
 

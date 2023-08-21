@@ -229,6 +229,6 @@ static void awake_sleeping_process() {
 static void free_dead_process() {
   while (!queue_empty(&dead_process_queue)) {
     process *top = queue_out(&dead_process_queue, process, next_prev);
-    free_process_memory(top);
+    free_process_memory(top, DELETE_ALL);
   }
 }

@@ -68,7 +68,6 @@ unsigned long syscall_handler(struct trap_frame *tf) {
     case SYSC_pcount:
       return pcount(tf->a0, (int*) tf->a1);
     case SYSC_pcreate:
-      // printf("--------pcreate called =  -----------\n");
       return pcreate(tf->a0);
     case SYSC_pdelete:
       return pdelete(tf->a0);
@@ -177,6 +176,8 @@ unsigned long syscall_handler(struct trap_frame *tf) {
       return sys_pipe((int*)tf->a0);
     case SYSC_fork:
       return fork(getpid(), tf);
+    case SYSC_execve:
+      return execve((const char*)tf->a0, (char **const) tf->a1, (char **const) tf->a2);
     case SYSC_print_dir_elements:
       print_dir_elements((const char*)tf->a0);    
       break;
@@ -185,6 +186,9 @@ unsigned long syscall_handler(struct trap_frame *tf) {
       break;
     case SYSC_void_call:
       void_call();
+      break;
+    case SYSC_ld_progs_into_disk:
+      write_user_apps_fs();
       break;
     default:
       printf("Syscall code does not match any of the defined syscalls");

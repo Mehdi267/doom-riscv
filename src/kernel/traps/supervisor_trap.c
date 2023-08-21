@@ -106,7 +106,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
         }
       case CAUSE_LOAD_PAGE_FAULT:
         // while(1){}
-        // blue_screen(tf);
+        blue_screen(tf);
         if (user){
           PRINT_RED("Killing proces = (CAUSE_LOAD_PAGE_FAULTs)\n");
           kill(getpid());

@@ -23,6 +23,7 @@ typedef struct frame_info{
   page_table* page_table; 
 } frame_loc;
 
+
 #define STACK_FRAME_SIZE 128U
 #define HEAP_FRAME_SIZE 128U
 #define SHARED_FRAME_SIZE 256U 
@@ -75,5 +76,13 @@ extern int add_frame_to_process(process* proc_conf, page_t page_type, frame_loc*
  * pages in the stack and heap 
 */
 extern int copy_process_memory(process* dest_proc, process* src_proc);
+
+/**
+ * @brief Get the first stack page of the process given 
+ * as function argument
+ * @param proc the process that we would like to extract its first page
+ * @return void* the pointer to the page
+ */
+void* get_first_stack_page(process* proc);
 
 #endif

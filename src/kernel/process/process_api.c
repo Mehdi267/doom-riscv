@@ -29,6 +29,7 @@
 
 //Fs imports
 #include "../fs/fs_api.h" //for open and dup2 syscall
+#include "../fs/inode_util.h" //to get inode out of filename
 
 #define FLOAT_TO_INT(x) (int)((x) + 0.5)
 
@@ -44,7 +45,7 @@ static int free_process_arg_and_fix_tree_link(process *process_to_free,
 static int make_children_orphans_and_kill_zombies(process *parent_process);
 static int turn_current_process_into_a_zombie_or_kill_it(bool current_or_custom,
                                                          int pid);
-static int process_name_copy(process *p, const char *name);
+static int process_name_copy(process *p, const char *name, size_t);
 
 /*
 ** MAIN FUNCTIONS
@@ -217,7 +218,7 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio,
            new_process);
 
   new_process->prio = prio;                     // Priority config
-  if (process_name_copy(new_process, name) < 0) // this function fails if size
+  if (process_name_copy(new_process, name, 0) < 0) // this function fails if size
     return -1;
 
   // We add PROCESS_SETUP_SIZE because we need space to call the function
@@ -360,7 +361,7 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
            new_process);
 
   new_process->prio = prio;                     // Priority config
-  if (process_name_copy(new_process, name) < 0) // this function fails if size
+  if (process_name_copy(new_process, name, 0) < 0) // this function fails if size
     return -1;
 
   // We add PROCESS_SETUP_SIZE because we need space to call the function
@@ -371,7 +372,7 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
   new_process->released_pages_list = NULL;
   // We need to find the application related to the process, it is at that
   // address where the code will be stored
-  new_process->app_pointer = find_app(name);
+  new_process->app_pointer = (struct uapps*) find_app(name);
   if (new_process->app_pointer == NULL) {
     // Cannot locate app code
     return -1;
@@ -480,11 +481,11 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
   return new_process->pid;
 }
 
-
+//------------------Fork syscall----------------
 // int block_forked;
 // struct trap_frame trap_return;
 void return_from_trap_frame(){
-  printf("[fork]Inside child process\n");
+  // printf("[fork]Inside child process\n");
   fork_d* fork_iter = proc_mang_g.forked_data_list;
   struct trap_frame frame;
   while(fork_iter != NULL){
@@ -552,7 +553,7 @@ int fork(int parent_pid, struct trap_frame* tf){
   hash_set(get_process_hash_table(), cast_int_to_pointer(new_process->pid),
            new_process);
   new_process->prio = parent_p->prio;
-  if (process_name_copy(new_process, parent_p->process_name) < 0){
+  if (process_name_copy(new_process, parent_p->process_name, 0) < 0){
     return -1;
   }
   new_process->ssize = parent_p->ssize;
@@ -641,8 +642,132 @@ int fork(int parent_pid, struct trap_frame* tf){
   //---Add process to activatable queue
   queue_add(new_process, &activatable_process_queue, process, next_prev, prio);
   check_if_new_prio_is_higher_and_call_scheduler(new_process->prio, true, 0);
-  printf("Fork finished\n");
+  // printf("Fork finished\n");
   return new_process->pid;
+}
+
+//------------------Fork syscall end----------------
+
+static void* find_pte_adress(page_table_entry* pte){
+  return (void*)((long) pte->ppn2*GIGA_SIZE+pte->ppn1*MEGA_SIZE+pte->ppn0*KILO_SIZE);
+}
+
+static void set_satp(uint64_t new_value) {
+    __asm__ __volatile__(
+        "csrw satp, %0"
+        :
+        : "r"(new_value)
+    );
+}
+
+int execve(const char *filename, char *const argv[], char *const envp[]){
+  process* cur_proc = get_process_struct_of_pid(getpid());
+  if (cur_proc == 0){return -1;}
+  inode_t* new_inode = walk_and_get(filename, 0);
+  if (new_inode == 0){return -1;}
+  //We get the code of the app from disk and save it
+  cur_proc->app_pointer = 
+      (struct uapps*) malloc(sizeof(struct uapps));
+  if (cur_proc->app_pointer == NULL) {
+    return -1;
+  }
+  cur_proc->app_pointer->start = (void*)malloc(new_inode->i_size);
+  if (cur_proc->app_pointer->start == NULL){return -1;}
+  int fd = open(cur_proc, filename, O_RDONLY, 0);
+  if (fd<0){return -1;}
+  assert(read(fd, cur_proc->app_pointer->start, new_inode->i_size)
+       == new_inode->i_size);
+  cur_proc->app_pointer->end = (void*)((char*)cur_proc->app_pointer->start +
+                           new_inode->i_size);
+  close(fd);
+  assert(memcmp(cur_proc->app_pointer->start,
+        find_app("test_execve")->start, new_inode->i_size) == 0); 
+
+  path_fs* path_data = extract_files(filename);
+  if (path_data == 0){ return -1;}
+  free(cur_proc->process_name);
+  if (process_name_copy(cur_proc, path_data->files[path_data->nb_files -1],
+        strlen(path_data->files[path_data->nb_files -1])) < 0){
+    return -1;
+  }
+  free_path_fs(path_data);
+
+  // Calculate the total size needed for all strings and pointers
+  int argc = 0;
+  while (argv && argv[argc] != NULL) {
+    argc++;
+  }
+  size_t total_size_arg = (argc + 1) * sizeof(char *) + argc * sizeof(char);
+  for (int i = 0; i < argc; i++) {
+    total_size_arg += strlen(argv[i]) + 1;
+  }
+  if (total_size_arg>FRAME_SIZE){
+    //to many args
+    return -1;
+  }
+  // Allocate memory space
+  void *argv_mem = (void*)malloc(total_size_arg);
+  // Copy the pointers and strings into the memory page
+  char **new_argv = argv_mem;
+  char *data_ptr = (char *)(new_argv + (argc + 1));  // Skip space for pointers
+  for (int i = 0; i < argc; i++) {
+    new_argv[i] = (void*)((uint64_t)data_ptr-(uint64_t)new_argv);
+    strcpy(data_ptr, argv[i]);
+    data_ptr += strlen(argv[i]) + 1;
+  }
+  new_argv[argc] = NULL;  // NULL-terminate the pointers
+
+  //We set to them to null to avoid errors
+  void* old_lvl2 = cur_proc->page_table_level_2;
+  if (free_process_memory(cur_proc, DELETE_MEM_FS)<0){
+    return -1;
+  }
+  cur_proc->page_table_level_2 = NULL;
+  cur_proc->page_tables_lvl_1_list = NULL;
+  cur_proc->shared_pages = NULL;
+  cur_proc->released_pages_list = NULL;
+  cur_proc->proc_shared_hash_table = NULL;
+  if (process_memory_allocator(cur_proc, FRAME_SIZE) < 0) {
+    print_memory_no_arg("Memory is full");
+    return -1;
+  }
+  assert(memcmp(find_pte_adress(cur_proc->page_tables_lvl_1_list->head_page->table->pte_list+0),
+      find_app("test_execve")->start, FRAME_SIZE) == 0); 
+
+  cur_proc->stack_shift = STACK_FRAME_SIZE*PT_SIZE;
+  //The pointer must have addresses in the stack page in which we place
+  //argv and not the address when of the frame
+  void *memory_page = (void*)((char*)get_first_stack_page(cur_proc)
+      + FRAME_SIZE - total_size_arg);
+  uint64_t offset = (uint64_t)0x40000000 + FRAME_SIZE * (cur_proc->stack_shift-1) +
+                                  (uint64_t)memory_page%FRAME_SIZE;
+  for (int i = 0; i < argc; i++) {
+    new_argv[i] = (void*)((uint64_t)new_argv[i]+offset);
+  }
+  memcpy(memory_page, new_argv, total_size_arg);
+  free(argv_mem);
+
+  cur_proc->context_process->sp =
+      (uint64_t)0x40000000 + FRAME_SIZE * cur_proc->stack_shift - total_size_arg - 1;
+  //We place the argc in s2 and argv pointer in s3 and later on
+  //we just call the new process
+  cur_proc->context_process->ra = (uint64_t)process_call_wrapper_user;
+  cur_proc->context_process->sepc = 0x40000000;
+  cur_proc->context_process->s[2] = (uint64_t)argc;
+  cur_proc->context_process->s[3] = (uint64_t)0x40000000 + FRAME_SIZE * 
+                                  (cur_proc->stack_shift-1) + (uint64_t)memory_page%FRAME_SIZE;
+  cur_proc->context_process->satp =
+      0x8000000000000000 |
+      ((long unsigned int)cur_proc->page_table_level_2 >> 12) |
+      ((long unsigned int)cur_proc->pid << 44);
+  set_satp(cur_proc->context_process->satp);
+  release_frame(old_lvl2);
+  free(cur_proc->app_pointer->start);
+  free(cur_proc->app_pointer);
+  __asm__ __volatile__("sfence.vma x0, x0" :  :  :);
+  direct_context_jump(cur_proc->context_process);
+  printf("Exec has finished");
+  return 0;
 }
 
 int waitpid(int pid, int *retvalp) {
@@ -814,7 +939,7 @@ static int free_child_zombie_process(process *process_to_free) {
                        process_to_free->pid, process_to_free->process_name);
     // If we killed the process using the kill method then we can removea it
     // directly
-    return free_process_memory(process_to_free);
+    return free_process_memory(process_to_free, DELETE_ALL);
   }
   return 0;
 }
@@ -946,8 +1071,11 @@ static int turn_current_process_into_a_zombie_or_kill_it(bool current_or_custom,
   return 0;
 }
 
-static int process_name_copy(process *p, const char *name) {
-  size_t size = strlen(name);
+static int process_name_copy(process *p, const char *name, size_t size_arg) {
+  size_t size;
+  if (size_arg == 0){
+    size = strlen(name);
+  } else {size = size_arg;}
   if (size > MAX_SIZE_NAME)
     return -1;
   secmalloc(p->process_name, size + 1);

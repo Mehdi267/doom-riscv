@@ -405,7 +405,7 @@ static int allocate_memory_final(process* proc_conf, int start_index,
       else{
         memset(frame_pointer, 0, FRAME_SIZE);
       }
-      debug_print_memory("Creating frame to %p\n", frame_pointer);  
+      debug_print_memory("Created frame add %p\n", frame_pointer);  
       configure_page_entry(kilo_table_entry,
             (long unsigned int )frame_pointer, 
             true, true, writing_data,
@@ -597,8 +597,6 @@ int process_memory_allocator(process* process_conf, unsigned long size){
     return -1;
   }
   //----------------------------Reserving space -------------------
-  //This stack shift will help us determine the value of the stack pointer
-  process_conf->stack_shift = 0;
   //The current value of the heap size is set so that we can have at least one frame
   int heap_size = 1;//This value represent the initial size of the heap(limited to one page)
   debug_print_memory("Reserving space for the process %s // %d \n",
@@ -712,9 +710,12 @@ int free_frames_page_table(page_table_link_list_t* page_table_link){
   return 0;
 }
 
-int free_fs_proc(process* proc){
+int free_fs_proc(process* proc, del_t del_type){
   if (close_all_files(proc)<0){
     return -1;
+  }
+  if (del_type != DELETE_ALL){
+    return 0;
   }
   if (proc->root_dir.dir_name != 0){
     free(proc->root_dir.dir_name);
@@ -725,15 +726,14 @@ int free_fs_proc(process* proc){
   return 0;
 }
 
-int free_process_memory(process* proc)
-{
+int free_process_memory(process* proc, del_t del_type){
   print_memory_no_arg("--------------Free process memory-------------\n");
   if (proc == NULL){
     return -1;
   }
   #ifdef VIRTMACHINE
-    if (free_fs_proc(proc)<0){
-    return -1;
+    if (free_fs_proc(proc, del_type)<0){
+      return -1;
     }
   #endif
   proc_mang_g.nb_proc_running--;
@@ -762,7 +762,10 @@ int free_process_memory(process* proc)
       released_iter = released_iter->next_released_page;
       free(released_iter_prev);
     }
-    hash_destroy(proc->proc_shared_hash_table);
+    if (del_type != DELETE_ALL){
+      hash_destroy(proc->proc_shared_hash_table);
+      free(proc->proc_shared_hash_table);
+    }
   }
   debug_print_memory("--------Shared frames released for the process/ id -> %d -------- : %s\n",
             proc->pid, proc->process_name); 
@@ -781,9 +784,14 @@ int free_process_memory(process* proc)
     }
     free_frames_page_table(proc->page_tables_lvl_1_list); //We only free one page
     release_frame(proc->page_tables_lvl_1_list->table);
-    release_frame(proc->page_table_level_2);
-    release_frame(proc->sscratch_frame);
+    if (del_type == DELETE_ALL){
+      release_frame(proc->page_table_level_2);
+      release_frame(proc->sscratch_frame);
+    }
     free(proc->page_tables_lvl_1_list);
+  }
+  if (del_type != DELETE_ALL){
+    return 0;
   }
   //We remove share page and all the memory associated to them
   if (hash_del(get_process_hash_table(),
@@ -906,3 +914,15 @@ int copy_process_memory(process* new_proc, process* old_proc){
   return 0;
 }
 
+
+void* get_first_stack_page(process* proc){
+  page_table_link_list_t* lvl0_iter = proc->page_tables_lvl_1_list->head_page;
+  while(lvl0_iter != NULL){
+    if (lvl0_iter->page_type == STACK_PAGE 
+        && lvl0_iter->index == STACK_CODE_SPACE_END){
+      return find_pte_adress(lvl0_iter->table->pte_list+PT_SIZE-1); 
+    }
+    lvl0_iter = lvl0_iter->next_page;
+  }
+  return 0;
+}

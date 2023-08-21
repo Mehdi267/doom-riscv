@@ -82,10 +82,12 @@
 #define SYSC_dup2               62
 #define SYSC_pipe               63
 #define SYSC_fork               64
+#define SYSC_execve             65
+#define SYSC_ld_progs_into_disk     66
 
-#define SYSC_print_dir_elements 66 
-#define SYSC_fs_info            67
-#define SYSC_void_call          68
-#define NB_SYSCALLS             69
+#define SYSC_print_dir_elements 76 
+#define SYSC_fs_info            77
+#define SYSC_void_call          78
+#define NB_SYSCALLS             79
 
 #endif

@@ -323,7 +323,7 @@ typedef struct process_t {
   int sem_signal;
   int semaphore_id;
   //App struct pointer
-  const struct uapps* app_pointer;
+  struct uapps* app_pointer;
   //File system
   p_dir_t root_dir; //Contains information 
                     //about the root dir 
@@ -460,6 +460,13 @@ extern int getpid(void);
 int check_if_new_prio_is_higher_and_call_scheduler(int newprio,
                                                    bool current_or_queue,
                                                    int prio_to_compare_queue);
+//This is usd in the free_process_memory to specify
+//the extent at which we would like to delete things
+typedef enum delete_types{
+  DELETE_MEM_FS, //Delete memory usage and close all fs
+                 //related pointers
+  DELETE_ALL,
+} del_t;
 
 /**
  * @brief Complete frees all of the memory that the process is using within the kernel
@@ -468,7 +475,7 @@ int check_if_new_prio_is_higher_and_call_scheduler(int newprio,
  * @param proc the process that we want to free its memory
  * @return int a positive value if the memory was successfully deleted
  */
-int free_process_memory(process* proc);
+int free_process_memory(process* proc, del_t);
 
 /**
  * @brief Adds the frame pointer to the struct within the process that holds a linked list

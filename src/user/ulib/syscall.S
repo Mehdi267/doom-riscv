@@ -71,3 +71,5 @@ syscall(dup2)
 syscall(pipe)
 syscall(fork)
 syscall(void_call)
+syscall(execve);
+syscall(ld_progs_into_disk);
