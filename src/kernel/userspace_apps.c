@@ -34,6 +34,8 @@ int write_user_apps_fs(){
   while (symbols_table[app].name != NULL){
     int code_size = (int) ((long) symbols_table[app].end - 
         (long) symbols_table[app].start);
+    // printf("prog = %s csize = %d\n",
+    //      symbols_table[app].name ,code_size);
     char dir[] = "/bin/";
     uint64_t name_len = strlen(dir)+strlen(symbols_table[app].name)+1;
     char buf[name_len];

@@ -140,9 +140,14 @@ static int link_shared_page_to_process(process* proc_conf, shared_page_t* page_i
     //We can't find any released pages so we create a new page 
     //This method will configure the shared page node and place the location that was found in a table 
     //in it and it will also add the table to node this will allow us to easily configure the page later
-    if (add_frame_to_process(proc_conf, SHARED_PAGE, 0)<0){
+    frame_loc frame;
+    if (add_frame_to_process(proc_conf, SHARED_PAGE, &frame)<0){
       return -1;
     }
+    proc_conf->shared_pages->tail_shared_page->lvl0_index = frame.lvl0_index;
+    proc_conf->shared_pages->tail_shared_page->lvl1_index = frame.lvl1_index;
+    proc_conf->shared_pages->tail_shared_page->lvl2_index = frame.lvl2_index;  
+    proc_conf->shared_pages->tail_shared_page->page_table = frame.page_table;
   }
   //We link the shared page to the hash table that maps keys to shared pages
    

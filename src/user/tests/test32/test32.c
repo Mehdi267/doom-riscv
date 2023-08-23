@@ -33,5 +33,6 @@ int test_exec(){
 
 int main() {
   assert(test_exec() == 0);
+  printf("Exec test success\n");
   return 0;
 }

@@ -179,7 +179,7 @@ static int add_child_node_page_table(process* proc_conf, page_table_link_list_t 
  * @param lvl2_index the level 2 index(remains experimental because we only use giga page for the user currently)
  * @return int a positive value if successful and negative value otherwise
  */
-static int link_lvl1_table_shared_page(process* proc_conf, int lvl2_index, int lvl1_index, page_table* lvl0_table){
+static int link_lvl1_table_direct(process* proc_conf, int lvl2_index, int lvl1_index, page_table* lvl0_table){
   if (proc_conf->page_tables_lvl_1_list == NULL){
     return -1;
   }
@@ -220,18 +220,22 @@ int add_frame_to_process(process* proc_conf, page_t page_type, frame_loc* frame_
   int index_end;
   switch (page_type){
     case CODE_PAGE:
+      proc_conf->mem_info.code_usage++;
       index_start = STACK_CODE_SPACE_START;
       index_end =  STACK_CODE_SPACE_END;
       break;
     case STACK_PAGE:
+      proc_conf->mem_info.stack_usage++;
       index_start = STACK_CODE_SPACE_START;
       index_end =  STACK_CODE_SPACE_END;
       break;
     case HEAP_PAGE:
+      proc_conf->mem_info.heap_usage++;
       index_start = HEAP_SPACE_START;
       index_end =  HEAP_SPACE_END;
       break;
     case SHARED_PAGE:
+      proc_conf->mem_info.shared_pages_usage++;
       index_start = SHARED_MEMORY_START;
       index_end =  SHARED_MEMORY_END;
       break;
@@ -246,19 +250,6 @@ int add_frame_to_process(process* proc_conf, page_t page_type, frame_loc* frame_
         lvl0_iterator->index<= index_end &&
         lvl0_iterator->page_type == page_type){
       if (lvl0_iterator->usage < PT_SIZE){
-        if (page_type == SHARED_PAGE){
-          if (proc_conf == NULL || 
-              proc_conf->shared_pages == NULL || 
-              proc_conf->shared_pages->tail_shared_page== NULL){
-            return -1;
-          }
-          proc_conf->shared_pages->tail_shared_page->lvl0_index = lvl0_iterator->usage;
-          proc_conf->shared_pages->tail_shared_page->lvl1_index = lvl0_iterator->index;
-          proc_conf->shared_pages->tail_shared_page->lvl2_index = USERSPACE;//This value is constant but we 
-                                                                            //might make it depend on a specific 
-                                                                            //location in the table
-          proc_conf->shared_pages->tail_shared_page->page_table = lvl0_iterator->table;
-        }
         if (frame_info != 0){save_frame_data(lvl0_iterator, frame_info, page_type);}
         //We found a empty page, and we then increase its usage
         lvl0_iterator->usage++;
@@ -275,16 +266,12 @@ int add_frame_to_process(process* proc_conf, page_t page_type, frame_loc* frame_
   }
   if (frame_info != 0){save_frame_data(node_lvl1->tail_page, frame_info, page_type);}
   if (page_type == SHARED_PAGE){
-    if (proc_conf == NULL || proc_conf->shared_pages == NULL || proc_conf->shared_pages->tail_shared_page== NULL){
-      return -1;
-    }
-    proc_conf->shared_pages->tail_shared_page->lvl0_index = node_lvl1->tail_page->usage;
-    proc_conf->shared_pages->tail_shared_page->lvl1_index = node_lvl1->tail_page->index;
-    proc_conf->shared_pages->tail_shared_page->lvl2_index = USERSPACE;  
-    proc_conf->shared_pages->tail_shared_page->page_table = node_lvl1->tail_page->table;
-    // print_shared_page_node("Add frame level values",proc_conf->shared_pages->tail_shared_page);
-    //We only link shared pages this way due to their dynamic nature, the other pages are linked using memory allocator
-    if (link_lvl1_table_shared_page(proc_conf, USERSPACE, node_lvl1->tail_page->index, node_lvl1->tail_page->table)<0){
+    //We only link shared pages this way due to their dynamic nature,
+    //the other pages are linked using memory allocator
+    //Could be improved, since its location is not ideal
+    //it is possible to place directly in the memory api
+    if (link_lvl1_table_direct(proc_conf, USERSPACE, node_lvl1->tail_page->index, 
+        node_lvl1->tail_page->table)<0){
       return -1;
     }
   }
@@ -388,6 +375,7 @@ static int allocate_memory_final(process* proc_conf, int start_index,
                 mega_usage_iter, index_kilo);
       void* frame_pointer = get_frame();
       if (frame_pointer == NULL){return -1;}
+      memset(frame_pointer, 0, FRAME_SIZE);
       if (writing_data){
         if (data_left<0){
           //We have written all of the data that we need to write and 
@@ -401,9 +389,6 @@ static int allocate_memory_final(process* proc_conf, int start_index,
           data_pointer = (void*)((long) data_pointer + FRAME_SIZE);
           data_left-=FRAME_SIZE;
         }
-      }
-      else{
-        memset(frame_pointer, 0, FRAME_SIZE);
       }
       debug_print_memory("Created frame add %p\n", frame_pointer);  
       configure_page_entry(kilo_table_entry,
@@ -436,12 +421,12 @@ static int process_frames_alloc(process* process_conf){
   //At this point we need to copy the code into the frames that were allocated 
   #ifdef USER_PROCESSES_ON
     int code_size = (int) ((long) process_conf->app_pointer->end - (long) process_conf->app_pointer->start);
-    page_table_link_list_t* lvl_1_node = process_conf->page_tables_lvl_1_list;
     //TODO FIX THIS AND A PERMANANT FIX
     //This is used because we need additional space for bss
     //and some other efl related directories
-    lvl_1_node->head_page->usage++;
-    process_conf->mem_info.code_usage++;
+    // page_table_link_list_t* lvl_1_node = process_conf->page_tables_lvl_1_list;
+    // lvl_1_node->head_page->usage+= 20;
+    // process_conf->mem_info.code_usage+= 20;
     if (allocate_memory_final(process_conf,
               STACK_CODE_SPACE_START, 
               STACK_CODE_SPACE_START +process_conf->page_tables_lvl_1_list->code_usage,
@@ -496,9 +481,6 @@ static int process_frames_alloc(process* process_conf){
 static int add_frames_process(process *process_conf, int temp_code_size, int size_stack, int heap_size){
   debug_print_memory("Reserving space for process code size = %d heap size = %d stack size = %d \n",
       temp_code_size, heap_size, size_stack);
-  process_conf->mem_info.code_usage = CUSTOM_MOD_DIV(temp_code_size, FRAME_SIZE);
-  process_conf->mem_info.stack_usage = CUSTOM_MOD_DIV(size_stack, FRAME_SIZE);
-  process_conf->mem_info.heap_usage = CUSTOM_MOD_DIV(heap_size, FRAME_SIZE);
   #ifdef USER_PROCESSES_ON
   //We add process' code
     while(temp_code_size > 0){
@@ -826,12 +808,12 @@ int copy_process_memory(process* new_proc, process* old_proc){
         FRAME_SIZE*old_proc->mem_info.heap_usage)<0){
     return -1;
   }
-  // printf("code_usage dest %d, src %d \n", new_proc->mem_info.code_usage,
-  //              old_proc->mem_info.code_usage);
-  // printf("stack_usage dest %d, src %d \n", new_proc->mem_info.stack_usage,
-  //              old_proc->mem_info.stack_usage);
-  // printf("heap_usage dest %d, src %d \n", new_proc->mem_info.heap_usage,
-  //              old_proc->mem_info.heap_usage);
+  printf("code_usage dest %d, src %d \n", new_proc->mem_info.code_usage,
+               old_proc->mem_info.code_usage);
+  printf("stack_usage dest %d, src %d \n", new_proc->mem_info.stack_usage,
+               old_proc->mem_info.stack_usage);
+  printf("heap_usage dest %d, src %d \n", new_proc->mem_info.heap_usage,
+               old_proc->mem_info.heap_usage);
   
   assert(new_proc->mem_info.code_usage == old_proc->mem_info.code_usage);
   assert(new_proc->mem_info.stack_usage == old_proc->mem_info.stack_usage);
@@ -889,6 +871,7 @@ int copy_process_memory(process* new_proc, process* old_proc){
     for(int tab_iter = 0; tab_iter<lvl0_iter->usage; tab_iter++){
       void* frame_pointer = get_frame();
       if (frame_pointer == 0){return -1;}
+      memset(frame_pointer, 0, FRAME_SIZE);
       int index_kilo = 0;
       if (reverse_order){
         index_kilo = (PT_SIZE-1-tab_iter);
@@ -925,4 +908,70 @@ void* get_first_stack_page(process* proc){
     lvl0_iter = lvl0_iter->next_page;
   }
   return 0;
+}
+
+int check_expansion_mem(process* proc, struct trap_frame* frame){
+  //We check if need to expand the stack
+  {
+    debug_print_memory("Checking if we need to expand the stack proc name %s\n", 
+        proc->process_name);
+    uint64_t sp_limit = (uint64_t)0x40000000 +
+           FRAME_SIZE * proc->stack_shift;
+    uint64_t current_sp = (uint64_t)frame->sp;
+    uint64_t used_pages = (sp_limit-current_sp)/FRAME_SIZE + 1;
+    long page_diff = used_pages - proc->mem_info.stack_usage;
+    if (page_diff>0 && 
+        (proc->mem_info.stack_usage + page_diff)<STACK_FRAME_SIZE*PT_SIZE){
+      debug_print_memory("Expanding memory of proc : %s by %ld \n", 
+        proc->process_name, page_diff);
+      for (uint64_t page_iter = 0; page_iter < page_diff; page_iter++){
+        frame_loc frame;
+        memset(&frame, 0,sizeof(frame_loc));
+        if (add_frame_to_process(proc, STACK_PAGE, &frame)<-1){
+          return -1;
+        }
+        //New lvl0 table
+        if (frame.lvl1_index == 1){
+          //Works only for on lvl1 page
+          assert(proc->page_tables_lvl_1_list->tail_page->page_type 
+              == STACK_PAGE);
+          if (link_lvl1_table_direct(proc, USERSPACE, 
+                  proc->page_tables_lvl_1_list->tail_page->index, 
+                  proc->page_tables_lvl_1_list->tail_page->table)<0){
+            return -1;
+          }
+        }
+        void* frame_pointer = get_frame();
+        if (frame_pointer == NULL){return -1;}
+        memset(frame_pointer, 0, FRAME_SIZE);
+        configure_page_entry(frame.page_table->pte_list+frame.lvl0_index,
+          (long unsigned int) frame_pointer, 
+          true,true, false,
+          true,
+          KILO);
+      }
+      return 0;
+    }
+  }
+  return -1;
+}
+
+/* 4 Ko heap */
+#define HEAP_SIZE       0x1000
+#define HEAP 0x50000000ul
+#define HEAP_END (HEAP + HEAP_SIZE)
+
+void *sys_sbrk(unsigned long increment){
+	static char *current = (char *) HEAP;
+  	// printf("[USER brk called ] curptr = %p \n", current);
+	char *s = current;
+	char *c = s + increment;
+
+	if ((c < current) || (c > (char *) HEAP_END)) {
+		/* We cannot grow the heap anymore */
+		return ((void *) (-1));
+	}
+	/* The heap grown */
+	current = c;
+	return s;
 }

@@ -15,6 +15,7 @@
 #include "timer.h"
 #include "syscall.h"
 #include "../process/process.h"
+#include "../process/process_memory.h"
 #include "../sync/timer_api.h"
 #include "../process/memory_api.h"
 #include "../process/scheduler.h"
@@ -31,7 +32,6 @@ extern void inc_sepc(void); // defined in supervisor_trap_entry.S
 int debug = 0;
 
 void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
-  // printf("super int %ld\n",scause&0xff);
     
   bool user = false;
   if (((csr_read(sstatus) & MSTATUS_SPP) == 0)){
@@ -96,31 +96,43 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
         csr_clear(sstatus, MSTATUS_SPP);
         break;
       case CAUSE_FETCH_PAGE_FAULT:
-        // while(1){}
-        // blue_screen(tf);
-        if (user){
-          PRINT_RED("Killing process = (CAUSE_FETCH_PAGE_FAULT)\n");
-          kill(getpid());
-          scheduler();
-          break;
-        }
-      case CAUSE_LOAD_PAGE_FAULT:
-        // while(1){}
+        // // while(1){}
         blue_screen(tf);
         if (user){
-          PRINT_RED("Killing proces = (CAUSE_LOAD_PAGE_FAULTs)\n");
-          kill(getpid());
-          scheduler();
-          break;
+          if (check_expansion_mem(get_process_struct_of_pid(getpid()), tf)>=0){
+            break;
+          } else{
+            PRINT_RED("Killing process = (CAUSE_FETCH_PAGE_FAULT)\n");
+            kill(getpid());
+            scheduler();
+            break;
+          }
+        }
+      case CAUSE_LOAD_PAGE_FAULT:
+        // // while(1){}
+        blue_screen(tf);
+        if (user){
+          if (check_expansion_mem(get_process_struct_of_pid(getpid()), tf)>=0){
+            break;
+          } else{
+            PRINT_RED("Killing proces = (CAUSE_LOAD_PAGE_FAULTs)\n");
+            kill(getpid());
+            scheduler();
+            break;
+          }
         }
       case CAUSE_STORE_PAGE_FAULT:
-        // while(1){}
-        // blue_screen(tf);
+        // // while(1){}
+        blue_screen(tf);
         if (user){
-          PRINT_RED("Killing process = (CAUSE_STORE_PAGE_FAULT)\n");
-          kill(getpid());
-          scheduler();
-          break;
+          if (check_expansion_mem(get_process_struct_of_pid(getpid()), tf)>=0){
+            break;
+          } else{
+            PRINT_RED("Killing process = (CAUSE_STORE_PAGE_FAULT)\n");
+            kill(getpid());
+            scheduler();
+            break;
+          }
         }
 			default:
         // while(1){};

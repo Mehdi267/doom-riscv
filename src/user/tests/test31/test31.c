@@ -58,11 +58,16 @@ int test_fork() {
     // Close the file descriptor
     close(file_fd);
   }
+  if (unlink("fork.txt")<0){
+    printf("delete file failed");
+    return -1;
+  }
   // shm_release("test31_fork");
   return 0;
 }
 
 int main() {
   assert(test_fork() == 0);
+  printf("Fork test success\n");
   return 0;
 }

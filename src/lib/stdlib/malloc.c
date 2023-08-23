@@ -3376,13 +3376,14 @@ Void_t* mALLOc(size_t bytes)
   Void_t* mALLOc(bytes) size_t bytes;
 #endif
 {
+  // printf("[Alloc METHOD]Trying to allocate %ld\n", bytes);
   mstate av = get_malloc_state();
+  // printf("av add = %p av_ %p\n", &av, &av_);
 
   INTERNAL_SIZE_T nb;               /* normalized request size */
   unsigned int    idx;              /* associated bin index */
   mbinptr         bin;              /* associated bin */
   mfastbinptr*    fb;               /* associated fastbin */
-
   mchunkptr       victim;           /* inspected/selected chunk */
   INTERNAL_SIZE_T size;             /* its size */
   int             victim_index;     /* its bin index */

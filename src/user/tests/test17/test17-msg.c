@@ -83,7 +83,6 @@ int test17()
                 int pid = start("no_run", 2000, 127, 0);
                 // printf("n = %d l = %d \n", n, l);
                 if (pid < 0) break;
-                // printf("n = %d\n", n);
                 ids[n++] = pid;
                 // printf("after\n");
                 if (n == l) {

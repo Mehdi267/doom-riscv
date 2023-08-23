@@ -296,6 +296,7 @@ int pipe(int file_descriptors[2]);
 pid_t fork(void);
 int execve(const char *filename, char *const argv[], char *const envp[]);
 void ld_progs_into_disk();
+void *sbrk(unsigned long increment);
 
 //Dir api
 char *getcwd(char *buf, size_t size);

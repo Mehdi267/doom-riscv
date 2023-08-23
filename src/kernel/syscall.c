@@ -190,6 +190,9 @@ unsigned long syscall_handler(struct trap_frame *tf) {
     case SYSC_ld_progs_into_disk:
       write_user_apps_fs();
       break;
+    case SYSC_sbrk:
+      printf("bingo sbrk\n");
+      return (unsigned long) sys_sbrk(tf->a0);
     default:
       printf("Syscall code does not match any of the defined syscalls");
       // blue_screen(tf);

@@ -83,7 +83,8 @@
 #define SYSC_pipe               63
 #define SYSC_fork               64
 #define SYSC_execve             65
-#define SYSC_ld_progs_into_disk     66
+#define SYSC_ld_progs_into_disk 66
+#define SYSC_sbrk               67
 
 #define SYSC_print_dir_elements 76 
 #define SYSC_fs_info            77

@@ -43,7 +43,7 @@ $(APPS_OUT):
 # Generate a linker file that:
 # - creates a table with an entry (address, size) for each application
 # - include each binary in its own section
-# This is a intermediate target that will be automagically deleted by make
+# This is a intermediate target that will be automatically deleted by make
 # at the end of the build. It ensures that the script is entirely
 # re-generated at each build.
 

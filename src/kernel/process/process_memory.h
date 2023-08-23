@@ -85,4 +85,29 @@ extern int copy_process_memory(process* dest_proc, process* src_proc);
  */
 void* get_first_stack_page(process* proc);
 
+/**
+ * @brief Checks if we need to expand the stack or an other memory part
+ * in order to solve the exception, if it not the case or it the no memory space left
+ * at that case we just leave, otherwise we return 0 indicating that space 
+ * was needed and the problem was solved
+ * @param proc the process that crashed
+ * @param frame the trap frame of the process from which we extract
+ * the necessary information
+ * @return int status
+ */
+int check_expansion_mem(process* proc, struct trap_frame* frame);
+
+/**
+ * Increment the program's data space by <increment> bytes. Calling sbrk()
+ * with an increment of 0 can be used to find the current location of the
+ * program break.
+ *
+ * @param increment the number of bytes to extend the data space
+ * @return the previous program break on success. If the break was increased
+ *         then this value is a pointer to the start of the newly allocated
+ *         memory.
+ *         (void *)-1 on error (ie: no memory available)
+ */
+void *sys_sbrk(unsigned long increment);
+
 #endif

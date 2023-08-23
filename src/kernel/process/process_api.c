@@ -546,6 +546,7 @@ int fork(int parent_pid, struct trap_frame* tf){
   }
   process *new_process;
   secmalloc(new_process, sizeof(process));
+  memset(new_process, 0, sizeof(process));
   new_process->next_prev.next = NULL;
   new_process->next_prev.prev = NULL;
   //---------Create a new pid and and new process to hashtable----------------
