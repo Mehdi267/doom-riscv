@@ -16,6 +16,10 @@ char *mem_ptr;
 uint64_t mem_usage;
 uint64_t mem_total;
 
+uint64_t get_remaining_frames(){
+  return mem_total - mem_usage; 
+}
+
 /**
  * @brief Initializes the frame allocator by setting up the linked list of free memory blocks.
  */
@@ -79,6 +83,7 @@ void release_frame(void *frame) {
     mem_ptr = (char*)frame;
     *(char**)frame = temp;
 }
+
 
 void print_mem_usage(){
   printf("Mem usage = %ld/%ld %ld per cent\n", mem_usage, mem_total, (mem_usage*100)/mem_total);

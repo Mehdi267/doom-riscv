@@ -1,19 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <sys/time.h>
-
-#include "variante.h"
 #include "readcmd.h"
 
 
@@ -26,14 +16,14 @@ void output_process_bg()
 	if (job_list == NULL)
 		return;
 	uint8_t process_number = 1; 
-	job_bg_t * current_job_iterate = job_list;
-	job_bg_t * next_job_iterate = NULL;
+	job_bg_t* current_job_iterate = job_list;
+	job_bg_t* next_job_iterate = NULL;
 	while (current_job_iterate)
-	{   
-		if (waitpid(current_job_iterate->job_id , NULL, WNOHANG) != 0)
+	{
+		if (waitpid_old(current_job_iterate->job_id, NULL) != 0)
 		{
 			next_job_iterate = current_job_iterate->next_job;
-			add_remove_job_to_the_background(current_job_iterate->job_name, current_job_iterate->job_id, 0, 0);
+			add_remove_job_to_the_background(current_job_iterate->job_name, current_job_iterate->job_id, 0);
 			current_job_iterate = next_job_iterate;
 		}
 		else
@@ -49,7 +39,7 @@ void output_process_bg()
 This function is used to add and remove for the linked list
 that stores jobs in the background
 */
-void add_remove_job_to_the_background(char* job_name, int job_id_process, int time_start, bool add_or_remove)
+void add_remove_job_to_the_background(char* job_name, int job_id_process, bool add_or_remove)
 {
 	if (add_or_remove == 1)
 	{
@@ -74,7 +64,6 @@ void add_remove_job_to_the_background(char* job_name, int job_id_process, int ti
 		}
 		char * string_that_will_placed_in_job = (char * ) malloc(strlen(job_name)*sizeof(char));
 		job_bg_to_add->job_id = job_id_process;
-		job_bg_to_add->time_start= time_start;
 		strcpy(string_that_will_placed_in_job, job_name);
 		job_bg_to_add->job_name = string_that_will_placed_in_job;
 		job_bg_to_add->next_job = NULL;

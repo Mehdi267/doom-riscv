@@ -294,6 +294,8 @@ int remove_fd_list(process* proc_arg, int fd, rem_type op_type){
         fd_elt->file_info->usage_counter);
   }
   else{
+    debug_print_fsapi("[FSAPI]Fd usage equal to 0, removing it completly; usage = %d\n", 
+        fd_elt->file_info->usage_counter);
     if (fd_elt->file_info->type == FS_FT_PIPE){
         close_type close_t = fd_elt->file_info->can_read ?
             CLOSE_READ : CLOSE_WRITE;   
@@ -334,7 +336,7 @@ int remove_fd_list(process* proc_arg, int fd, rem_type op_type){
     free(fd_elt);
     debug_print_fsapi("[FSAPI]Open files list num %d was removed\n", fd);
   }
-  else if (op_type == REMOVE_ALL){
+  else if (op_type == ONLY_CLOSE_FILE){
     debug_print_fsapi("[FSAPI]Close the file but did not remove the link, fd = %d\n", fd);
   }
   return 0;

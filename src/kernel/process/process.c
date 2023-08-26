@@ -81,7 +81,7 @@ static int create_testing_process() {
 
 int create_shell_program() {
     int pid_test;
-    pid_test = start_virtual("shell", 40000, 2,0);
+    pid_test = start_virtual("shell", 4000, 2, 0);
     return pid_test;
 }
 

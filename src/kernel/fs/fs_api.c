@@ -202,9 +202,18 @@ ssize_t read(int file_descriptor, void *buffer, size_t count){
   }
   debug_print_fsapi("\033[0;34m[FSAPI] read syscall was called on fd %d, read size = %ld\033[0;0m\n",
          file_descriptor, count);
-  flip* fs_elt = get_fs_list_elt(NULL, file_descriptor); 
-  if (fs_elt == 0 || count == 0 || fs_elt->can_read == false ){
-    return -1;
+  flip* fs_elt = get_fs_list_elt(NULL, file_descriptor);
+  if (fs_elt == 0) {
+      printf("File system element is NULL.\n");
+      return -1;
+  }
+  if (count == 0) {
+      printf("Count is zero.\n");
+      return -1;
+  }
+  if (fs_elt->can_read == false) {
+      printf("Cannot read from the file system element.\n");
+      return -1;
   }
   if (fs_elt->type == FS_FT_CHRDEV){
     return dev_op[(fs_elt->f_inode->i_osd1 & 0xffff0000) >> 16].read((uint64_t)buffer, count); 
@@ -244,6 +253,9 @@ ssize_t read(int file_descriptor, void *buffer, size_t count){
     debug_print_fsapi("\033[0;34m[FSAPI]Read ran normal and data read is equal to %d\033[0;0m\n",
         read_data); 
     return read_data;
+  } else{
+    //Bad type
+    printf("fs_elt->type %d pos %ld inode num %d\n", fs_elt->type, fs_elt->position, fs_elt->inode_number);
   }
   return -1;
 }

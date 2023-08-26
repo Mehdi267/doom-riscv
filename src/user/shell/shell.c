@@ -2,13 +2,28 @@
 #include "../ulib/ufunc.h"
 #include "stdio.h"
 #include "string.h"
-
-long int ret = 0;
-
 #include <stdio.h>
 #include <stdlib.h>
 
-int dis(char *prog) {
+long int ret = 0;
+
+
+void dis(const char *filename) {
+    int fd = open(filename, O_RDONLY, 0 );
+    if (fd == -1) {
+        printf("Error opening file");
+        return;
+    }
+
+    char buffer[1024]; // Buffer to hold read data
+    while (my_fgets(buffer, sizeof(buffer), fd) != NULL) {
+        printf("%s", buffer); // Print each line read from the file
+    }
+
+    close(fd); // Close the file when done
+}
+
+int dis_bin(char *prog) {
   const char *filename = prog;
   int fd = open(filename, O_RDONLY, 0);
   if (fd == -1) {
@@ -60,6 +75,7 @@ int main() {
   char rmdirprog[] = "rmdir";
   char unlinkprog[] = "unlink";
   char disprog[] = "dis";
+  char dis_binprog[] = "dis_bin";
   char exitshell[] = "exit";
   char voidsysprog[] = "voidsys";
   // #ifdef VIRTMACHINE
@@ -102,6 +118,10 @@ int main() {
     char* curr_path = cmd + strlen(disprog) + 1;
     dis(curr_path);
   }
+  else if (memcmp(cmd, "dis_bin", strlen(dis_binprog)) == 0){
+    char* curr_path = cmd + strlen(dis_binprog) + 1;
+    dis_bin(curr_path);
+  }
   else if (memcmp(cmd, "exit", strlen(exitshell)) == 0){
     exit(0);
   }
@@ -114,7 +134,7 @@ int main() {
     printf("shell: program not found: %s\n", cmd);
     ret = -1;
     } else {
-    waitpid(pid, &ret);
+    waitpid_old(pid, &ret);
     }
   }
   memset(cmd, 0, 20);

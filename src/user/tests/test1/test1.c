@@ -20,14 +20,14 @@ int main(void *arg)
         pid1 = start("dummy1", 4000, 192, (void *) DUMMY_VAL);
         assert(pid1 > 0);
         printf(" 2");
-        r = waitpid(pid1, &rval);
+        r = waitpid_old(pid1, &rval);
         assert(r == pid1);
         assert(rval == 3);
         printf(" 3");
         pid1 = start("dummy2", 4000, 100, (void *) (DUMMY_VAL + 1));
         assert(pid1 > 0);
         printf(" 4");
-        r = waitpid(pid1, &rval);
+        r = waitpid_old(pid1, &rval);
         assert(r == pid1);
         assert(rval == 4);
         printf(" 6.\n");

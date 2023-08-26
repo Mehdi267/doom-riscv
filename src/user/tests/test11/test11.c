@@ -29,11 +29,11 @@ int main(void *arg)
         assert(chprio(getpid(), 160) == 128);
         printf(" 6");
         xsignal(&shared->sem);
-        assert(waitpid(-1, 0) == pid2);
-        assert(waitpid(-1, 0) == pid3);
-        assert(waitpid(-1, 0) == pid1);
-        assert(waitpid(-1, 0) == pid4);
-        assert(waitpid(-1, 0) < 0);
+        assert(waitpid_old(-1, 0) == pid2);
+        assert(waitpid_old(-1, 0) == pid3);
+        assert(waitpid_old(-1, 0) == pid1);
+        assert(waitpid_old(-1, 0) == pid4);
+        assert(waitpid_old(-1, 0) < 0);
         assert(chprio(getpid(), 128) == 160);
         xsdelete(&shared->sem);
         printf(" 11.\n");

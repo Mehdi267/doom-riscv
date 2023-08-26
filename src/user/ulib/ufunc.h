@@ -3,6 +3,7 @@
 // #define NULL ((void*)0)
 #include "stdio.h"
 #define EOF -1
+#define BS 8
 
 int per_fgetc(int fd);
 char* my_fgets(char* buffer, int size, int fd);

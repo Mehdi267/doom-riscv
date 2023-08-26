@@ -30,14 +30,14 @@ int main(void *arg)
         assert(signaln(sem, 2) == 0);
         assert(signaln(sem, 1) == 0);
         assert(signaln(sem, 4) == 0);
-        assert(waitpid(pid1, &ret) == pid1);
+        assert(waitpid_old(pid1, &ret) == pid1);
         assert(ret == 1);
-        assert(waitpid(-1, &ret) == pid3);
+        assert(waitpid_old(-1, &ret) == pid3);
         assert(ret == 0);
         assert(scount(sem) == 1);
         assert(sdelete(sem) == 0);
         printf(" 12");
-        assert(waitpid(-1, &ret) == pid2);
+        assert(waitpid_old(-1, &ret) == pid2);
         assert(ret == 2);
         printf(" 14.\n");
         return 0;

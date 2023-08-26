@@ -12,6 +12,7 @@
 int test_fork() {
   printf("Inside test31\n");
   int file_fd = open("fork.txt", O_CREAT | O_TRUNC | O_RDWR, 0);
+  printf("file_fd = %d\n",file_fd);
   char msg[] = "Hello from the child process\n";
   if (file_fd == -1) {
     printf("Error opening file");
@@ -35,8 +36,9 @@ int test_fork() {
   if (child_pid == 0) {
     // This code runs in the child process.
     // assert(memcmp(test_mappings, msg, strlen(msg)) == 0);
-    printf("Child process: My PID is %d\n", getpid());
-    write(file_fd, msg, strlen(msg));
+    printf("Child process: My PID is %d\n", getpid(), msg);
+    printf("msg = %s", msg);
+    assert(write(file_fd, msg, strlen(msg)) == (long)strlen(msg));
     close(file_fd);
     exit(0);
   } else {
@@ -45,7 +47,7 @@ int test_fork() {
 
     // Wait for the child process to finish
     long status;
-    waitpid(child_pid, &status);
+    waitpid_old(child_pid, &status);
 
     // Rewind the file descriptor to the beginning
     lseek(file_fd, 0, SEEK_SET);

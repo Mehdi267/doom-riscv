@@ -92,7 +92,7 @@ int test17()
         }
         for (i=0; i<n; i++) {
                 assert(kill(ids[i]) == 0);
-                assert(waitpid(ids[i], 0) == ids[i]);
+                assert(waitpid_old(ids[i], 0) == ids[i]);
                 test_it();
         }
         int old_n = n;
@@ -111,7 +111,7 @@ int test17()
         }
         for (i=0; i<n; i++) {
                 assert(kill(ids[i]) == 0);
-                assert(waitpid(ids[i], 0) == ids[i]);
+                assert(waitpid_old(ids[i], 0) == ids[i]);
                 test_it();
         }
         assert(old_n == n);
@@ -123,7 +123,7 @@ int test17()
         }
         for (i=0; i<n; i++) {
                 long int retval;
-                assert(waitpid(ids[i], &retval) == ids[i]);
+                assert(waitpid_old(ids[i], &retval) == ids[i]);
                 assert(retval == i);
                 test_it();
         }

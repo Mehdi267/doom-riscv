@@ -37,7 +37,7 @@ int main(void *arg)
         printf(" 13");
         assert(pdelete(fid2) == 0);
         assert(pdelete(fid2) < 0);
-        assert(waitpid(pid2, 0) == pid2); //XXX assert(waitpid(-1, 0) == pid2); ???
-        assert(waitpid(-1, 0) == pid1);
+        assert(waitpid_old(pid2, 0) == pid2); //XXX assert(waitpid_old(-1, 0) == pid2); ???
+        assert(waitpid_old(-1, 0) == pid1);
         printf(".\n");
 }

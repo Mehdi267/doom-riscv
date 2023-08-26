@@ -94,7 +94,8 @@ extern unsigned long current_clock(void);
 extern void wait_clock(unsigned long wakeup);
 
 extern int start(const char *process_name, unsigned long ssize, int prio, void *arg);
-extern int waitpid(int pid, long int *retval);
+extern int waitpid_old(int pid, long int *retval);
+extern int waitpid(int pid, long int *retval, int);
 
 extern void *shm_create(const char*);
 extern void *shm_acquire(const char*);

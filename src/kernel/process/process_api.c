@@ -206,6 +206,7 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio,
 
   process *new_process;
   secmalloc(new_process, sizeof(process));
+  memset(new_process, 0, sizeof(process));
   // somehow those pointers are not null sometimes
   new_process->next_prev.next = NULL;
   new_process->next_prev.prev = NULL;
@@ -351,6 +352,7 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
 
   process *new_process;
   secmalloc(new_process, sizeof(process));
+  memset(new_process, 0, sizeof(process));
   // somehow those pointers are not null sometimes
   new_process->next_prev.next = NULL;
   new_process->next_prev.prev = NULL;
@@ -388,6 +390,9 @@ int start_virtual(const char *name, unsigned long ssize, int prio, void *arg) {
   }
 
   new_process->stack_shift = STACK_FRAME_SIZE*PT_SIZE;
+  //We place the heap pointer right after the stack 
+  new_process->mem_info.sbrk_pointer = (char*)0x40000000 + FRAME_SIZE * new_process->stack_shift;
+  new_process->mem_info.start_heap_add = (uint64_t) new_process->mem_info.sbrk_pointer;
   new_process->context_process->sp =
       (uint64_t)0x40000000 + FRAME_SIZE * new_process->stack_shift - 1;
   // During the context_switch we will call the process_call_wrapper that has
@@ -649,7 +654,7 @@ int fork(int parent_pid, struct trap_frame* tf){
 
 //------------------Fork syscall end----------------
 
-static void* find_pte_adress(page_table_entry* pte){
+void* find_pte_adress(page_table_entry* pte){
   return (void*)((long) pte->ppn2*GIGA_SIZE+pte->ppn1*MEGA_SIZE+pte->ppn0*KILO_SIZE);
 }
 
@@ -662,6 +667,11 @@ static void set_satp(uint64_t new_value) {
 }
 
 int execve(const char *filename, char *const argv[], char *const envp[]){
+  if (filename == 0){
+    return -1;
+  }
+  debug_print_fsapi("[Exec] exec syscall called %s\n",
+         filename);
   process* cur_proc = get_process_struct_of_pid(getpid());
   if (cur_proc == 0){return -1;}
   inode_t* new_inode = walk_and_get(filename, 0);
@@ -681,8 +691,8 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
   cur_proc->app_pointer->end = (void*)((char*)cur_proc->app_pointer->start +
                            new_inode->i_size);
   close(fd);
-  assert(memcmp(cur_proc->app_pointer->start,
-        find_app("test_execve")->start, new_inode->i_size) == 0); 
+  // assert(memcmp(cur_proc->app_pointer->start,
+  //       find_app("test_execve")->start, new_inode->i_size) == 0); 
 
   path_fs* path_data = extract_files(filename);
   if (path_data == 0){ return -1;}
@@ -732,8 +742,8 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
     print_memory_no_arg("Memory is full");
     return -1;
   }
-  assert(memcmp(find_pte_adress(cur_proc->page_tables_lvl_1_list->head_page->table->pte_list+0),
-      find_app("test_execve")->start, FRAME_SIZE) == 0); 
+  // assert(memcmp(find_pte_adress(cur_proc->page_tables_lvl_1_list->head_page->table->pte_list+0),
+  //     find_app("test_execve")->start, FRAME_SIZE) == 0); 
 
   cur_proc->stack_shift = STACK_FRAME_SIZE*PT_SIZE;
   //The pointer must have addresses in the stack page in which we place
@@ -748,6 +758,10 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
   memcpy(memory_page, new_argv, total_size_arg);
   free(argv_mem);
 
+  //Heap conf
+  cur_proc->mem_info.sbrk_pointer = (char*)0x40000000 + FRAME_SIZE * cur_proc->stack_shift;
+  cur_proc->mem_info.start_heap_add = (uint64_t) cur_proc->mem_info.sbrk_pointer;
+  //stack conf
   cur_proc->context_process->sp =
       (uint64_t)0x40000000 + FRAME_SIZE * cur_proc->stack_shift - total_size_arg - 1;
   //We place the argc in s2 and argv pointer in s3 and later on

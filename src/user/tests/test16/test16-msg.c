@@ -31,7 +31,7 @@ int main(void *arg)
                         assert(psend(fid, i) == 0);
                         test_it();
                 }
-                assert(waitpid(pid, 0) == pid);
+                assert(waitpid_old(pid, 0) == pid);
                 assert(pdelete(fid) == 0);
         }
 
@@ -50,7 +50,7 @@ int main(void *arg)
                 pids[NB_PROCS + i] = pid;
         }
         for (i=0; i < 2 * NB_PROCS; i++) {
-                assert(waitpid(pids[i], 0) == pids[i]);
+                assert(waitpid_old(pids[i], 0) == pids[i]);
         }
         assert(pcount(fid, &count) == 0);
         assert(count == 0);

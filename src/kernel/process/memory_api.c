@@ -213,6 +213,9 @@ void shm_release(const char *key){
   //by exploiting the releasead pages struct
   //-----------------We start by creating a released page struct and we save related the hole---------
   released_pages_t* released_page_p = (released_pages_t*) malloc(sizeof(released_pages_t));
+  if (released_page_p == 0){
+    return;
+  }
   released_page_p->lvl0_index = proc_page_shared->lvl0_index;
   released_page_p->lvl1_index = proc_page_shared->lvl1_index;
   released_page_p->lvl2_index = proc_page_shared->lvl2_index;

@@ -33,11 +33,11 @@ int main(void *arg)
         assert(chprio(getpid(), 128) == 126);
         assert(sdelete(sem) == 0);
         printf(" 14");
-        assert(waitpid(pid1, &ret) == pid1);
+        assert(waitpid_old(pid1, &ret) == pid1);
         assert(ret == 1);
-        assert(waitpid(-1, &ret) == pid3);
+        assert(waitpid_old(-1, &ret) == pid3);
         assert(ret == 3);
-        assert(waitpid(-1, &ret) == pid2);
+        assert(waitpid_old(-1, &ret) == pid2);
         assert(ret == 2);
         assert(signal(sem) == -1);
         assert(scount(sem) == -1);

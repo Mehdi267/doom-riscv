@@ -255,6 +255,8 @@ typedef struct mem_proc{
   uint32_t stack_usage;
   uint32_t heap_usage;
   uint32_t shared_pages_usage;
+  char* sbrk_pointer;
+  uint64_t start_heap_add;
 } mem_proc;
 
 /**

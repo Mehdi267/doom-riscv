@@ -25,7 +25,7 @@ int main(void *arg)
         printf("\n%s\n", "Test 22: checking page fault handling...");
         pagefault_pid = start("pagefault", 4000, getprio(getpid()) - 1, NULL);
 
-        waitpid(pagefault_pid, &pagefault_ret);
+        waitpid_old(pagefault_pid, &pagefault_ret);
 
         /* "pagefault" should have been killed */
         switch (pagefault_ret) {
@@ -37,7 +37,7 @@ int main(void *arg)
                         printf("-> %s\n-> %s\n", "\"pagefault\" process should not ends correctly.", "TEST FAILED");
                         break;
                 default:
-                        printf("-> %s\n-> %s\n", "unexpected return value for \"pagefault\" process. Check waitpid and kill behaviors", "TEST FAILED");
+                        printf("-> %s\n-> %s\n", "unexpected return value for \"pagefault\" process. Check waitpid_old and kill behaviors", "TEST FAILED");
         }
 
 
@@ -53,7 +53,7 @@ int main(void *arg)
         printf("%s\n", "Test 22: checking shared memory mappings ...");
         malicious_pid = start("malicious", 4000, getprio(getpid()) - 1, NULL);
 
-        waitpid(malicious_pid, &malicious_ret);
+        waitpid_old(malicious_pid, &malicious_ret);
 
         /* "malicious" should have been killed */
         switch (malicious_ret) {
@@ -65,7 +65,7 @@ int main(void *arg)
                         printf("-> %s\n-> %s\n", "\"malicious\" process should not ends correctly.", "TEST FAILED");
                         break;
                 default:
-                        printf("-> %s\n-> %s\n", "unexpected return value for \"malicious\" process. Check waitpid and kill behaviors", "TEST FAILED");
+                        printf("-> %s\n-> %s\n", "unexpected return value for \"malicious\" process. Check waitpid_old and kill behaviors", "TEST FAILED");
         }
 
         /* and should not have been able to modify shared memory */

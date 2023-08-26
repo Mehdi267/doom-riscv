@@ -37,10 +37,10 @@ int main(void *arg)
         assert(msg == 6);
         assert(pcount(fid1, &count) == 0);
         assert(count == 0);
-        assert(waitpid(pid1, &r) == pid1);
+        assert(waitpid_old(pid1, &r) == pid1);
         assert(r == 0);
         r = 1;
-        assert(waitpid(-1, &r) == pid2);
+        assert(waitpid_old(-1, &r) == pid2);
         assert(r == 0);
         assert(pdelete(fid1) == 0);
         assert(pdelete(fid1) < 0);

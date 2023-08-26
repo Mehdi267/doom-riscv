@@ -18,6 +18,7 @@ int strncmp(const char *, const char *, size_t);
 char *strncpy(char *, const char *, size_t);
 char *strtok(char *str, const char *delimiters);
 char *strrchr(const char *str, int character);
+char *strdup(const char *str);
 
 #ifdef __cplusplus
 }

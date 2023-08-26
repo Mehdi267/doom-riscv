@@ -20,10 +20,10 @@ int main(void *args)
         printf(" - 2");
         r = kill(pid1);
         assert(r == 0);
-        assert(waitpid(pid1, 0) == pid1);
+        assert(waitpid_old(pid1, 0) == pid1);
         r = kill(pid2);
         assert(r < 0); /* kill d'un processus zombie */
-        assert(waitpid(pid2, 0) == pid2);
+        assert(waitpid_old(pid2, 0) == pid2);
         printf(" 3");
         r = chprio(getpid(), 128);
         assert(r == 32);

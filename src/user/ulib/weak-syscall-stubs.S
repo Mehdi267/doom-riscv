@@ -11,11 +11,11 @@
 
 # WEAK_STUB(start)
 
-# WEAK_STUB(getpid)
+#WEAK_STUB(getpid)
 #WEAK_STUB(getprio)
 #WEAK_STUB(chprio)
 #WEAK_STUB(kill)
-#WEAK_STUB(waitpid)
+#WEAK_STUB(waitpid_old)
 #WEAK_STUB(exit)
 #WEAK_STUB(cons_write)
 #WEAK_STUB(cons_read)

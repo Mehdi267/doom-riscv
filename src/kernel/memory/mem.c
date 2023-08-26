@@ -23,7 +23,10 @@ void *sbrk(ptrdiff_t diff)
 {	
  	// debug_print_memory("[brk called ] curptr = %p \n", curptr);
  	// printf("[brk called ] curptr = %p \n", curptr);
-	char *s = curptr;
+	if (diff<0){
+    printf("diff = %ld\n", diff);
+  }
+  char *s = curptr;
 	char *c = s + diff;
 	if ((c < curptr) || (c > _heap_end)) return ((void*)(-1));
 	curptr = c;

@@ -24,6 +24,7 @@
 #define SYSC_start              16
 #define SYSC_wait_clock         17
 #define SYSC_waitpid            18
+#define SYSC_waitpid_old        18
 
 #define SYSC_sleep              19
 #define SYSC_getname            20

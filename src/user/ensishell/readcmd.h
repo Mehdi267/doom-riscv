@@ -16,9 +16,11 @@
 #define END 1
 #define NO 0
 
+//Sycalls and local funtions
+#include "../ulib/syscall.h"
+#include "../ulib/ufunc.h"
 
 /* If GNU Readline is not available, internal readline will be used*/
-#include "variante.h"
 #include <stdbool.h>
 
 /* Read a command line from input stream. Return null when input closed.
@@ -86,7 +88,7 @@ typedef enum op { NONE,IN, OUT} Operation_Type;
 This function is used to add and remove for the linked list
 that stores jobs in the background
 */
-void add_remove_job_to_the_background(char* job_name, int job_id_process, int time_start, bool add_or_remove);
+void add_remove_job_to_the_background(char* job_name, int job_id_process, bool add_or_remove);
 
 /*
 This function is called to run a process. 

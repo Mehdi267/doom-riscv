@@ -23,6 +23,7 @@ int test_exec(){
     
     if (execve("/bin/test_execve", new_argv_non_const, new_envp) <0) {
       printf("execve failed");
+      exit(0);
       return -1;
     }
   } else {

@@ -34,7 +34,7 @@ int main(void *arg)
         assert(pdelete(fid) == 0);
         assert(psend(fid, 2) < 0);
         assert(preceive(fid, &msg) < 0);
-        assert(waitpid(-1, 0) == pid);
+        assert(waitpid_old(-1, 0) == pid);
         printf(" 10.\n");
         return 0;
 }

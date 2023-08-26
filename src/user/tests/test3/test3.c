@@ -18,7 +18,7 @@ int main(void *arg)
         r = chprio(getpid(), 128);
         assert(r == 32);
         printf(" 5");
-        assert(waitpid(pid1, 0) == pid1);
+        assert(waitpid_old(pid1, 0) == pid1);
         printf(" 6");
 
         assert(getprio(getpid()) == 128);
@@ -27,7 +27,7 @@ int main(void *arg)
         printf(" 8");
         r = kill(pid1);
         assert(r == 0);
-        assert(waitpid(pid1, 0) == pid1);
+        assert(waitpid_old(pid1, 0) == pid1);
         printf(" 9");
         r = chprio(getpid(), 32);
         assert(r == 128);

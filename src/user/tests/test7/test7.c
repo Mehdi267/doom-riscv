@@ -32,7 +32,7 @@ int main(void *arg)
         pid1 = start("timer1", 4000, 129, 0);
         assert(pid1 > 0);
         printf(" 3");
-        assert(waitpid(-1, 0) == pid1);
+        assert(waitpid_old(-1, 0) == pid1);
         printf(" 8 : ");
 
         *timer = 0;
@@ -50,14 +50,14 @@ int main(void *arg)
         } while (c == c0);
         wait_clock(c + dur);
         assert(kill(pid1) == 0);
-        assert(waitpid(pid1, 0) == pid1);
+        assert(waitpid_old(pid1, 0) == pid1);
         assert(kill(pid2) == 0);
-        assert(waitpid(pid2, 0) == pid2);
+        assert(waitpid_old(pid2, 0) == pid2);
         printf("%ld changements de contexte sur %ld tops d'horloge", *timer, dur);
         pid1 = start("sleep_pr1", 4000, 192, 0);
         assert(pid1 > 0);
         assert(kill(pid1) == 0);
-        assert(waitpid(pid1, &r) == pid1);
+        assert(waitpid_old(pid1, &r) == pid1);
         assert(r == 0);
         printf(".\n");
         shm_release("test7_shm");

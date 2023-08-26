@@ -69,7 +69,7 @@ unsigned detected_eol() {
  * @param length  The maximum number of characters to copy.
  * @return The number of characters actually copied.
  */
-unsigned copy(char *dest, unsigned long length) {
+unsigned long copy(char *dest, unsigned long length, bool copy_all) {
   unsigned long index = 0;
   unsigned long temp = console_dev->start_of_buffer_index;
   assert(console_dev->last_written_char_index != -1);
@@ -95,6 +95,9 @@ unsigned copy(char *dest, unsigned long length) {
              console_dev->buffer[temp] == '\n') {
     // we read the whole buffer and '\n' was the last character so we reset
     // the buffer
+    if (copy_all){
+      dest[index++] = console_dev->buffer[temp];
+    }
     console_dev->start_of_buffer_index = 0;
     console_dev->last_written_char_index = -1;
   } else if (console_dev->buffer[temp] == '\n') {
@@ -129,6 +132,6 @@ unsigned long cons_read(const char *string, unsigned long length) {
     scheduler();
   }
   // printf("String is equal to %s", string);
-  return copy((char*)string, length);
+  return copy((char*)string, length, false);
 }
 

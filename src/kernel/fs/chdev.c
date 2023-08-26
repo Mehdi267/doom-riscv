@@ -4,21 +4,41 @@
 #include "fs.h"
 #include "inode_util.h"
 #include "../process/helperfunc.h"
+#include "../process/process.h"
+#include "../process/scheduler.h"
 #include "../input-output/cons_read.h"
 #include "../input-output/cons_write.h"
 #include "string.h"
+#include "assert.h"
+#include "../drivers/console.h"
 
 //Equal to the number of virtio ports 
 //even though i don't think that we will use all of them 
 #define NUM_DEV 11 //0 is used for error checking
 chdevop dev_op[NUM_DEV]; 
 
+static unsigned long local_cons_read(const char *string, unsigned long length) {
+  if (!length)
+    return 0;
+  while (!is_buffer_full() && length > buffer_current_size()) {
+    process *proc = get_current_process();
+    proc->state = BLOCKEDIO;
+    queue_add(proc, &blocked_io_process_queue, process, next_prev, prio);
+    scheduler();
+  }
+  // printf("String is equal to %s", string);
+  return copy((char*)string, length, true);
+}
+
 static long cons_read_wrapper(uint64_t buf, int size){
-  return cons_read((const char*) buf, size);
+  int ret = local_cons_read((const char*) buf, size);
+  printf("asicci buf %d\n", *(char*)buf);
+  return ret;
 }
 
 static long cons_write_wrapper(uint64_t buf, int size){
-  return cons_write((const char*) buf, size);
+  int ret = cons_write((const char*) buf, size);
+  return ret;
 }
 
 int init_fs_drivers(){

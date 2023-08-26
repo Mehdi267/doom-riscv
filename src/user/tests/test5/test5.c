@@ -25,16 +25,16 @@ int main(void *arg)
         assert(kill(pid1) < 0); //pas de kill de zombie
         assert(chprio(pid1, 128) < 0); //changer la priorite d'un zombie
         assert(chprio(pid1, 64) < 0); //changer la priorite d'un zombie
-        assert(waitpid(pid1, 0) == pid1);
-        assert(waitpid(pid1, 0) < 0);
+        assert(waitpid_old(pid1, 0) == pid1);
+        assert(waitpid_old(pid1, 0) < 0);
         pid1 = start("no_run", 4000, 64, 0);
         assert(pid1 > 0);
         pid2 = start("waiter", 4000, 65, (void *)pid1);
         assert(pid2 > 0);
-        assert(waitpid(pid2, &r) == pid2);
+        assert(waitpid_old(pid2, &r) == pid2);
         // printf("value of r is equal to %lx adress of is %p \n", r, &r);
         assert(r == 1);
-        assert(waitpid(pid1, &r) == pid1);
+        assert(waitpid_old(pid1, &r) == pid1);
         assert(r == 0);
         printf("ok.\n");
 }

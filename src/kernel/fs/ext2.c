@@ -8,6 +8,7 @@
 #include "disk_buffer.h"
 #include "inode.h"
 #include "logger.h"
+#include "drivers/disk_device.h"
 
 //Used for initialization
 #include "fs_api.h"

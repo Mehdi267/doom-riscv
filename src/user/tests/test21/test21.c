@@ -29,7 +29,7 @@ int main(void *arg)
         checker_pid = start("shm_checker", 4000, getprio(getpid()) - 1, NULL);
         assert(checker_pid > 0);
 
-        waitpid(checker_pid, &checker_ret);
+        waitpid_old(checker_pid, &checker_ret);
 
         switch (checker_ret) {
                 case CHECKER_SUCCESS:
@@ -39,7 +39,7 @@ int main(void *arg)
                         printf(" -> %s\n -> %s\n", "\"shm_checker\" killed.", "TEST FAILED");
                         break;
                 default:
-                        printf(" -> %s\n -> %s\n", "\"shm_checker\" returned inconsistent value. Check waitpid implementation.", "TEST FAILED");
+                        printf(" -> %s\n -> %s\n", "\"shm_checker\" returned inconsistent value. Check waitpid_old implementation.", "TEST FAILED");
         }
 
         int shm_valid = 1;

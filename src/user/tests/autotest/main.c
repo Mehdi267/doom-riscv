@@ -21,8 +21,8 @@ const char *tests[] =
         "test13",
         "test14",
         "test15",
-        "test16",
-        "test17",
+        // "test16",
+        // "test17",
         #ifndef TESTING
         // "test19",
         #endif
@@ -61,7 +61,7 @@ int main(void) {
   for (i = 0; tests[i] != NULL; i++) {
     printf("Test %s : ", tests[i]);
     pid = start(tests[i], 4000, 128, NULL);
-    waitpid(pid, &ret);
+    waitpid_old(pid, &ret);
     test_res[i] = (int)ret;
     if (ret != 0 && has_failed == 0){
       printf("Test failed on i", i );

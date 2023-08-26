@@ -34,6 +34,9 @@ static void save_frame_data(page_table_link_list_t* lvl0_iterator,
   if (page_type == STACK_PAGE){
     frame_info->lvl0_index = PT_SIZE - 1 - lvl0_iterator->usage;
   }
+  else{
+    frame_info->lvl0_index = lvl0_iterator->usage;
+  }
   frame_info->lvl1_index = lvl0_iterator->index;
   frame_info->lvl2_index = USERSPACE;//The only used page location at the moment
   frame_info->page_table = lvl0_iterator->table;
@@ -580,7 +583,7 @@ int process_memory_allocator(process* process_conf, unsigned long size){
   }
   //----------------------------Reserving space -------------------
   //The current value of the heap size is set so that we can have at least one frame
-  int heap_size = 1;//This value represent the initial size of the heap(limited to one page)
+  int heap_size = 1;
   debug_print_memory("Reserving space for the process %s // %d \n",
        process_conf->process_name, process_conf->pid);
   #ifdef USER_PROCESSES_ON
@@ -808,26 +811,29 @@ int copy_process_memory(process* new_proc, process* old_proc){
         FRAME_SIZE*old_proc->mem_info.heap_usage)<0){
     return -1;
   }
-  printf("code_usage dest %d, src %d \n", new_proc->mem_info.code_usage,
-               old_proc->mem_info.code_usage);
-  printf("stack_usage dest %d, src %d \n", new_proc->mem_info.stack_usage,
-               old_proc->mem_info.stack_usage);
-  printf("heap_usage dest %d, src %d \n", new_proc->mem_info.heap_usage,
-               old_proc->mem_info.heap_usage);
+  // printf("code_usage dest %d, src %d \n", new_proc->mem_info.code_usage,
+  //              old_proc->mem_info.code_usage);
+  // printf("stack_usage dest %d, src %d \n", new_proc->mem_info.stack_usage,
+  //              old_proc->mem_info.stack_usage);
+  // printf("heap_usage dest %d, src %d \n", new_proc->mem_info.heap_usage,
+  //              old_proc->mem_info.heap_usage);
   
   assert(new_proc->mem_info.code_usage == old_proc->mem_info.code_usage);
   assert(new_proc->mem_info.stack_usage == old_proc->mem_info.stack_usage);
   assert(new_proc->mem_info.heap_usage == old_proc->mem_info.heap_usage);
-  page_table_link_list_t* lvl0_parent = old_proc->page_tables_lvl_1_list->head_page;
-  while(lvl0_parent != NULL){
-    debug_print_memory("[]Parent lvl0 page, page usage %d, index %d, type = %d\n",
-        lvl0_parent->usage, lvl0_parent->index, lvl0_parent->page_type);
-   page_table_link_list_t* lvl0_src = hash_get(old_proc->page_tables_lvl_1_list->link_index_table,
-                             (void*)((uint64_t)lvl0_parent->index), NULL);
-    debug_print_memory("[Src]parent by index, page usage %d, index %d type = %d\n",
-        lvl0_src->usage, lvl0_src->index, lvl0_src->page_type);
-    lvl0_parent = lvl0_parent->next_page;
-  }
+  new_proc->mem_info.sbrk_pointer = old_proc->mem_info.sbrk_pointer;
+  new_proc->mem_info.start_heap_add = old_proc->mem_info.start_heap_add;
+  
+  // page_table_link_list_t* lvl0_parent = old_proc->page_tables_lvl_1_list->head_page;
+  // while(lvl0_parent != NULL){
+  //   debug_print_memory("[]Parent lvl0 page, page usage %d, index %d, type = %d\n",
+  //       lvl0_parent->usage, lvl0_parent->index, lvl0_parent->page_type);
+  //  page_table_link_list_t* lvl0_src = hash_get(old_proc->page_tables_lvl_1_list->link_index_table,
+  //                            (void*)((uint64_t)lvl0_parent->index), NULL);
+  //   debug_print_memory("[Src]parent by index, page usage %d, index %d type = %d\n",
+  //       lvl0_src->usage, lvl0_src->index, lvl0_src->page_type);
+  //   lvl0_parent = lvl0_parent->next_page;
+  // }
 
   page_table_link_list_t* lvl0_iter = new_proc->page_tables_lvl_1_list->head_page;
   while(lvl0_iter != NULL){
@@ -897,6 +903,42 @@ int copy_process_memory(process* new_proc, process* old_proc){
   return 0;
 }
 
+static int add_and_allocate_frames(process* proc, uint32_t page_nb, page_t type){
+  if (proc == 0 || page_nb > get_remaining_frames()){
+    return -1;
+  }
+  for (uint64_t page_iter = 0; page_iter < page_nb; page_iter++){
+    frame_loc frame;
+    memset(&frame, 0,sizeof(frame_loc));
+    if (add_frame_to_process(proc, type, &frame)<-1){
+      return -1;
+    }
+    //New lvl0 table
+    if (frame.lvl1_index == 1){
+      //Works only for on lvl1 page
+      assert(proc->page_tables_lvl_1_list->tail_page->page_type 
+          == type);
+      if (link_lvl1_table_direct(proc, USERSPACE, 
+              proc->page_tables_lvl_1_list->tail_page->index, 
+              proc->page_tables_lvl_1_list->tail_page->table)<0){
+        return -1;
+      }
+    }
+    debug_print_memory("Allo details frame lvl2_index = %d \n", frame.lvl2_index);
+    debug_print_memory("Allo details frame lvl1_index = %d \n", frame.lvl1_index);
+    debug_print_memory("Allo details frame lvl0_index = %d \n", frame.lvl0_index);
+    debug_print_memory("Allo details frame page_table = %p \n", frame.page_table); 
+    void* frame_pointer = get_frame();
+    if (frame_pointer == NULL){return -1;}
+    memset(frame_pointer, 0, FRAME_SIZE);
+    configure_page_entry(frame.page_table->pte_list+frame.lvl0_index,
+      (long unsigned int) frame_pointer, 
+      true,true, false,
+      true,
+      KILO);
+  }
+  return 0;
+}
 
 void* get_first_stack_page(process* proc){
   page_table_link_list_t* lvl0_iter = proc->page_tables_lvl_1_list->head_page;
@@ -924,54 +966,40 @@ int check_expansion_mem(process* proc, struct trap_frame* frame){
         (proc->mem_info.stack_usage + page_diff)<STACK_FRAME_SIZE*PT_SIZE){
       debug_print_memory("Expanding memory of proc : %s by %ld \n", 
         proc->process_name, page_diff);
-      for (uint64_t page_iter = 0; page_iter < page_diff; page_iter++){
-        frame_loc frame;
-        memset(&frame, 0,sizeof(frame_loc));
-        if (add_frame_to_process(proc, STACK_PAGE, &frame)<-1){
-          return -1;
-        }
-        //New lvl0 table
-        if (frame.lvl1_index == 1){
-          //Works only for on lvl1 page
-          assert(proc->page_tables_lvl_1_list->tail_page->page_type 
-              == STACK_PAGE);
-          if (link_lvl1_table_direct(proc, USERSPACE, 
-                  proc->page_tables_lvl_1_list->tail_page->index, 
-                  proc->page_tables_lvl_1_list->tail_page->table)<0){
-            return -1;
-          }
-        }
-        void* frame_pointer = get_frame();
-        if (frame_pointer == NULL){return -1;}
-        memset(frame_pointer, 0, FRAME_SIZE);
-        configure_page_entry(frame.page_table->pte_list+frame.lvl0_index,
-          (long unsigned int) frame_pointer, 
-          true,true, false,
-          true,
-          KILO);
-      }
-      return 0;
+      add_and_allocate_frames(proc, page_diff, STACK_PAGE);
     }
   }
   return -1;
 }
 
+
+
 /* 4 Ko heap */
-#define HEAP_SIZE       0x1000
-#define HEAP 0x50000000ul
-#define HEAP_END (HEAP + HEAP_SIZE)
-
-void *sys_sbrk(unsigned long increment){
-	static char *current = (char *) HEAP;
-  	// printf("[USER brk called ] curptr = %p \n", current);
-	char *s = current;
+void *sys_sbrk(long int increment){
+  process* proc = get_current_process();
+  if (proc == 0){
+    return 0;
+  }
+  // printf("sysbrk called arg = %ld \n", increment);
+	char *current = (char *) proc->mem_info.sbrk_pointer;
+  // printf("current = %p \n", proc->mem_info.sbrk_pointer);
+  char *s = current;
 	char *c = s + increment;
-
-	if ((c < current) || (c > (char *) HEAP_END)) {
+  uint64_t abs_inc = ABS(increment);
+  uint64_t nb_pages = CUSTOM_MOD_DIV(abs_inc, FRAME_SIZE);
+  if (increment>0){
+    if (add_and_allocate_frames(proc, nb_pages, HEAP_PAGE)<0){
+      return ((void *) (-1));
+        PRINT_RED("BAD\n");
+    }
+  }
+	if (((uint64_t) c < (uint64_t) proc->mem_info.start_heap_add)) {
 		/* We cannot grow the heap anymore */
-		return ((void *) (-1));
+    PRINT_RED("BAD\n");
+    return ((void *) (-1));
 	}
 	/* The heap grown */
-	current = c;
-	return s;
+	proc->mem_info.sbrk_pointer = c;
+  // printf("return current = %p \n", s);
+  return s;
 }

@@ -9,15 +9,14 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <limits.h>
 #include <string.h>
+#include <limits.h>
 #include "readcmd.h"
 
 static void memory_error(void)
 {
-	errno = ENOMEM;
-	perror(0);
+	// errno = ENOMEM;
+	// printf(0);
 	exit(1);
 }
 
@@ -41,14 +40,23 @@ static void *xrealloc(void *ptr, size_t size)
 /* Read a line from standard input and put it in a char[] */
 char *readline(char *prompt)
 {
-	size_t buf_len = 16;
+	size_t buf_len = 100;
 	char *buf = xmalloc(buf_len * sizeof(char));
-
+  memset(buf, 0, buf_len);
 	printf(prompt);
-	if (fgets(buf, buf_len, stdin) == NULL) {
-		free(buf);
-		return NULL;
-	}
+  
+  {
+    cons_read(buf, buf_len);
+    printf("%s\n", buf);
+    return buf;
+  }
+  // {
+  //   if (my_fgets(buf, buf_len, 0) == NULL) {
+	// 	  free(buf);
+	// 	return NULL;
+	//   }
+  // }
+  
 
 	do {
 		size_t l = strlen(buf);
@@ -60,7 +68,9 @@ char *readline(char *prompt)
 		if (buf_len >= (INT_MAX / 2)) memory_error();
 		buf_len *= 2;
 		buf = xrealloc(buf, buf_len * sizeof(char));
-		if (fgets(buf + l, buf_len - l, stdin) == NULL) return buf;
+		// if (my_fgets(buf + l, buf_len - l, 0) == NULL) return buf;
+		// cons_read(buf + l, buf_len - l);
+    return buf;
 	} while (1);
 }
 #endif

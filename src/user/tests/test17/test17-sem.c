@@ -42,14 +42,14 @@ int main(void *arg)
         }
         for (i=0; i<3; i++) {
                 int ret;
-                assert(waitpid(pid[i], &ret) == pid[i]);
+                assert(waitpid_old(pid[i], &ret) == pid[i]);
                 count += ret;
         }
         assert(scount(st->rsem) == 0xfffd);
         for (i=3; i<6; i++) {
                 int ret;
                 assert(kill(pid[i]) == 0);
-                assert(waitpid(pid[i], &ret) == pid[i]);
+                assert(waitpid_old(pid[i], &ret) == pid[i]);
         }
         assert(scount(st->mutex) == 1);
         assert(scount(st->wsem) == 100);

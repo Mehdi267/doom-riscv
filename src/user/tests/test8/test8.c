@@ -17,11 +17,11 @@ int main(void *arg)
         assert(getprio(getpid()) == 128);
 
         /* Le petit-fils va passer zombie avant le fils mais ne pas
-           etre attendu par waitpid. Un nettoyage automatique doit etre
+           etre attendu par waitpid_old. Un nettoyage automatique doit etre
            fait. */
         pid = start("suicide_launcher", 4000, 129, 0);
         assert(pid > 0);
-        assert(waitpid(pid, &r) == pid);
+        assert(waitpid_old(pid, &r) == pid);
         assert(chprio((int)r, 192) < 0);
 
         count = 0;
@@ -30,7 +30,7 @@ int main(void *arg)
                 for (i=0; i<10; i++) {
                         pid = start("suicide_launcher", 4000, 200, 0);
                         assert(pid > 0);
-                        assert(waitpid(pid, 0) == pid);
+                        assert(waitpid_old(pid, 0) == pid);
                 }
                 test_it();
                 count += i;

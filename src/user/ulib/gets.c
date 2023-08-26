@@ -7,7 +7,16 @@ char* my_fgets(char* buffer, int size, int fd) {
     int c;
     int i = 0;
 
-    while (i < size - 1 && (c = per_fgetc(fd)) != EOF) {
+    while (i < size) {
+        c = per_fgetc(fd);
+        if (c == EOF){
+          break;
+        }
+        if (c == BS){
+          if (i != 0){i--;}
+          buffer[i] = 0 ;
+          continue;
+        }
         buffer[i++] = c;
         if (c == '\n') {
             break;

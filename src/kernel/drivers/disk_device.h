@@ -3,6 +3,26 @@
 #include <stdint.h>
 #pragma once
 
+//######################################################
+//##   Disk operations functions ##
+//######################################################
+
+#define BLOCK_SIZE 512 
+
+typedef enum operation_type {
+  READ = 0,
+  WRITE = 1,
+} op_type;
+
+typedef struct disk_operation{
+  uint32_t blockNumber; //the disk sector that we will read from/write to
+  op_type type; //Type of the disk operation(read or write)
+  //The location in which we read data into
+  //or the location of the data that will be 
+  //written to the disk.
+  char *data;
+} disk_op;
+
 typedef struct disk_device {
 	void (*init)();
   int (*read_disk)(disk_op*);

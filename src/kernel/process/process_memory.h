@@ -33,7 +33,8 @@ typedef struct frame_info{
         int remainder = (number) % (divisor); \
         (remainder > 0) ? ((number) / (divisor) + 1) : ((number) / (divisor)); \
     })
-    
+#define ABS(x) ((x) < 0 ? -(x) : (x))
+
 //These indicies will be used to index elements 
 //that are present in the lvl 1 page table
 #define STACK_CODE_SPACE_START 0
@@ -98,16 +99,18 @@ void* get_first_stack_page(process* proc);
 int check_expansion_mem(process* proc, struct trap_frame* frame);
 
 /**
- * Increment the program's data space by <increment> bytes. Calling sbrk()
- * with an increment of 0 can be used to find the current location of the
- * program break.
+ * @brief Increment or decrement the end of the data segment (heap) of the calling process.
  *
- * @param increment the number of bytes to extend the data space
- * @return the previous program break on success. If the break was increased
- *         then this value is a pointer to the start of the newly allocated
- *         memory.
- *         (void *)-1 on error (ie: no memory available)
+ * The `sbrk` system call adjusts the end of the data segment (heap) of the calling
+ * process by incrementing it by the specified `increment` bytes. The new end
+ * address must be within the range of valid addresses for the process's address space.
+ *
+ * @param increment The number of bytes to increment the end address by. A negative
+ * value can be used to decrement the end address.
+ * @return On success, a pointer to the previous end of the data segment (heap) is
+ * returned. On failure, (void *)-1 is returned.
+ * @see brk
  */
-void *sys_sbrk(unsigned long increment);
+void *sys_sbrk(long int increment);
 
 #endif

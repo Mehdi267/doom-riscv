@@ -55,4 +55,10 @@ void release_frame(void *frame_ptr);
  */
 void print_mem_usage();
 
+/**
+ * @brief Get the reamaining frames.
+ * @return uint64_t the number of free frames
+ */
+uint64_t get_remaining_frames();
+
 #endif

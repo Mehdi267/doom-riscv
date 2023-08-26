@@ -16,17 +16,17 @@ int main(void *arg)
         r = kill(pid1);
         assert(r == 0);
         printf(" 3");
-        r = waitpid(pid1, &rval);
+        r = waitpid_old(pid1, &rval);
         assert(rval == 0);
         assert(r == pid1);
         printf(" 4");
         pid1 = start("procExit", 4000, 192, (void *) val);
         assert(pid1 > 0);
         printf(" 6");
-        r = waitpid(pid1, &rval);
+        r = waitpid_old(pid1, &rval);
         assert(rval == val);
         assert(r == pid1);
-        assert(waitpid(getpid(), &rval) < 0);
+        assert(waitpid_old(getpid(), &rval) < 0);
         printf(" 7.\n");
 }
 

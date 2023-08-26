@@ -52,9 +52,9 @@ int main(void *arg)
                 assert(preceive(fid, &msg) == 0);
                 assert(msg == 'k' + i);
         }
-        assert(waitpid(pid3, 0) == pid3); //XXX assert(waitpid(-1, 0) == pid3); ???
-        assert(waitpid(-1, 0) == pid2);
-        assert(waitpid(-1, 0) == pid1);
+        assert(waitpid_old(pid3, 0) == pid3); //XXX assert(waitpid_old(-1, 0) == pid3); ???
+        assert(waitpid_old(-1, 0) == pid2);
+        assert(waitpid_old(-1, 0) == pid1);
         printf(" 2");
 
         strncpy(ps[1].data, "abej", 32);
@@ -79,9 +79,9 @@ int main(void *arg)
         }
         chprio(pid1, 125);
         chprio(pid3, 127);
-        assert(waitpid(-1, 0) == pid3);
-        assert(waitpid(-1, 0) == pid2);
-        assert(waitpid(-1, 0) == pid1);
+        assert(waitpid_old(-1, 0) == pid3);
+        assert(waitpid_old(-1, 0) == pid2);
+        assert(waitpid_old(-1, 0) == pid1);
         assert(pdelete(fid) == 0);
         printf(" 3.\n");
         shm_release("test13_shm");

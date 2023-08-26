@@ -12,6 +12,6 @@ int main(void *arg)
         (void)arg;
         pid = start("proc16_1", 4000 + NBSEMS * 4, 128, 0);
         assert(pid > 0);
-        assert(waitpid(pid, 0) == pid);
+        assert(waitpid_old(pid, 0) == pid);
         return 0;
 }

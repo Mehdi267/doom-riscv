@@ -27,7 +27,7 @@ int main(void *arg)
         printf("\n");
         pid = start("launch_philo", 4000, 193, 0);
         assert(pid > 0);
-        assert(waitpid(pid, 0) == pid);
+        assert(waitpid_old(pid, 0) == pid);
         printf("\n");
         xsdelete(&p->mutex_philo);
         for (j = 0; j < NR_PHILO; j++) {
