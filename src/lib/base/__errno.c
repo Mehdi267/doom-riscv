@@ -25,18 +25,11 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#ifndef _SYS_UIO_H_
-#define _SYS_UIO_H_
+#include <errno.h>
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
-#include <linux/uio.h>
+int errno_v; 
 
-__BEGIN_DECLS
-
-int readv(int, const struct iovec *, int);
-int writev(int, const struct iovec *, int);
-
-__END_DECLS
-
-#endif /* _SYS_UIO_H_ */
+volatile int*  __errno( void )
+{
+  return  &errno_v;
+}

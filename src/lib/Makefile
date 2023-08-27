@@ -21,7 +21,7 @@ LIB_TARGET ?= $(BUILD_DIR)/$(LIB_NAME).a
 LIB_INCLUDES = include include/riscv
 LIB_INCLUDES := $(addprefix ../$(LIB_NAME)/, $(LIB_INCLUDES)) # Useful if this Makefile is imported to an other.
 
-LIB_SRC_DIRS = stdin stdlib stdio string drivers hash arch/rv64
+LIB_SRC_DIRS = stdin stdlib stdio string drivers hash arch/rv64 base
 LIB_SRC_DIRS := $(addprefix ../$(LIB_NAME)/, $(LIB_SRC_DIRS)) # Useful if this Makefile is imported to an other.
 LIB_SRC = $(foreach d, $(LIB_SRC_DIRS), $(wildcard $(d)/*.c))
 LIB_OBJS = $(sort $(LIB_SRC:.c=.o))

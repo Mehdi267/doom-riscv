@@ -29,9 +29,7 @@
 #define _DIRENT_H_
 
 #include <stdint.h>
-#include <sys/cdefs.h>
 
-__BEGIN_DECLS
 
 #ifndef DT_UNKNOWN
 #define  DT_UNKNOWN     0
@@ -60,7 +58,7 @@ struct dirent {
 
 typedef struct DIR  DIR;
 
-extern  int              getdents(unsigned int, struct dirent*, unsigned int);
+extern  int              getdents(int, struct dirent*, unsigned int);
 extern  DIR*             opendir(const char*  dirpath);
 extern  DIR*             fdopendir(int fd);
 extern  struct dirent*   readdir(DIR*  dirp);
@@ -74,6 +72,5 @@ extern  int              scandir(const char *dir, struct dirent ***namelist,
                                  int(*compar)(const struct dirent **, 
                                               const struct dirent **));
 
-__END_DECLS
 
 #endif /* _DIRENT_H_ */

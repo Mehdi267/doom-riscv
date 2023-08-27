@@ -17,6 +17,7 @@ int isspace(int c);
 int isdigit(int c);
 int atoi(const char *str);
 #define fprintf(f, ...) printf(__VA_ARGS__)
+void	 perror(const char *);
 
 //######################################################
 //##   Utility functions ##

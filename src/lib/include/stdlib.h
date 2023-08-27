@@ -27,3 +27,4 @@ void *realloc(void *ptr, size_t size);
 void* memalign(size_t alignment, size_t size);
 void free(void* ptr);
 long int strtol(const char *nptr, char **endptr, int base);
+extern void qsort(void *, size_t, size_t, int (*)(const void *, const void *));

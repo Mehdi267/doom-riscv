@@ -25,26 +25,19 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#ifndef _SYS_EVENTFD_H
-#define _SYS_EVENTFD_H
+#include <errno.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
 
-#include <sys/cdefs.h>
-#include <fcntl.h>
+void perror(const char *prefix)
+{
+  char   buff[256];
 
-__BEGIN_DECLS
-
-#define  EFD_CLOEXEC   O_CLOEXEC
-#define  EFD_NONBLOCK  O_NONBLOCK
-
-/* type of event counter */
-typedef uint64_t  eventfd_t;
-
-extern int eventfd(unsigned int initval, int flags);
-
-/* Compatibility with GLibc */
-extern int eventfd_read(int fd, eventfd_t *counter);
-extern int eventfd_write(int fd, const eventfd_t counter);
-
-__END_DECLS
-
-#endif /* _SYS_EVENTFD_H */
+  if (prefix) {
+      write( 2, prefix, strlen(prefix) );
+      write( 2, ": ", 2 );
+  }
+  write( 2, buff, strlen(buff) );
+  write( 2, "\n", 1 );
+}
