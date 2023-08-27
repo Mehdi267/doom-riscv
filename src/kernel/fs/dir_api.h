@@ -2,7 +2,7 @@
 #define MY_DIRAPI_H
 
 #include "fs_api.h"
-
+#include "dirent.h"
 /**
  * @brief Check accessibility of a file.
  *
@@ -104,5 +104,33 @@ int rmdir(const char *path);
  */
 int rename(const char *oldpath, const char *newpath);
 
+/**
+ * int getdents(unsigned int fd, struct dirent *dirp, unsigned int count);
+ *
+ * The getdents() system call reads directory entries from the directory referred
+ * to by the open file descriptor 'fd' into the buffer pointed to by 'dirp'. The
+ * entries are read into the buffer in a format defined by 'struct dirent'.
+ * This function allows you to retrieve a list of directory entries directly from
+ * the kernel into the provided buffer.
+ *
+ * Parameters:
+ *   - fd: The file descriptor of the directory to read from.
+ *   - dirp: A pointer to a buffer where directory entries will be stored.
+ *   - count: The size of the buffer in bytes.
+ *
+ * Return Value:
+ *   - On success, the number of bytes read into the buffer.
+ *   - On error, -1 is returned and errno is set to indicate the error.
+ *
+ * Notes:
+ *   - It's important to provide a buffer of sufficient size (specified by 'count')
+ *     to accommodate the directory entries. If the buffer is too small, some
+ *     entries might not be read completely, and the function may need to be called
+ *     multiple times to read all entries.
+ *   - The 'count' parameter helps to prevent buffer overflow, ensuring that the
+ *     system reads no more data than can fit into the provided buffer.
+ */
+int getdents(int fd, struct dirent *dirp,
+            unsigned int count);
 
 #endif // MY_DIRAPI_H

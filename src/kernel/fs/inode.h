@@ -4,6 +4,20 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include "dirent.h"
+
+#define ALIGN_SIZE(rec_len) do { \
+    if ((rec_len) % 4 != 0) { \
+        (rec_len) += 4 - (rec_len) % 4; \
+    } \
+} while (0)
+
+#define ALIGN_SIZE_8(rec_len) do { \
+    if ((rec_len) % 8 != 0) { \
+        (rec_len) += 8 - (rec_len) % 8; \
+    } \
+} while (0)
+
 
 //Reserved inodes
 #define EXT2_BAD_INO 1        // bad blocks inode
@@ -124,6 +138,14 @@ typedef struct Linked_directory_entry {
   uint8_t file_type;
   char* name;
 } dir_entry;
+
+typedef struct dirent_basic {
+    uint64_t         d_ino;
+    int64_t          d_off;
+    unsigned short   d_reclen;
+    unsigned char    d_type;
+} dirent_basic;
+
 
 //sizeof(uint32_t)+sizeof(uint16_t)+sizeof(uint8_t)+sizeof(uint8_t);
 #define SIZE_DIR_NO_NAME 8
@@ -306,6 +328,11 @@ int free_inode_list(inode_elt* list);
  * @param dir the directory inode
  */
 void print_dir_list(inode_t* dir, bool verbose);
+
+/** fills dirp with data about 
+ * the directories inside the inode*/
+int getdents_i(inode_t* dir, struct dirent *dirp,
+            unsigned int count);
 
 /**
  * @brief prints basic entry with no filename

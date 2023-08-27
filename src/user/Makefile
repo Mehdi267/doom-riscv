@@ -61,7 +61,7 @@ ULIB_CFLAGS = $(CFLAGS) $(addprefix -I, $(APP_INCLUDES))
 #
 # Apps
 #
-APPS_NAMES = hello idle off shell help ps show_programs info_queue snake input_reader pmg voidprog ensishell
+APPS_NAMES = hello idle off shell help ps show_programs info_queue snake input_reader pmg voidprog ensishell ls
 
 APP_CFLAGS = $(CFLAGS) $(addprefix -I, $(APP_INCLUDES))
 

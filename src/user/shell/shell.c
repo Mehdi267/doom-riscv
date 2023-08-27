@@ -65,7 +65,8 @@ int main() {
   assert(open("/dev/terminal", O_WRONLY, 0) == 1);
   //stderr
   assert(dup2(1, 2) == 2);
-  char cmd[20];
+  char cmd[21];
+  cmd[20] = 0;
   #define CURR_DIR_SIZE 50
   char current_dir[CURR_DIR_SIZE];
   int pid;

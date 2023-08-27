@@ -11,6 +11,7 @@
 #include "logger.h"
 #include <assert.h>
 #include "inode_util.h"
+#include <dirent.h> //for the dir struct
 
 
 inode_t* get_inode(uint32_t inode_number){  
@@ -1186,6 +1187,66 @@ void print_dir_list(inode_t* dir, bool verbose){
   print_inode_no_arg("------Printing dir list end------\n");
 }
 
+int getdents_i(inode_t* dir, struct dirent *dirp,
+            unsigned int count){
+  if (dirp == 0 || count  == 0 || dir == 0){
+    return -1;
+  }
+  super_block* super = (super_block*) get_super_block();
+  if (dir->i_mode != EXT2_S_IFDIR){
+    PRINT_RED("Inode is not a dir\n");
+    return -1;
+  }
+  debug_print_inode("print dir list dir->i_blocks = %d\n", dir->i_blocks);
+  if (dir->i_blocks == 0){
+      printf("Dir is empty\n");
+  }
+  int nb_read = 0;
+  for (int blk = 0; blk<dir->i_blocks; blk++){
+    uint32_t block_nb = super->s_first_data_block+dir->i_block[blk];
+    char* block_data = disk_read_block(block_nb, LOCK);
+    if (block_data == 0){
+      PRINT_RED("Failed to read op while printing dir");
+      return -1;
+    }
+    dir_entry_basic* list_elt = 
+          (dir_entry_basic*)block_data;
+    char* limit = block_data+root_file_system->block_size;
+    uint64_t size_ent = 0;
+    while (((char*)list_elt)<limit){
+      if (list_elt->file_type != EXT2_FT_FREE){
+          size_ent = sizeof(dirent_basic) +
+               list_elt->name_len + 1;
+          ALIGN_SIZE_8(size_ent);
+          if (count < size_ent){
+            break;
+          }
+          dirp->d_ino = list_elt->inode_n;
+          // printf("size %ld\n", size_ent);
+          dirp->d_off = ((uint64_t)list_elt - (uint64_t)block_data) + 
+                        blk*EXT2_BLOCK_SIZE + list_elt->rec_len;
+          dirp->d_reclen = size_ent;
+          dirp->d_type = list_elt->file_type;
+          char filename[list_elt->name_len + 1];
+          memcpy(filename, (char*)list_elt + sizeof(dir_entry_basic),
+              list_elt->name_len);
+          filename[list_elt->name_len] = '\0';  
+          memcpy(dirp->d_name, filename,
+                list_elt->name_len + 1);
+          dirp = (struct dirent *)((uint64_t)dirp +
+                   size_ent); 
+          count -= size_ent;
+          nb_read += size_ent;
+      }
+      uint32_t jump_by = list_elt->rec_len;
+      list_elt = (dir_entry_basic*)((char*)list_elt+jump_by);
+    }
+    unlock_cache(block_nb);
+  }
+  print_inode_no_arg("------Dirent reach the end------\n");
+  return nb_read + 1; //FIX THIS IS VERY BAD
+}
+
 int add_dot_directories(inode_t* dir, inode_t* previous_directory){
   print_inode_no_arg("------ADDING DOT DIRECTORIES------\n");
   if (dir == 0 || previous_directory == 0){
@@ -1210,8 +1271,8 @@ int add_dot_directories(inode_t* dir, inode_t* previous_directory){
     PRINT_RED("Failed Addin dir 2\n");
     return -1;
   }
-  return 0;
   print_inode_no_arg("------DOT DIRECTORIES WERE ADDED------\n");
+  return 0;
 }
 
 

@@ -294,7 +294,7 @@ int remove_fd_list(process* proc_arg, int fd, rem_type op_type){
         fd_elt->file_info->usage_counter);
   }
   else{
-    debug_print_fsapi("[FSAPI]Fd usage equal to 0, removing it completly; usage = %d\n", 
+    debug_print_fsapi("[FSAPI]Fd usage equal to 0, removing it completly from proc; usage = %d\n", 
         fd_elt->file_info->usage_counter);
     if (fd_elt->file_info->type == FS_FT_PIPE){
         close_type close_t = fd_elt->file_info->can_read ?

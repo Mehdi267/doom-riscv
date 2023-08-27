@@ -125,6 +125,9 @@ void print_fs_details(){
   print_mem_usage();
   load_and_print_superblock();
   load_and_print_desc_table();
+  if (root_file_system == 0){
+    return;
+  }
   print_cache_details(root_file_system->inode_list);
   print_data_bitmap();
   print_inode_bitmap();

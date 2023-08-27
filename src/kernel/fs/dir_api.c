@@ -164,7 +164,8 @@ int mkdir(const char *dir_name, mode_t mode){
           EXT2_FT_DIR,
           path_data->files[path_data->nb_files -1],
           strlen(path_data->files[path_data->nb_files -1]))<0){
-      PRINT_RED("Folder already exists or something went wrong\n");
+      // PRINT_RED("Folder already exists or something went wrong\n");
+      PRINT_RED("Folder already exists\n");
       free_inode(dir_inode, get_inode_number(dir_inode));
       free(final_string);
       free_path_fs(path_data);
@@ -247,4 +248,21 @@ int rmdir(const char *path){
   }
   printf("Removing dir = %s\n", final_string);
   return 0;
+}
+
+
+int getdents(int fd, struct dirent *dirp,
+            unsigned int count){
+  if (dirp == 0){
+    return -1;
+  }
+  flip* fs_elt = get_fs_list_elt(NULL, fd);
+  if (fs_elt == 0) {
+      printf("File system element is NULL.\n");
+      return -1;
+  }
+  if (count  == 0){
+    return 0;
+  }
+  return getdents_i(fs_elt->f_inode, dirp, count);
 }

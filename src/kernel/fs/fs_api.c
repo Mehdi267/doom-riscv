@@ -21,10 +21,10 @@ int open(process* proc, const char *file_name, int flags, mode_t mode){
   if (file_name == 0){
     return -1;
   }
-  if (flags > 0x2ff){
-    printf("Bad flags");
-    return -1;
-  }
+  // if (flags > 0x2ff){
+  //   printf("Bad flags");
+  //   return -1;
+  // }
   path_fs* path_data = extract_files(file_name);
   if (path_data == 0){
     return -1;
@@ -78,6 +78,12 @@ int open(process* proc, const char *file_name, int flags, mode_t mode){
     free_path_fs(path_data);
     return -1;
   }
+  if ((flags & O_DIRECTORY) != 0){
+    if (file_inode->i_mode != EXT2_S_IFDIR){
+      free_path_fs(path_data);
+      return -1;
+    }
+  } 
   open_fd* new_file = add_new_element_open_files(proc);
   if (new_file == 0){
     free_path_fs(path_data);

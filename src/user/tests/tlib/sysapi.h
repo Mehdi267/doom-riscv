@@ -250,15 +250,22 @@ typedef unsigned short nlink_t;    // Number of hard links
 
 // Messages from users
 enum FileOpenFlags {
-    O_RDONLY = 0x0000,      // Read-only
-    O_WRONLY = 0x0001,      // Write-only
-    O_RDWR = 0x0002,        // Read-write
-    O_CREAT = 0x0010,       // Create the file if it doesn't exist
-    O_EXCL = 0x0020,        // Fail if the file exists and O_CREAT is used
-    O_TRUNC = 0x0040,       // Truncate the file to zero length upon opening
-    O_APPEND = 0x0080,      // Set the file offset to the end before each write
-    O_SYNC = 0x0200         // Write operations are synchronized on storage
+  O_RDONLY = 0x0000,      // Read-only
+  O_WRONLY = 0x0001,      // Write-only
+  O_RDWR = 0x0002,        // Read-write
+  O_CREAT = 0x0010,       // Create the file if it doesn't exist
+  O_EXCL = 0x0020,        // Fail if the file exists and O_CREAT is used
+  O_TRUNC = 0x0040,       // Truncate the file to zero length upon opening
+  O_APPEND = 0x0080,      // Set the file offset to the end before each write
+  O_SYNC = 0x0200,        // Write operations are synchronized on storage
+  O_NONBLOCK = 0x4000,    // Open in non-blocking mode
+  O_DIRECTORY = 0x10000,  // Ensure that the file is a directory
+  O_NOFOLLOW = 0x20000,   // Do not follow symbolic links
+  O_CLOEXEC = 0x80000,    // Set the close-on-exec flag
+  O_DSYNC = 0x400000,     // Synchronous data writes
+  O_RSYNC = 0x1010000,    // Synchronous reads
 };
+
 enum SEEK_OPERATION {
   SEEK_SET = 0,
   SEEK_CUR = 1,
@@ -278,8 +285,17 @@ struct __attribute__((packed)) stat {
   blkcnt_t  st_blocks;      // Number of 512B blocks allocated
   time_t    st_atime;       // Time of last access
   time_t    st_mtime;       // Time of last modification
-  time_t    st_ctime;       // Time of last status change
+  time_t  
+    st_ctime;       // Time of last status change
 };
+struct dirent {
+  uint64_t         d_ino;
+  int64_t          d_off;
+  unsigned short   d_reclen;
+  unsigned char    d_type;
+  char             d_name[256];
+}  __attribute__((packed)) ;
+
 
 //Fs api 
 int open(const char *file_name, int flags, mode_t mode);
@@ -304,6 +320,8 @@ char *getcwd(char *buf, size_t size);
 int mkdir(const char *dir_name, mode_t mode);
 int chdir(const char *new_directory);
 int rmdir(const char *path);
+int getdents(int fd, struct dirent *dirp,
+            unsigned int count);
 
 //Custom api
 void print_dir_elements(const char*);

@@ -192,6 +192,8 @@ unsigned long syscall_handler(struct trap_frame *tf) {
       break;
     case SYSC_sbrk:
       return (unsigned long) sys_sbrk(tf->a0);
+    case SYSC_getdents:
+      return (unsigned long) getdents(tf->a0,( struct dirent *)tf->a1, tf->a2);
     default:
       printf("Syscall code does not match any of the defined syscalls");
       // blue_screen(tf);
