@@ -217,6 +217,13 @@ mode_t umask(mode_t mask);
 int umount(const char *special_file);
 //int utime(const char *file_name, const struct utimbuf *times);
 
+#define R_OK  4  /* Read */
+#define W_OK  2  /* Write */
+#define X_OK  1  /* Execute */
+#define F_OK  0  /* Existence */
+
+int access(const char *, int);
+
 void print_dir_elements(const char* path);
 typedef struct disk_info{
  uint32_t total_blocks;

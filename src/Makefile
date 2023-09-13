@@ -37,7 +37,7 @@ MACHINE ?= virt
 #MACHINE ?= sifive_u
 #MACHINE ?= spike
 #MACHINE ?= zybo
-#MACHINE ?= cep
+# MACHINE ?= cep
 
 #
 # Hardware plateforme
@@ -79,7 +79,13 @@ QEMU_OPT_LINK_BLOCK = -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 QEMU_NO_GRAPH_OPTS = -nographic
 # Pour avoir l'uart + le VGA en mode graphique
 # QEMU_GRAPH_OPTS = --enable-sdl --with-sdlabi=2.0 -display sdl -serial mon:stdio
-QEMU_GRAPH_OPTS = --enable-sdl -display sdl
+#These work but there is they are not easy to manipulate and 
+#and not well documented
+# QEMU_GRAPH_OPTS = -vga std -serial mon:stdio
+# QEMU_GRAPH_OPTS = -device bochs-display -serial mon:stdio
+# QEMU_GRAPH_OPTS = -device isa-vga -serial mon:stdio
+# QEMU_GRAPH_OPTS = -device virtio-vga -serial mon:stdio
+QEMU_GRAPH_OPTS = -device virtio-gpu-device,bus=virtio-mmio-bus.1 -serial mon:stdio
 
 QEMU = $(RISCV_ROOT)qemu-system-riscv64
 ifeq ("$(MACHINE)", "spike")
@@ -94,6 +100,7 @@ else ifeq ("$(MACHINE)", "virt")
 		QEMU_OPTS += $(QEMU_VIRTIO_CONF)
 		QEMU_OPTS += $(QEMU_OPT_DISK)
 		QEMU_OPTS += $(QEMU_OPT_LINK_BLOCK)
+		# QEMU_OPTS += $(QEMU_GRAPH_OPTS)
 	endif
 	VIRT_OPT=VIRTMACHINE
 else ifeq ("$(MACHINE)", "cep")
@@ -151,7 +158,7 @@ debug: all
 
 # go-graphic : Lance l'OS avec QEmu en mode graphique
 go_graphic: all
-	$(QEMU) $(QEMU_GRAPH_OPTS) $(QEMUOPTS)
+	$(QEMU) $(QEMU_GRAPH_OPTS) $(QEMU_OPTS)
 
 # kill QEmu si CTRL-A, X ne fonctionne pas.
 kill_qemu:

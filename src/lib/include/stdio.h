@@ -3,6 +3,10 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+#define stdin 0
+#define stdout 1
+#define stderr 2
+
 
 int printf(const char *, ...);
 int puts(const char *);
@@ -18,7 +22,7 @@ int isdigit(int c);
 int atoi(const char *str);
 #define fprintf(f, ...) printf(__VA_ARGS__)
 void	 perror(const char *);
-
+int dprintf(int fd, const char *format, ...);
 //######################################################
 //##   Utility functions ##
 //######################################################

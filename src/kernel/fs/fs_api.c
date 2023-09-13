@@ -522,3 +522,9 @@ void fs_info(disk_info* info){
    info->free_inodes = super->s_free_inodes_count;
   }
 }
+
+int access(const char *f, int flag){
+  //it is the wild west
+  //No protections in the os
+  return 0;
+}

@@ -40,7 +40,6 @@
 #ifndef _CTYPE_H_
 #define _CTYPE_H_
 
-#include <sys/cdefs.h>
 
 #define	_U	0x01
 #define	_L	0x02
@@ -51,7 +50,6 @@
 #define	_X	0x40
 #define	_B	0x80
 
-__BEGIN_DECLS
 
 extern const char	*_ctype_;
 extern const short	*_tolower_tab_;
@@ -200,7 +198,6 @@ __CTYPE_INLINE int _toupper(int c)
 
 #endif /* NDEBUG */
 
-__END_DECLS
 
 #undef __CTYPE_INLINE
 

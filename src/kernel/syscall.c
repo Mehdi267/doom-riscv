@@ -23,6 +23,7 @@
 #include "fs/fs.h"
 #include "fs/fs_api.h"
 #include "fs/dir_api.h"
+#include "drivers/gpu_device.h" //gpu related methods
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -193,7 +194,17 @@ unsigned long syscall_handler(struct trap_frame *tf) {
     case SYSC_sbrk:
       return (unsigned long) sys_sbrk(tf->a0);
     case SYSC_getdents:
-      return (unsigned long) getdents(tf->a0,( struct dirent *)tf->a1, tf->a2);
+      return (unsigned long) getdents(tf->a0, (struct dirent *)tf->a1, tf->a2);
+    case SYSC_get_display_info:
+      if (gpu_dev->get_display_info != NULL){
+        gpu_dev->get_display_info((struct display_info*) tf->a0);
+        break;
+      }
+    case SYSC_upd_data_display:
+      if (gpu_dev->update_data != NULL){
+        gpu_dev->update_data((void*) tf->a0, tf->a1, tf->a2, tf->a3, tf->a4);
+        break;
+      }
     default:
       printf("Syscall code does not match any of the defined syscalls");
       // blue_screen(tf);

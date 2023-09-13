@@ -87,10 +87,15 @@
 #define SYSC_ld_progs_into_disk 66
 #define SYSC_sbrk               67
 #define SYSC_getdents           68
+#define SYSC_access             69
 
 #define SYSC_print_dir_elements 76 
 #define SYSC_fs_info            77
 #define SYSC_void_call          78
+
+#define SYSC_get_display_info   80
+#define SYSC_upd_data_display   81
+
 #define NB_SYSCALLS             79
 
 #endif

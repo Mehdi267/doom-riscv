@@ -1,5 +1,4 @@
 /**
- * @file block_q.c
  * @brief Virtual Disk Device implementation
  * @author Mehdi Frikha 
  * This file contains the implementation of the Virtual Disk Device, which interacts with the disk
@@ -27,6 +26,11 @@
 #include "timer.h"
 #include "string.h"
 #include "virt_disk.h"
+#include "virtio.h"
+
+//Disk queue
+virt_q block_q;
+
 /**
  * @brief Initializes the virtual disk device by configuring 
  * its registers in the virtio memory space.
@@ -105,9 +109,6 @@ void virt_disk_init(){
     return;
   }
   *R(MMIO_QUEUE_NUM) = NUMQ;
-  // if (*R(MMIO_QUEUE_NUM) != NUMQ){
-  //   printf("Queue size rejected by the device, queue size = %d\n", *R(MMIO_QUEUE_NUM));
-  // }
 
   //We save the location of the queues
   *R(MMIO_QUEUE_DESC_LOW) = (uint64_t)block_q.desc;

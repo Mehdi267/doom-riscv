@@ -903,6 +903,36 @@ int copy_process_memory(process* new_proc, process* old_proc){
   return 0;
 }
 
+// static int free_top_pages(process* proc, uint32_t page_nb, page_t page_type){
+//   if (proc == 0){
+//     return -1;
+//   }
+//   page_table_link_list_t* lvl1 = proc->page_tables_lvl_1_list->head_page;
+//   int start_index = 0;
+//   int end_index = 0;
+//   switch (page_type){
+//     case CODE_PAGE:
+//       start_index = STACK_CODE_SPACE_START;
+//       end_index = STACK_CODE_SPACE_START + lvl1->code_usage;
+//       break;
+//     case STACK_PAGE:
+//       start_index = STACK_CODE_SPACE_END;
+//       end_index = STACK_CODE_SPACE_END - lvl1->code_usage;
+//       break;
+//     case HEAP_PAGE:
+//       start_index = HEAP_SPACE_START;
+//       end_index = HEAP_SPACE_START + lvl1->heap_usage;
+//       break;
+//     case SHARED_PAGE:
+//       start_index = SHARED_MEMORY_START;
+//       end_index = SHARED_MEMORY_START + lvl1->shared_memory_usage;
+//       break;
+//     default:
+//       break;
+//   }
+//   lvl1->link_index_table
+// }
+
 static int add_and_allocate_frames(process* proc, uint32_t page_nb, page_t type){
   if (proc == 0 || page_nb > get_remaining_frames()){
     return -1;
@@ -974,7 +1004,6 @@ int check_expansion_mem(process* proc, struct trap_frame* frame){
 
 
 
-/* 4 Ko heap */
 void *sys_sbrk(long int increment){
   process* proc = get_current_process();
   if (proc == 0){

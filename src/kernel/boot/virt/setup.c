@@ -18,6 +18,7 @@
 #include "drivers/poweroff.h"
 #include "drivers/console.h"
 #include "drivers/disk_device.h"
+#include "drivers/gpu_device.h"
 
 char * default_program = "console";
 
@@ -37,6 +38,7 @@ void arch_setup()
 	register_clint(&virt_clint);
 	register_plic(&virt_plic);
 	register_disk(&virt_disk);
+	register_gpu(&virt_gpu);
 
 	// activation des compteurs de performances
 	csr_write(mcounteren, -1);

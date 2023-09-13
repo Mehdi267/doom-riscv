@@ -16,12 +16,12 @@ page_table *kernel_base_page_table;
  * @return A pointer to the created page table directory, or NULL if an error occurred.
  */
 page_table *init_directory() {
-    page_table *directory_ptr = create_page_table();
-    if (directory_ptr == NULL) {
-        return NULL;
-    }
+  page_table *directory_ptr = create_page_table();
+  if (directory_ptr == NULL) {
+    return NULL;
+  }
 
-    #ifndef VIRTMACHINE
+  #ifndef VIRTMACHINE
     /**
      * @brief Cep machine directory configuration
      * 
@@ -54,8 +54,8 @@ page_table *init_directory() {
     page_table_entry *second_kernel_space_giga = directory_ptr->pte_list + KERNEL_SPACE + 4;
     configure_page_entry(second_kernel_space_giga, KERNEL_SPACE, true, true, true, GIGA);
     #endif
-
-    #else
+  //Virt machine
+  #else
     /**
      * @brief Virt machine configuration
      * 
@@ -71,9 +71,9 @@ page_table *init_directory() {
     // Mapping kernel memory
     page_table_entry *pte_graphic_memory_1 = directory_ptr->pte_list + VRAM_SPACE_1;
     configure_page_entry(pte_graphic_memory_1, VRAM_SPACE_1_ADDRESS, true, true, true, false, GIGA);
-    #endif
+  #endif
 
-    return directory_ptr;
+  return directory_ptr;
 }
 
 /**

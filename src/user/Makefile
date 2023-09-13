@@ -38,6 +38,7 @@ include ../riscv_flags.config
 include ../toolchain.config
 
 CFLAGS = $(ARCH_CFLAGS) -g -O0
+CFLAGS_NO_WARN = $(ARCH_CFLAGS_SIMPLE) -g -O0
 APP_INCLUDES = $(LIB_INCLUDES) $(ULIB_DIR)
 LDFLAGS = $(CFLAGS) $(ARCH_LDFLAGS)
 
@@ -61,9 +62,9 @@ ULIB_CFLAGS = $(CFLAGS) $(addprefix -I, $(APP_INCLUDES))
 #
 # Apps
 #
-APPS_NAMES = hello idle off shell help ps show_programs info_queue snake input_reader pmg voidprog ensishell ls
+APPS_NAMES = hello idle off shell help ps show_programs info_queue snake input_reader pmg voidprog ensishell ls xinuldoom
 
-APP_CFLAGS = $(CFLAGS) $(addprefix -I, $(APP_INCLUDES))
+APP_CFLAGS = $(CFLAGS_NO_WARN) $(addprefix -I, $(APP_INCLUDES))
 
 APP_LDFLAGS := $(LDFLAGS) -T build/apps.lds
 

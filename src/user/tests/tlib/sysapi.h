@@ -333,6 +333,15 @@ typedef struct disk_info{
 } disk_info;    
 void fs_info(disk_info* info);
 void void_call();
+int access(const char *f, int flag);
+
+//Display syscalls
+struct display_info{
+  int width;
+  int height;
+};
+int upd_data_display(void* data, int x, int y, int width, int height);
+void get_display_info(struct display_info*);
 
 /*
  * RISC-V asm

@@ -106,7 +106,7 @@ extern void power_off(int exit_value);
 extern void show_ps_info();
 extern void show_programs();
 extern void info_queue();
-extern void sleep(long int nbr_sec);
+extern void sleep(unsigned int nbr_sec);
 
 //Disk related syscalls
 extern void display_partions();
@@ -129,34 +129,29 @@ typedef unsigned int   gid_t;      // Group ID of owner
 typedef unsigned int   dev_t;      // Device ID (if file is character or block special)
 typedef int            blksize_t;  // Block size for filesystem I/O
 typedef long           blkcnt_t;   // Number of 512B blocks allocated
-typedef long           time_t;     // Time type (usually represents POSIX timestamp)
 typedef unsigned short nlink_t;    // Number of hard links
+typedef long           time_t;     // Time type (usually represents POSIX timestamp)
 
 
 // Messages from users
-// Messages from users
-enum FileOpenFlags {
-  O_RDONLY = 0x0000,      // Read-only
-  O_WRONLY = 0x0001,      // Write-only
-  O_RDWR = 0x0002,        // Read-write
-  O_CREAT = 0x0010,       // Create the file if it doesn't exist
-  O_EXCL = 0x0020,        // Fail if the file exists and O_CREAT is used
-  O_TRUNC = 0x0040,       // Truncate the file to zero length upon opening
-  O_APPEND = 0x0080,      // Set the file offset to the end before each write
-  O_SYNC = 0x0200,        // Write operations are synchronized on storage
-  O_NONBLOCK = 0x4000,    // Open in non-blocking mode
-  O_DIRECTORY = 0x10000,  // Ensure that the file is a directory
-  O_NOFOLLOW = 0x20000,   // Do not follow symbolic links
-  O_CLOEXEC = 0x80000,    // Set the close-on-exec flag
-  O_DSYNC = 0x400000,     // Synchronous data writes
-  O_RSYNC = 0x1010000,    // Synchronous reads
-};
+#define  O_RDONLY 0x0000      // Read-only
+#define  O_WRONLY 0x0001      // Write-only
+#define  O_RDWR 0x0002        // Read-write
+#define  O_CREAT 0x0010       // Create the file if it doesn't exist
+#define  O_EXCL 0x0020        // Fail if the file exists and O_CREAT is used
+#define  O_TRUNC 0x0040       // Truncate the file to zero length upon opening
+#define  O_APPEND 0x0080      // Set the file offset to the end before each write
+#define  O_SYNC 0x0200        // Write operations are synchronized on storage
+#define  O_NONBLOCK 0x4000    // Open in non-blocking mode
+#define  O_DIRECTORY 0x10000  // Ensure that the file is a directory
+#define  O_NOFOLLOW 0x20000   // Do not follow symbolic links
+#define  O_CLOEXEC 0x80000    // Set the close-on-exec flag
+#define  O_DSYNC 0x400000     // Synchronous data writes
+#define  O_RSYNC 0x1010000    // Synchronous reads
 
-enum SEEK_OPERATION {
-  SEEK_SET = 0,
-  SEEK_CUR = 1,
-  SEEK_END = 2,
-};
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
 
 struct stat {
     dev_t     st_dev;         // ID of device containing file
@@ -210,5 +205,15 @@ typedef struct disk_info{
 } disk_info;    
 void fs_info(disk_info* info);
 void void_call();
+
+
+//Display syscalls
+struct display_info{
+  int width;
+  int height;
+};
+int upd_data_display(void* data, int x, int y, int width, int height);
+void get_display_info(struct display_info*);
+int access(const char *, int);
 
 #endif

@@ -1,4 +1,4 @@
-#include "../ulib/syscall.h"
+#include "syscall.h"
 #include "../ulib/ufunc.h"
 #include "stdio.h"
 #include "string.h"
@@ -60,11 +60,17 @@ int builtin_cmd(char *cmd) {
 
 int main() {
   //stdin
-  assert(open("/dev/terminal", O_RDONLY, 0) == 0);
-  //stdout
-  assert(open("/dev/terminal", O_WRONLY, 0) == 1);
-  //stderr
-  assert(dup2(1, 2) == 2);
+  if (open("/dev/terminal", O_RDONLY, 0) == 0){
+    // assert(open("/dev/terminal", O_RDONLY, 0) == 0);
+    //stdout
+    assert(open("/dev/terminal", O_WRONLY, 0) == 1);
+    //stderr
+    assert(dup2(1, 2) == 2);
+    // #ifdef VIRTMACHINE
+    //Loads all of the elfs into the disk
+    // ld_progs_into_disk();
+    // #endif
+  }
   char cmd[21];
   cmd[20] = 0;
   #define CURR_DIR_SIZE 50
@@ -79,10 +85,6 @@ int main() {
   char dis_binprog[] = "dis_bin";
   char exitshell[] = "exit";
   char voidsysprog[] = "voidsys";
-  // #ifdef VIRTMACHINE
-  //Loads all of the elfs into the disk
-  ld_progs_into_disk();
-  // #endif
   while (1) {
   printf("shell$");
   if (getcwd(current_dir, CURR_DIR_SIZE) != 0){
