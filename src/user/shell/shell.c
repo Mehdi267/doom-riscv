@@ -192,7 +192,7 @@ int main() {
     void_call();
   }
   else if (builtin_cmd(cmd) != 0) {
-    pid = start(cmd, 8000, 128, NULL);
+    pid = start(cmd, 800000, 128, NULL);
     if (pid == -1) {
     printf("shell: program not found: %s\n", cmd);
     ret = -1;

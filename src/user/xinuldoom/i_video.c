@@ -177,91 +177,35 @@ static int	lastmousey = 0;
 boolean		mousemoved = false;
 boolean		shmFinished;
 
+int first = 1;
+int iter = 0;
+int second = 0;
 void I_GetEvent(void)
 {
-
-  //   event_t event;
-
-  //   // put event-grabbing stuff in here
-  //   XNextEvent(X_display, &X_event);
-  //   switch (X_event.type)
-  //   {
-  //     case KeyPress:
-	// event.type = ev_keydown;
-	// event.data1 = xlatekey();
-	// D_PostEvent(&event);
-	// // fprintf(stderr, "k");
-	// break;
-  //     case KeyRelease:
-	// event.type = ev_keyup;
-	// event.data1 = xlatekey();
-	// D_PostEvent(&event);
-	// // fprintf(stderr, "ku");
-	// break;
-  //     case ButtonPress:
-	// event.type = ev_mouse;
-	// event.data1 =
-	//     (X_event.xbutton.state & Button1Mask)
-	//     | (X_event.xbutton.state & Button2Mask ? 2 : 0)
-	//     | (X_event.xbutton.state & Button3Mask ? 4 : 0)
-	//     | (X_event.xbutton.button == Button1)
-	//     | (X_event.xbutton.button == Button2 ? 2 : 0)
-	//     | (X_event.xbutton.button == Button3 ? 4 : 0);
-	// event.data2 = event.data3 = 0;
-	// D_PostEvent(&event);
-	// // fprintf(stderr, "b");
-	// break;
-  //     case ButtonRelease:
-	// event.type = ev_mouse;
-	// event.data1 =
-	//     (X_event.xbutton.state & Button1Mask)
-	//     | (X_event.xbutton.state & Button2Mask ? 2 : 0)
-	//     | (X_event.xbutton.state & Button3Mask ? 4 : 0);
-	// // suggest parentheses around arithmetic in operand of |
-	// event.data1 =
-	//     event.data1
-	//     ^ (X_event.xbutton.button == Button1 ? 1 : 0)
-	//     ^ (X_event.xbutton.button == Button2 ? 2 : 0)
-	//     ^ (X_event.xbutton.button == Button3 ? 4 : 0);
-	// event.data2 = event.data3 = 0;
-	// D_PostEvent(&event);
-	// // fprintf(stderr, "bu");
-	// break;
-  //     case MotionNotify:
-	// event.type = ev_mouse;
-	// event.data1 =
-	//     (X_event.xmotion.state & Button1Mask)
-	//     | (X_event.xmotion.state & Button2Mask ? 2 : 0)
-	//     | (X_event.xmotion.state & Button3Mask ? 4 : 0);
-	// event.data2 = (X_event.xmotion.x - lastmousex) << 2;
-	// event.data3 = (lastmousey - X_event.xmotion.y) << 2;
-
-	// if (event.data2 || event.data3)
-	// {
-	//     lastmousex = X_event.xmotion.x;
-	//     lastmousey = X_event.xmotion.y;
-	//     if (X_event.xmotion.x != X_width/2 &&
-	// 	X_event.xmotion.y != X_height/2)
-	//     {
-	// 	D_PostEvent(&event);
-	// 	// fprintf(stderr, "m");
-	// 	mousemoved = false;
-	//     } else
-	//     {
-	// 	mousemoved = true;
-	//     }
-	// }
-	// break;
-	
-  //     case Expose:
-  //     case ConfigureNotify:
-	// break;
-	
-  //     default:
-	// if (doShm && X_event.type == X_shmeventtype) shmFinished = true;
-	// break;
-  //   }
-
+  iter++;
+  if (iter > 1000){ 
+  if (first){
+    event_t event;
+    event.type = ev_keydown;
+    event.data1 = KEY_DOWNARROW;
+    D_PostEvent(&event);
+    event.type = ev_keydown;
+    event.data1 = KEY_ENTER;
+    D_PostEvent(&event);
+    event.type = ev_keydown;
+    event.data1 = KEY_ENTER;
+    D_PostEvent(&event);
+    first = 0;
+    second = 1;
+  }
+  if (second){
+    event_t event;
+    event.type = ev_keydown;
+    event.data1 = KEY_ENTER;
+    D_PostEvent(&event);
+    second = 0;
+  }
+  }
 }
 
 //
@@ -269,12 +213,11 @@ void I_GetEvent(void)
 //
 void I_StartTic (void)
 {
-    // while (XPending(X_display)){
-    // 	I_GetEvent();
-    //   // Warp the pointer back to the middle of the window
-    //   //  or it will wander off - that is, the game will
-    //   //  loose input focus within X11.
-    // }
+  int i = 0;
+  while (i == 0){
+    i++;
+    I_GetEvent();
+  }
 }
 
 int printed = 1;
@@ -284,18 +227,10 @@ void transformToRGBA(XColor palette[], unsigned char* srcMap, struct rgba_pixel*
     for (int y = 0; y < height; y++) {
       if (x < SCREENWIDTH && y <  SCREENHEIGHT) {
         unsigned char pixelValue = *(srcMap+y*SCREENWIDTH+x);  // Use unsigned char instead of unsigned long
-        // if (x<2 && printed){
-        //   printf("pixelValue = %d, palette[pixelValue]red = %d,  palette[pixelValue].green = %d, palette[pixelValue].blue = %d\n",
-        //     pixelValue, palette[pixelValue].red, palette[pixelValue].green, palette[pixelValue].blue);
-        // }
         (destMap+y*SCREENWIDTH+x)->red = (unsigned char) ((int)(palette[pixelValue].red*255)/65535);
         (destMap+y*SCREENWIDTH+x)->green = (unsigned char) ((int)(palette[pixelValue].green*255)/65535);
         (destMap+y*SCREENWIDTH+x)->blue = (unsigned char) ((int)(palette[pixelValue].blue*255)/65535);
         (destMap+y*SCREENWIDTH+x)->alpha = alphaValue;
-        // if (x<2 && printed){
-        //   printf("pixelValue = %d, destMap[x][y]. red = %d,  destMap[x][y].green = %d, destMap[x][y].blue = %d\n",
-        //       pixelValue, (destMap+y*SCREENWIDTH+x)->red, (destMap+y*SCREENWIDTH+x)->green, (destMap+y*SCREENWIDTH+x)->blue);
-        // }
       }
     }
   }
@@ -445,7 +380,7 @@ void I_FinishUpdate (void)
 	void Expand4(unsigned *, int *);
   	Expand4 ((unsigned *)(screens[0]), (int *) (image->data));
   }
- 
+	// I_GetEvent();
   transformToRGBA(colors, screens[0], rgba_pixelmap,  SCREENWIDTH, SCREENHEIGHT, 125);
   upd_data_display(rgba_pixelmap, 0, 0, SCREENWIDTH, SCREENHEIGHT); 
 }
@@ -539,9 +474,6 @@ void I_InitGraphics(void)
   X_width = SCREENWIDTH * multiply;
   X_height = SCREENHEIGHT * multiply;
 
-    // setup attributes for main window
-  //   attribmask = CWEventMask | CWColormap | CWBorderPixel;
-  //   attribs.event_mask =
 	// KeyPressMask
 	// | KeyReleaseMask
 	// // | PointerMotionMask | ButtonPressMask | ButtonReleaseMask
