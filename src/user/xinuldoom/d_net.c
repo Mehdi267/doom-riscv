@@ -574,8 +574,8 @@ void D_CheckNetGame (void)
     if (netgame)
 	D_ArbitrateNetStart ();
 
-    printf ("startskill %i  deathmatch: %i  startmap: %i  startepisode: %i\n",
-	    startskill, deathmatch, startmap, startepisode);
+    // printf ("startskill %i  deathmatch: %i  startmap: %i  startepisode: %i\n",
+	  //   startskill, deathmatch, startmap, startepisode);
 	
     // read values out of doomcom
     ticdup = doomcom->ticdup;
@@ -765,3 +765,5 @@ void TryRunTics (void)
 	NetUpdate ();	// check for new console commands
     }
 }
+
+

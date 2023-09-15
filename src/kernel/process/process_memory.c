@@ -944,7 +944,7 @@ static int add_and_allocate_frames(process* proc, uint32_t page_nb, page_t type)
       return -1;
     }
     //New lvl0 table
-    if (frame.lvl1_index == 1){
+    if (frame.lvl0_index == 1){
       //Works only for on lvl1 page
       assert(proc->page_tables_lvl_1_list->tail_page->page_type 
           == type);
@@ -1005,6 +1005,7 @@ int check_expansion_mem(process* proc, struct trap_frame* frame){
 
 
 void *sys_sbrk(long int increment){
+  // printf("SBRK CALLED %ld \n", increment);
   process* proc = get_current_process();
   if (proc == 0){
     return 0;
@@ -1018,8 +1019,8 @@ void *sys_sbrk(long int increment){
   uint64_t nb_pages = CUSTOM_MOD_DIV(abs_inc, FRAME_SIZE);
   if (increment>0){
     if (add_and_allocate_frames(proc, nb_pages, HEAP_PAGE)<0){
+      PRINT_RED("SBRK FAILED\n");
       return ((void *) (-1));
-        PRINT_RED("BAD\n");
     }
   }
 	if (((uint64_t) c < (uint64_t) proc->mem_info.start_heap_add)) {

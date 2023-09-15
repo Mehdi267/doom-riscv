@@ -575,7 +575,7 @@ void IdentifyVersion (void)
 #ifdef NORMALUNIX
     char *home;
     char *doomwaddir;
-    doomwaddir = getenv("DOOMWADDIR");
+    doomwaddir = NULL;
     if (!doomwaddir)
 	doomwaddir = ".";
 
@@ -608,7 +608,7 @@ void IdentifyVersion (void)
     doom2fwad = malloc(strlen(doomwaddir)+1+10+1);
     sprintf(doom2fwad, "%s/doom2f.wad", doomwaddir);
 
-    home = getenv("HOME");
+    home = ".";
     if (!home)
       I_Error("Please set $HOME to your home directory");
     sprintf(basedefault, "%s/.doomrc", home);
@@ -654,59 +654,60 @@ void IdentifyVersion (void)
 	strcpy (basedefault,DEVDATA"default.cfg");
 	return;
     }
-
-    if ( !access (doom2fwad,R_OK) )
-    {
-	gamemode = commercial;
-	// C'est ridicule!
-	// Let's handle languages in config files, okay?
-	language = french;
-	printf("French version\n");
-	D_AddFile (doom2fwad);
-	return;
-    }
-
-    if ( !access (doom2wad,R_OK) )
-    {
-	gamemode = commercial;
-	D_AddFile (doom2wad);
-	return;
-    }
-
-    if ( !access (plutoniawad, R_OK ) )
-    {
-      gamemode = commercial;
-      D_AddFile (plutoniawad);
-      return;
-    }
-
-    if ( !access ( tntwad, R_OK ) )
-    {
-      gamemode = commercial;
-      D_AddFile (tntwad);
-      return;
-    }
-
-    if ( !access (doomuwad,R_OK) )
-    {
-      gamemode = retail;
-      D_AddFile (doomuwad);
-      return;
-    }
-
-    if ( !access (doomwad,R_OK) )
-    {
-      gamemode = registered;
-      D_AddFile (doomwad);
-      return;
-    }
-
     if ( !access (doom1wad,R_OK) )
-    {
-      gamemode = shareware;
-      D_AddFile (doom1wad);
-      return;
-    }
+  {
+    gamemode = shareware;
+    D_AddFile (doom1wad);
+    return;
+  }
+  //   if ( !access (doomwad,R_OK) )
+  // {
+  //   gamemode = registered;
+  //   D_AddFile (doomwad);
+  //   return;
+  // }
+
+  //   if ( !access (doom2fwad,R_OK) )
+  //   {
+	// gamemode = commercial;
+	// // C'est ridicule!
+	// // Let's handle languages in config files, okay?
+	// language = french;
+	// printf("French version\n");
+	// D_AddFile (doom2fwad);
+	// return;
+  //   }
+
+  //   if ( !access (doom2wad,R_OK) )
+  //   {
+	// gamemode = commercial;
+	// D_AddFile (doom2wad);
+	// return;
+  //   }
+
+  //   if ( !access (plutoniawad, R_OK ) )
+  //   {
+  //     gamemode = commercial;
+  //     D_AddFile (plutoniawad);
+  //     return;
+  //   }
+
+  //   if ( !access ( tntwad, R_OK ) )
+  //   {
+  //     gamemode = commercial;
+  //     D_AddFile (tntwad);
+  //     return;
+  //   }
+
+  //   if ( !access (doomuwad,R_OK) )
+  //   {
+  //     gamemode = retail;
+  //     D_AddFile (doomuwad);
+  //     return;
+  //   }
+
+
+
 
     printf("Game mode indeterminate.\n");
     gamemode = indetermined;
@@ -745,11 +746,11 @@ void FindResponseFile (void)
 		exit(1);
 	    }
 	    printf("Found response file %s!\n",&myargv[i][1]);
-	    fseek (handle,0,SEEK_END);
+	    lseek (handle,0,SEEK_END);
 	    size = ftell(handle);
-	    fseek (handle,0,SEEK_SET);
+	    lseek (handle,0,SEEK_SET);
 	    file = malloc (size);
-	    fread (file,size,1,handle);
+	    read (handle, file, size);
 	    close (handle);
 			
 	    // KEEP ALL CMDLINE ARGS FOLLOWING @RESPONSEFILE ARG
@@ -802,7 +803,6 @@ void D_DoomMain (void)
 	
     IdentifyVersion ();
 	
-    setbuf (stdout, NULL);
     modifiedgame = false;
 	
     nomonsters = M_CheckParm ("-nomonsters");
@@ -877,8 +877,8 @@ void D_DoomMain (void)
     if (M_CheckParm("-cdrom"))
     {
 	printf(D_CDROM);
-	mkdir("c:\\doomdata",0);
-	strcpy (basedefault,"c:/doomdata/default.cfg");
+	mkdir("doomdata",0);
+	strcpy (basedefault,"doomdata/default.cfg");
     }	
     
     // turbo option

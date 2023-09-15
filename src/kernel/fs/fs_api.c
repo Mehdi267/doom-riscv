@@ -21,10 +21,6 @@ int open(process* proc, const char *file_name, int flags, mode_t mode){
   if (file_name == 0){
     return -1;
   }
-  // if (flags > 0x2ff){
-  //   printf("Bad flags");
-  //   return -1;
-  // }
   path_fs* path_data = extract_files(file_name);
   if (path_data == 0){
     return -1;
@@ -126,8 +122,8 @@ int open(process* proc, const char *file_name, int flags, mode_t mode){
   }
   new_file->file_info->inode_number = 
     get_inode_number(file_inode);
-  debug_print_fsapi("\033[0;34m[FSAPI]{open}File opened with success %s flags %x\033[0;0m\n",
-        file_name, flags);
+  debug_print_fsapi("\033[0;34m[FSAPI]{open}File opened with success %s fd : %d flags %x\033[0;0m\n",
+        file_name, new_file->fd, flags);
   free_path_fs(path_data);
   return new_file->fd;
 }

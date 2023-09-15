@@ -11,8 +11,8 @@
 #define VIRTIO_GPU_F_EDID_BIT    (1) // Bit position for VIRTIO_GPU_F_EDID
 
 
-#define WIDTH 640
-#define HEIGHT 480
+#define WIDTH 320
+#define HEIGHT 200
 
 typedef struct pixel {
   uint8_t red;

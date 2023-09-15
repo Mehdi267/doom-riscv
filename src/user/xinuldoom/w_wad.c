@@ -33,6 +33,7 @@ rcsid[] = "$Id: w_wad.c,v 1.5 1997/02/03 16:47:57 b1 Exp $";
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include "ctype.h"
 //#include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -163,7 +164,7 @@ void W_AddFile (char *filename)
 	reloadlump = numlumps;
     }
 		
-    if ( (handle = open (filename,O_RDONLY | O_BINARY, 0)) == -1)
+    if ( (handle = open (filename, O_RDONLY | O_BINARY, 0)) == -1)
     {
 	printf (" couldn't open %s\n",filename);
 	return;
@@ -187,6 +188,7 @@ void W_AddFile (char *filename)
 	read (handle, &header, sizeof(header));
 	if (strncmp(header.identification,"IWAD",4))
 	{
+    printf("header.identification = %s\n", header.identification);
 	    // Homebrew levels?
 	    if (strncmp(header.identification,"PWAD",4))
 	    {

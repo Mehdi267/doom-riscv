@@ -131,7 +131,7 @@ void I_WaitVBL(int count)
 #ifdef SUN
     sleep(0);
 #else
-    usleep (count * (1000000/70) );                                
+    sleep (count * (1000000/70)*1000 );                                
 #endif
 #endif
 }

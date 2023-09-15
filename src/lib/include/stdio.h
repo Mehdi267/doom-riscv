@@ -7,6 +7,8 @@
 #define stdout 1
 #define stderr 2
 
+#define EOF -1
+#define BS 8
 
 int printf(const char *, ...);
 int puts(const char *);
@@ -21,8 +23,17 @@ int isspace(int c);
 int isdigit(int c);
 int atoi(const char *str);
 #define fprintf(f, ...) printf(__VA_ARGS__)
-void	 perror(const char *);
+#define perror(arg) printf(arg)
+// void	perror(const char *);
+//Replace F printf
 int dprintf(int fd, const char *format, ...);
+int strcasecmp(const char *s1, const char *s2);
+int sscanf(const char *str, const char *format, ...);
+int strncasecmp(const char *s1, const char *s2, size_t n);
+int getchar(void);
+int fgetc(int fd);
+char* fgets(char* buffer, int size, int fd);
+long int ftell(int stream);
 //######################################################
 //##   Utility functions ##
 //######################################################

@@ -15,6 +15,7 @@
 #include "process/process.h"
 #include "sync/timer_api.h"
 #include "sync/semaphore_api.h"
+#include "sync/time_syscall.h"
 #include "process/memory_api.h"
 #include "process/scheduler.h"
 #include "sync/msgqueue.h"
@@ -179,6 +180,10 @@ unsigned long syscall_handler(struct trap_frame *tf) {
       return fork(getpid(), tf);
     case SYSC_execve:
       return execve((const char*)tf->a0, (char **const) tf->a1, (char **const) tf->a2);
+    case SYSC_access:
+      return access((const char *)tf->a0, tf->a1);
+    case SYSC_fstat:
+      return fstat(tf->a0, (struct stat *)tf->a1);
     case SYSC_print_dir_elements:
       print_dir_elements((const char*)tf->a0);    
       break;
@@ -201,12 +206,19 @@ unsigned long syscall_handler(struct trap_frame *tf) {
         break;
       }
     case SYSC_upd_data_display:
+      // printf("HELLO THERE \n  ");
       if (gpu_dev->update_data != NULL){
         gpu_dev->update_data((void*) tf->a0, tf->a1, tf->a2, tf->a3, tf->a4);
         break;
       }
+    case SYSC_time:
+      return time((time_t *)tf->a0);      
+    case SYSC_gettimeofday:
+      return gettimeofday((struct timeval *)tf->a0, (struct timezone *)tf->a1);      
+    case SYSC_settimeofday:
+      return settimeofday((const struct timeval *)tf->a0, (const struct timezone *)tf->a1);      
     default:
-      printf("Syscall code does not match any of the defined syscalls");
+      printf("Syscall code does not match any of the defined syscalls, num = %ld\n", tf->a7);
       // blue_screen(tf);
       break;
   }

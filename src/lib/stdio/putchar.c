@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 
 extern int cons_write(const char *str, long size);

@@ -50,7 +50,7 @@ void handle_keyboard_interrupt() {
       console_dev->putchar(' ');
       kaddtobuffer(' ');
     }
-  } else if (c == BS || c == BSH) {
+  } else if (c == BSK || c == BSH) {
     if (console_dev->last_written_char_index != -1 &&
         console_dev->buffer[console_dev->last_written_char_index - 1] != '\r') {
       delete_last();

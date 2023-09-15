@@ -210,7 +210,7 @@ extern	int	numChannels;
 
 // UNIX hack, to be removed.
 #ifdef SNDSERV
-extern char*	sndserver_filename;
+// extern char*	sndserver_filename;
 extern int	mb_used;
 #endif
 
@@ -256,8 +256,8 @@ default_t	defaults[] =
 
 // UNIX hack, to be removed. 
 #ifdef SNDSERV
-    {"sndserver", (int *) &sndserver_filename, (long long int) "sndserver"},
-    {"mb_used", &mb_used, 2},
+    // {"sndserver", (int *) &sndserver_filename, (long long int) "sndserver"},
+    // {"mb_used", &mb_used, 2},
 #endif
     
 #endif
@@ -339,71 +339,142 @@ void M_SaveDefaults (void)
 //
 extern byte	scantokey[128];
 
-void M_LoadDefaults (void)
-{
-    int		i;
-    int		len;
-    int	f;
-    char	def[80];
-    char	strparm[100];
-    char*	newstring;
-    int		parm;
-    boolean	isstring;
+// void M_LoadDefaults (void)
+// {
+//     int		i;
+//     int		len;
+//     int	f;
+//     char	def[80];
+//     char	strparm[100];
+//     char*	newstring;
+//     int		parm;
+//     boolean	isstring;
     
-    // set everything to base values
-    numdefaults = sizeof(defaults)/sizeof(defaults[0]);
-    for (i=0 ; i<numdefaults ; i++)
-	*defaults[i].location = defaults[i].defaultvalue;
+//     // set everything to base values
+//     numdefaults = sizeof(defaults)/sizeof(defaults[0]);
+//     for (i=0 ; i<numdefaults ; i++)
+// 	*defaults[i].location = defaults[i].defaultvalue;
     
-    // check for a custom default file
-    i = M_CheckParm ("-config");
-    if (i && i<myargc-1)
-    {
-	defaultfile = myargv[i+1];
-	printf ("	default file: %s\n",defaultfile);
-    }
-    else
-	defaultfile = basedefault;
+//     // check for a custom default file
+//     i = M_CheckParm ("-config");
+//     if (i && i<myargc-1)
+//     {
+// 	defaultfile = myargv[i+1];
+// 	printf ("	default file: %s\n",defaultfile);
+//     }
+//     else
+// 	defaultfile = basedefault;
     
-    // read the file in, overriding any set defaults
-    f = open (defaultfile, O_RDONLY, 0);
-    if (f)
-    {
-	while (!feof(f))
-	{
-	    isstring = false;
-	    if (fscanf (f, "%79s %[^\n]\n", def, strparm) == 2)
-	    {
-		if (strparm[0] == '"')
-		{
-		    // get a string default
-		    isstring = true;
-		    len = strlen(strparm);
-		    newstring = (char *) malloc(len);
-		    strparm[len-1] = 0;
-		    strcpy(newstring, strparm+1);
-		}
-		else if (strparm[0] == '0' && strparm[1] == 'x')
-		    sscanf(strparm+2, "%x", &parm);
-		else
-		    sscanf(strparm, "%i", &parm);
-		for (i=0 ; i<numdefaults ; i++)
-		    if (!strcmp(def, defaults[i].name))
-		    {
-			if (!isstring)
-			    *defaults[i].location = parm;
-			else
-			    *defaults[i].location =
-				(int) newstring;
-			break;
-		    }
-	    }
-	}
+//     // read the file in, overriding any set defaults
+//     f = open (defaultfile, O_RDONLY, 0);
+//     if (f)
+//     {
+// 	while (!feof(f))
+// 	{
+// 	    isstring = false;
+// 	    if (fscanf (f, "%79s %[^\n]\n", def, strparm) == 2)
+// 	    {
+// 		if (strparm[0] == '"')
+// 		{
+// 		    // get a string default
+// 		    isstring = true;
+// 		    len = strlen(strparm);
+// 		    newstring = (char *) malloc(len);
+// 		    strparm[len-1] = 0;
+// 		    strcpy(newstring, strparm+1);
+// 		}
+// 		else if (strparm[0] == '0' && strparm[1] == 'x')
+// 		    sscanf(strparm+2, "%x", &parm);
+// 		else
+// 		    sscanf(strparm, "%i", &parm);
+// 		for (i=0 ; i<numdefaults ; i++)
+// 		    if (!strcmp(def, defaults[i].name))
+// 		    {
+// 			if (!isstring)
+// 			    *defaults[i].location = parm;
+// 			else
+// 			    *defaults[i].location =
+// 				(int) newstring;
+// 			break;
+// 		    }
+// 	    }
+// 	}
 		
-	close (f);
+// 	close (f);
+//     }
+// }
+
+void M_LoadDefaults(void) {
+    int i;
+    int len;
+    int f;
+    char def[80];
+    char strparm[100];
+    char *newstring;
+    int parm;
+    boolean isstring;
+
+    // Set everything to base values
+    numdefaults = sizeof(defaults) / sizeof(defaults[0]);
+    for (i = 0; i < numdefaults; i++)
+        *defaults[i].location = defaults[i].defaultvalue;
+
+    // Check for a custom default file
+    i = M_CheckParm("-config");
+    if (i && i < myargc - 1) {
+        defaultfile = myargv[i + 1];
+        printf("	default file: %s\n", defaultfile);
+    } else
+        defaultfile = basedefault;
+
+    // Read the file in, overriding any set defaults
+    f = open(defaultfile, O_RDONLY, 0);
+    if (f) {
+        char buffer[200];
+        ssize_t bytesRead;
+
+        while ((bytesRead = read(f, buffer, sizeof(buffer))) > 0) {
+            char *lineStart = buffer;
+            char *lineEnd;
+
+            for (char *c = buffer; c < buffer + bytesRead; c++) {
+                if (*c == '\n' || *c == '\0') {
+                    *c = '\0';  // Null-terminate the line
+                    lineEnd = c;
+                    isstring = false;
+
+                    if (sscanf(lineStart, "%79s %[^\n]\n", def, strparm) == 2) {
+                        if (strparm[0] == '"') {
+                            // Get a string default
+                            isstring = true;
+                            len = strlen(strparm);
+                            newstring = (char *)malloc(len);
+                            strparm[len - 1] = 0;
+                            strcpy(newstring, strparm + 1);
+                        } else if (strparm[0] == '0' && strparm[1] == 'x')
+                            sscanf(strparm + 2, "%x", &parm);
+                        else
+                            sscanf(strparm, "%i", &parm);
+
+                        for (i = 0; i < numdefaults; i++) {
+                            if (!strcmp(def, defaults[i].name)) {
+                                if (!isstring)
+                                    *defaults[i].location = parm;
+                                else
+                                    *defaults[i].location = (int)newstring;
+                                break;
+                            }
+                        }
+                    }
+
+                    lineStart = lineEnd + 1;
+                }
+            }
+        }
+
+        close(f);
     }
 }
-
 
 //
 // SCREEN SHOTS

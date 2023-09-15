@@ -121,10 +121,8 @@ void virt_gpu_init(){
   gpu_m.used_iter = 0;
   print_display_info();
   virt_gpu.frame =  malloc(HEIGHT*WIDTH*sizeof(pixel)); 
-  if (virt_gpu.frame == 0){
-    return;
-  }
-  memset(virt_gpu.frame, 255, HEIGHT*WIDTH*sizeof(pixel));
+  if (virt_gpu.frame == 0){return;}
+  memset(virt_gpu.frame, 0, HEIGHT*WIDTH*sizeof(pixel));
   init_gpu_frame(virt_gpu.frame);
   print_display_info();
   update_all();
@@ -233,7 +231,7 @@ void init_gpu_frame(void* frame){
   struct virtio_gpu_ctrl_hdr res_display;
   request_gpu(&req_display, sizeof(struct virtio_gpu_set_scanout), 
       &res_display, sizeof(struct virtio_gpu_ctrl_hdr)- 4);
-  print_header_details(&res_display);
+  // print_header_details(&res_display);
   assert(res_display.type == VIRTIO_GPU_RESP_OK_NODATA);
 }
 
@@ -254,11 +252,11 @@ int invalidate_and_flush(int x, int y, int width, int height){
   struct virtio_gpu_ctrl_hdr res_invalid;
   request_gpu(&req_invalid, sizeof(struct virtio_gpu_transfer_to_host_2d), 
       &res_invalid, sizeof(struct virtio_gpu_ctrl_hdr)- 4);
-  print_header_details(&res_invalid);
+  // print_header_details(&res_invalid);
   if (res_invalid.type != VIRTIO_GPU_RESP_OK_NODATA){
     return -1;
   }
-  printf("Pass this point\n");
+  // printf("Pass this point\n");
   struct virtio_gpu_resource_flush req_flush;
   memset(&req_flush, 0, sizeof(struct virtio_gpu_resource_flush));
   req_flush.hdr.type = VIRTIO_GPU_CMD_RESOURCE_FLUSH;
@@ -270,7 +268,7 @@ int invalidate_and_flush(int x, int y, int width, int height){
   struct virtio_gpu_ctrl_hdr res_flush;
   request_gpu(&req_flush, sizeof(struct virtio_gpu_resource_flush) - 4, 
       &res_flush, sizeof(struct virtio_gpu_ctrl_hdr)- 4);
-  print_header_details(&res_flush);
+  // print_header_details(&res_flush);
   if (res_flush.type != VIRTIO_GPU_RESP_OK_NODATA){
     return -1;
   }
@@ -326,17 +324,18 @@ int check_cord(int x, int y, int width, int height){
   if (x<0 || y<0 || width<0 || height<0){
     return -1;
   }
-  if (x+width>WIDTH || y+height>WIDTH){
+  if (x+width>WIDTH || y+height>HEIGHT){
     return -1;
   }
   return 0;
 }
 
 int update_data(void* data, int x, int y, int width, int height){
-  if (check_cord(x, y, width, height)<0){
+  if (check_cord(x, y, width, height)<0 && 
+        HEIGHT*WIDTH*sizeof(pixel) > width*height*sizeof(pixel)){
     return -1;
   }
-  memcpy(virt_gpu.frame + x*WIDTH+y, data, width*height);
+  memcpy(virt_gpu.frame+x*WIDTH+y, data, width*height*sizeof(pixel));
   return invalidate_and_flush(x, y, width, height);
 }
 

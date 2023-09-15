@@ -30,14 +30,14 @@
 #include <string.h>
 #include <stdio.h>
 
-void perror(const char *prefix)
-{
-  char   buff[256];
+// void perror(const char *prefix)
+// {
+//   char   buff[256];
 
-  if (prefix) {
-      write( 2, prefix, strlen(prefix) );
-      write( 2, ": ", 2 );
-  }
-  write( 2, buff, strlen(buff) );
-  write( 2, "\n", 1 );
-}
+//   if (prefix) {
+//       write( 2, prefix, strlen(prefix) );
+//       write( 2, ": ", 2 );
+//   }
+//   write( 2, buff, strlen(buff) );
+//   write( 2, "\n", 1 );
+// }

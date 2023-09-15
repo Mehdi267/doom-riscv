@@ -150,11 +150,13 @@ clean:
 
 # go :Lance l'OS avec QEmu dans le terminal
 go: all
-	$(QEMU) $(QEMU_OPTS) $(QEMU_NO_GRAPH_OPTS)
+	$(QEMU) $(QEMU_OPTS) $(QEMU_GRAPH_OPTS) 
+#$(QEMU_NO_GRAPH_OPTS)
 
 # debug : Lance l'OS dans un terminal avec QEmu et attend gdb.
 debug: all
-	$(QEMU) $(QEMU_OPTS) $(QEMU_GDB_OPTS) $(QEMU_NO_GRAPH_OPTS)
+	$(QEMU) $(QEMU_OPTS) $(QEMU_GDB_OPTS) $(QEMU_GRAPH_OPTS) 
+#$(QEMU_NO_GRAPH_OPTS)
 
 # go-graphic : Lance l'OS avec QEmu en mode graphique
 go_graphic: all

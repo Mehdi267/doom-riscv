@@ -88,6 +88,7 @@
 #define SYSC_sbrk               67
 #define SYSC_getdents           68
 #define SYSC_access             69
+#define SYSC_fstat              70
 
 #define SYSC_print_dir_elements 76 
 #define SYSC_fs_info            77
@@ -95,6 +96,10 @@
 
 #define SYSC_get_display_info   80
 #define SYSC_upd_data_display   81
+#define SYSC_time               82
+#define SYSC_gettimeofday       83
+#define SYSC_settimeofday       84
+
 
 #define NB_SYSCALLS             79
 

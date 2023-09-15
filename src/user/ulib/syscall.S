@@ -79,3 +79,9 @@ syscall(sbrk);
 syscall(get_display_info)
 syscall(upd_data_display)
 syscall(access)
+syscall(fstat)
+syscall(time)
+syscall(gettimeofday)
+syscall(settimeofday)
+
+

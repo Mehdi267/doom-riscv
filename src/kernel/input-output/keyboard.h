@@ -2,7 +2,7 @@
 #define _KEYBOARD_H_
 
 #define BSH 8
-#define BS 127
+#define BSK 127
 #define R 13 // Carriage return
 #define DL 21 // Delete line
 #define DW 23 // Delete word

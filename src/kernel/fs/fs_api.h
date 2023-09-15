@@ -24,23 +24,66 @@ typedef long           blkcnt_t;   // Number of 512B blocks allocated
 typedef long           time_t;     // Time type (usually represents POSIX timestamp)
 typedef unsigned short nlink_t;    // Number of hard links
 
-// Messages from users
-enum FileOpenFlags {
-  O_RDONLY = 0x0000,      // Read-only
-  O_WRONLY = 0x0001,      // Write-only
-  O_RDWR = 0x0002,        // Read-write
-  O_CREAT = 0x0010,       // Create the file if it doesn't exist
-  O_EXCL = 0x0020,        // Fail if the file exists and O_CREAT is used
-  O_TRUNC = 0x0040,       // Truncate the file to zero length upon opening
-  O_APPEND = 0x0080,      // Set the file offset to the end before each write
-  O_SYNC = 0x0200,        // Write operations are synchronized on storage
-  O_NONBLOCK = 0x4000,    // Open in non-blocking mode
-  O_DIRECTORY = 0x10000,  // Ensure that the file is a directory
-  O_NOFOLLOW = 0x20000,   // Do not follow symbolic links
-  O_CLOEXEC = 0x80000,    // Set the close-on-exec flag
-  O_DSYNC = 0x400000,     // Synchronous data writes
-  O_RSYNC = 0x1010000,    // Synchronous reads
-};
+// // Messages from users
+// enum FileOpenFlags {
+//   O_RDONLY = 0x0000,      // Read-only
+//   O_WRONLY = 0x0001,      // Write-only
+//   O_RDWR = 0x0002,        // Read-write
+//   O_CREAT = 0x0010,       // Create the file if it doesn't exist
+//   O_EXCL = 0x0020,        // Fail if the file exists and O_CREAT is used
+//   O_TRUNC = 0x0040,       // Truncate the file to zero length upon opening
+//   O_APPEND = 0x0080,      // Set the file offset to the end before each write
+//   O_SYNC = 0x0200,        // Write operations are synchronized on storage
+//   O_NONBLOCK = 0x4000,    // Open in non-blocking mode
+//   O_DIRECTORY = 0x10000,  // Ensure that the file is a directory
+//   O_NOFOLLOW = 0x20000,   // Do not follow symbolic links
+//   O_CLOEXEC = 0x80000,    // Set the close-on-exec flag
+//   O_DSYNC = 0x400000,     // Synchronous data writes
+//   O_RSYNC = 0x1010000,    // Synchronous reads
+// };
+
+#define O_RDONLY 00000000
+#define O_WRONLY 00000001
+#define O_RDWR 00000002
+#ifndef O_CREAT
+#define O_CREAT 00000100  
+#endif
+#ifndef O_EXCL
+#define O_EXCL 00000200  
+#endif
+#ifndef O_NOCTTY
+#define O_NOCTTY 00000400  
+#endif
+#ifndef O_TRUNC
+#define O_TRUNC 00001000  
+#endif
+#ifndef O_APPEND
+#define O_APPEND 00002000
+#endif
+#ifndef O_NONBLOCK
+#define O_NONBLOCK 00004000
+#endif
+#ifndef O_SYNC
+#define O_SYNC 00010000
+#endif
+#ifndef FASYNC
+#define FASYNC 00020000  
+#endif
+#ifndef O_DIRECT
+#define O_DIRECT 00040000  
+#endif
+#ifndef O_LARGEFILE
+#define O_LARGEFILE 00100000
+#endif
+#ifndef O_DIRECTORY
+#define O_DIRECTORY 00200000  
+#endif
+#ifndef O_NOFOLLOW
+#define O_NOFOLLOW 00400000  
+#endif
+#ifndef O_NOATIME
+#define O_NOATIME 01000000
+#endif
 
 /**
  * Opens or creates a file.
