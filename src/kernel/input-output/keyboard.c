@@ -2,6 +2,7 @@
 #include "../drivers/console.h"
 #include "../process/process.h"
 #include "../process/scheduler.h"
+#include "../process/helperfunc.h"
 #include "queue.h"
 #include <assert.h>
 #include <stdio.h>
@@ -36,13 +37,24 @@ void delete_last() {
  * entered into the buffer, it should be displayed on the screen unless echo mode
  * has been disabled with 'cons_echo'.
  */
+input_t processing_type = CONSOLE_INPUT;
 void handle_keyboard_interrupt() {
   // printf("Keyboard intterupt \n");
-  char c = kgetchar();
-  if (is_printable(c)) {
+  int c = kgetchar();
+  // printf("%d\n", c);
+  process *next = queue_out(&blocked_io_process_queue, process, next_prev);
+  if (next){
+    // printf("%s\n", next->process_name);
+    processing_type = next->input_type;
+  }
+  if (processing_type == RAW_INPUT){
     kaddtobuffer(c);
-    if (console_dev->echo)
+  }
+  else if (is_printable(c)) { //|| c == ES
+    kaddtobuffer(c);
+    if (console_dev->echo){
       console_dev->putchar(c); // echo
+    }
   } else if ((int)c == HT) {
     // Put space characters to erase the previous input.
     int nb_spaces = 8 - (console_dev->last_written_char_index % 8);
@@ -82,8 +94,6 @@ void handle_keyboard_interrupt() {
     if (console_dev->echo)
       console_dev->putchar('\n'); // echo
   }
-  // printf("Keyboard intterupt end\n");
-  process *next = queue_out(&blocked_io_process_queue, process, next_prev);
   if (next) {
     next->state = ACTIVATABLE;
     queue_add(next, &activatable_process_queue, process, next_prev, prio);

@@ -60,7 +60,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
 				break;
 			case intr_s_external:
 				//interruption clavier
-				handle_keyboard_interrupt();
+        handle_keyboard_interrupt();
 				csr_clear(sip, SIE_SEI); //clear interrupt
 				break;
 			default:

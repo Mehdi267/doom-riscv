@@ -68,6 +68,12 @@ rgba_pixel* rgba_pixelmap;
 int		X_width;
 int		X_height;
 
+void* input_page;
+typedef struct event_com{
+  int mutex_sem;
+  int event;
+} event_com;
+
 typedef struct {
 	unsigned long pixel;
 	unsigned short red, green, blue;
@@ -77,6 +83,21 @@ typedef struct {
 static XColor	colors[256];
 typedef unsigned int Colormap;
 
+//Used to communicate with the event process
+extern void *shm_create(const char*);
+extern void *shm_acquire(const char*);
+extern void shm_release(const char*);
+extern int start(const char *process_name, unsigned long ssize, int prio, void *arg);
+extern int scount(int sem);
+extern int screate(short count);
+extern int sdelete(int sem);
+extern int signal(int sem);
+extern int signaln(int sem, short count);
+extern int sreset(int sem, short count);
+extern int try_wait(int sem);
+extern int wait(int sem);
+extern int getpid(void);
+extern int getprio(int pid);
 
 // Blocky mode,
 // replace each 320x200 pixel with multiply*multiply pixels.
@@ -180,32 +201,42 @@ boolean		shmFinished;
 int first = 1;
 int iter = 0;
 int second = 0;
-void I_GetEvent(void)
-{
-  iter++;
-  if (iter > 1000){ 
-  if (first){
+#define NO_EVENT	0xff
+void I_GetEvent(void){
+  event_com* com = (event_com*) input_page;
+  int event_pressed = com->event;
+  if (event_pressed != NO_EVENT){
     event_t event;
     event.type = ev_keydown;
-    event.data1 = KEY_DOWNARROW;
+    event.data1 = event_pressed;
+    printf("event_pressed = %d\n", event_pressed);
     D_PostEvent(&event);
-    event.type = ev_keydown;
-    event.data1 = KEY_ENTER;
-    D_PostEvent(&event);
-    event.type = ev_keydown;
-    event.data1 = KEY_ENTER;
-    D_PostEvent(&event);
-    first = 0;
-    second = 1;
+    signal(com->mutex_sem);
   }
-  if (second){
-    event_t event;
-    event.type = ev_keydown;
-    event.data1 = KEY_ENTER;
-    D_PostEvent(&event);
-    second = 0;
-  }
-  }
+  // iter++;
+  // if (iter > 1000){ 
+  // if (first){
+  //   event_t event;
+  //   event.type = ev_keydown;
+  //   event.data1 = KEY_DOWNARROW;
+  //   D_PostEvent(&event);
+  //   event.type = ev_keydown;
+  //   event.data1 = KEY_ENTER;
+  //   D_PostEvent(&event);
+  //   event.type = ev_keydown;
+  //   event.data1 = KEY_ENTER;
+  //   D_PostEvent(&event);
+  //   first = 0;
+  //   second = 1;
+  // }
+  // if (second){
+  //   event_t event;
+  //   event.type = ev_keydown;
+  //   event.data1 = KEY_ENTER;
+  //   D_PostEvent(&event);
+  //   second = 0;
+  // }
+  // }
 }
 
 //
@@ -484,7 +515,11 @@ void I_InitGraphics(void)
 	
   image->data = (void*) malloc (SCREENWIDTH * SCREENHEIGHT);
 	rgba_pixelmap = malloc(sizeof(rgba_pixelmap)*SCREENWIDTH * SCREENHEIGHT); 
-
+  start("doomevents", 10000, getprio(getpid()) + 1, NULL);
+  input_page = shm_acquire("doom_events");
+  if (input_page == NULL){
+    I_Error("Input page cannot be found\n");
+  }
 }
 
 

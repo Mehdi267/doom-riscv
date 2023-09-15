@@ -100,7 +100,6 @@ else ifeq ("$(MACHINE)", "virt")
 		QEMU_OPTS += $(QEMU_VIRTIO_CONF)
 		QEMU_OPTS += $(QEMU_OPT_DISK)
 		QEMU_OPTS += $(QEMU_OPT_LINK_BLOCK)
-		# QEMU_OPTS += $(QEMU_GRAPH_OPTS)
 	endif
 	VIRT_OPT=VIRTMACHINE
 else ifeq ("$(MACHINE)", "cep")
@@ -165,6 +164,9 @@ go_graphic: all
 # kill QEmu si CTRL-A, X ne fonctionne pas.
 kill_qemu:
 	killall -9 $(QEMU) 
+
+vnc:
+	remmina -c vnc://127.0.0.1:5900 
 
 # gdb : Lancement de GDB avec connection automatique et lecture de GDBINIT_FILE
 gdb:

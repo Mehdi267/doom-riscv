@@ -74,6 +74,16 @@ extern int getpid(void);
 extern int getprio(int pid);
 extern int kill(int pid);
  
+union sem {
+    int fid;
+    int sem;
+};
+
+void xwait(union sem *s);
+void xsignal(union sem *s);
+void xsdelete(union sem *s);
+void xscreate(union sem *s);
+
 extern int scount(int sem);
 extern int screate(short count);
 extern int sdelete(int sem);

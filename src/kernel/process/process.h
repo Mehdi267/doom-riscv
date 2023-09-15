@@ -165,6 +165,7 @@ typedef struct context {
   uint64_t satp;
   } context_t;
 
+
 /**
  * @brief Enum _process_state is used to associate to every process a certain
  * state. the text is take from the project spec
@@ -259,6 +260,12 @@ typedef struct mem_proc{
   uint64_t start_heap_add;
 } mem_proc;
 
+typedef enum input_type{
+  CONSOLE_INPUT,
+  RAW_INPUT,
+} input_t;
+
+
 /**
   * @brief , struct trape_frame*this structure is given to all processesn it will stored at the kernel level
   * @param pid  id of the process
@@ -326,6 +333,8 @@ typedef struct process_t {
   int semaphore_id;
   //App struct pointer
   struct uapps* app_pointer;
+  //Input type
+  input_t input_type;
   //File system
   p_dir_t root_dir; //Contains information 
                     //about the root dir 

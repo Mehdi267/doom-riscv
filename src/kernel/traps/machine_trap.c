@@ -55,7 +55,7 @@ void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf){
 			case intr_s_external:
         //This is what gets called when we have a keyboard interrupt
 				//interruption clavier
-				handle_keyboard_interrupt();
+        handle_keyboard_interrupt();
 				csr_clear(mip, SIE_SEI); //clear interrupt
 				break;
       case intr_m_external:

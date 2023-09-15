@@ -35,7 +35,8 @@
 //what is inside this function will change depending on what we are 
 //currently testing
 void void_call(){
-  write_user_apps_fs();
+  process* proc = get_current_process();
+  proc->input_type = RAW_INPUT;
 }
 
 unsigned long syscall_handler(struct trap_frame *tf) {

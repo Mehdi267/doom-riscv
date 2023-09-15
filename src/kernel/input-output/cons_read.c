@@ -1,12 +1,14 @@
 #include "../drivers/console.h"
 #include "../process/helperfunc.h"
 #include "../process/scheduler.h"
+#include "../process/process.h"
 #include "encoding.h"
 #include <stdbool.h>
 #include <assert.h>
 #include <queue.h>
 #include <stdio.h>
 #include <string.h>
+
 
 /**
  * Enable or disable echo on the console.
@@ -15,10 +17,12 @@
  */
 void cons_echo(int on) {
   // Enable or disable echo on the console based on the 'on' parameter.
-  if (!on)
+  if (!on){
     console_dev->echo = false;
-  else
+  }
+  else{
     console_dev->echo = true;
+  }
 }
 
 /**

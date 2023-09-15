@@ -9,6 +9,7 @@
 #define HT 9 // Tab
 #define LF 10 // Next line, column 0
 #define CR 13 // Move cursor to the beginning of the current line
+#define ES 27 // Escape key
 
 /**
  * @brief Handle the keyboard interrupt.
