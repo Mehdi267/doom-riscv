@@ -39,9 +39,7 @@ void delete_last() {
  */
 input_t processing_type = CONSOLE_INPUT;
 void handle_keyboard_interrupt() {
-  // printf("Keyboard intterupt \n");
   int c = kgetchar();
-  // printf("%d\n", c);
   process *next = queue_out(&blocked_io_process_queue, process, next_prev);
   if (next){
     // printf("%s\n", next->process_name);

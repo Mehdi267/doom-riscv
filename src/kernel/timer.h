@@ -2,13 +2,13 @@
 
 #include "stdint.h"
 
-# define TIC_PER 50
+//50 miliseconds
+#define TIC_PER 50
 
 /*
 * Prototypes
 */
-
-
+extern uint64_t time_counter;
 void handle_mtimer_interrupt();
 void set_machine_timer_interrupt(uint64_t delta_ms);
 void set_supervisor_timer_interrupt(uint64_t delta_ms);

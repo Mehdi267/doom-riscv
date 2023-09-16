@@ -46,7 +46,6 @@ void scheduler() {
 
   // awake process and insert the in activable queue;
   awake_sleeping_process();
-
   // free the memory of the processes that were killed and they are orphans
   free_dead_process();
   // Scheduler has been called before any execution has started

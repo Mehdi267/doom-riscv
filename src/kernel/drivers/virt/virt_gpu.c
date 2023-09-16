@@ -122,9 +122,12 @@ void virt_gpu_init(){
   print_display_info();
   virt_gpu.frame =  malloc(HEIGHT*WIDTH*sizeof(pixel)); 
   if (virt_gpu.frame == 0){return;}
-  memset(virt_gpu.frame, 0, HEIGHT*WIDTH*sizeof(pixel));
+  memset(virt_gpu.frame, 125, HEIGHT*WIDTH*sizeof(pixel));
   init_gpu_frame(virt_gpu.frame);
-  print_display_info();
+  memset(virt_gpu.frame, 129, HEIGHT*WIDTH*sizeof(pixel));
+  // print_display_info();
+  update_all();
+  memset(virt_gpu.frame, 248, HEIGHT*WIDTH*sizeof(pixel));
   update_all();
   return;
 }
@@ -266,12 +269,13 @@ int invalidate_and_flush(int x, int y, int width, int height){
   req_flush.r.height = height;
   req_flush.resource_id = 1;
   struct virtio_gpu_ctrl_hdr res_flush;
-  request_gpu(&req_flush, sizeof(struct virtio_gpu_resource_flush) - 4, 
+  request_gpu(&req_flush, sizeof(struct virtio_gpu_resource_flush), 
       &res_flush, sizeof(struct virtio_gpu_ctrl_hdr)- 4);
   // print_header_details(&res_flush);
   if (res_flush.type != VIRTIO_GPU_RESP_OK_NODATA){
     return -1;
   }
+  // get_display_info();
   return 0;
 }
 
@@ -380,6 +384,44 @@ void get_display_info_virt(struct display_info* dis_ptr){
   }
   dis_ptr->width = WIDTH;
   dis_ptr->height = HEIGHT;
+}
+
+void display_boxes() {
+  printf("size of screen %ld\n", WIDTH*HEIGHT*sizeof(pixel));
+  void* frame = malloc(WIDTH*HEIGHT*sizeof(pixel)); 
+  struct pixel* data = (pixel*)(frame);
+  // Initialize pixel colors
+  unsigned char orientation = 6;
+  orientation += 40;
+  for (int x = 0; x < WIDTH; x++) {
+    for (int y = 0; y < HEIGHT; y++) {
+      if (x < WIDTH / 2 && y < HEIGHT / 2) {
+        // Top-left corner: Red
+        (data + y * WIDTH + x)->red = 255;
+        (data + y * WIDTH + x)->green = 0;
+        (data + y * WIDTH + x)->blue = orientation;
+      } else if (x >= WIDTH / 2 && y < HEIGHT / 2) {
+        // Top-right corner: Blue
+        (data + y * WIDTH + x)->red = 0;
+        (data + y * WIDTH + x)->green = orientation;
+        (data + y * WIDTH + x)->blue = 255;
+      } else if (x < WIDTH / 2 && y >= HEIGHT / 2) {
+        // Bottom-left corner: Green
+        (data + y * WIDTH + x)->red = 0;
+        (data + y * WIDTH + x)->green = 255;
+        (data + y * WIDTH + x)->blue = orientation;
+      } else {
+        // Remaining corner: Any color (e.g., yellow)
+        (data + y * WIDTH + x)->red = 255;
+        (data + y * WIDTH + x)->green = 255+orientation;
+        (data + y * WIDTH + x)->blue = orientation;
+      }
+      (data + y * WIDTH + x)->alpha = 255; // Alpha component (transparency)
+    }
+  }
+  // Ensure that orientation doesn't go beyond 255
+  gpu_dev->update_data(data, 0, 0, WIDTH, HEIGHT);
+  free(frame);
 }
 
 // Virtual gpu Device structure

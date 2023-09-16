@@ -31,11 +31,12 @@ extern void inc_sepc(void); // defined in supervisor_trap_entry.S
 
 int debug = 0;
 
+void noting(){}
+
 void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
-    
   bool user = false;
   if (((csr_read(sstatus) & MSTATUS_SPP) == 0)){
-			debug_print_no_arg("Int comming from user mode");
+			// debug_print_no_arg("Int comming from user mode\n");
     user = true;
   }
   
@@ -96,7 +97,6 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
         csr_clear(sstatus, MSTATUS_SPP);
         break;
       case CAUSE_FETCH_PAGE_FAULT:
-        // // while(1){}
         blue_screen(tf);
         if (user){
           if (check_expansion_mem(get_process_struct_of_pid(getpid()), tf)>=0){

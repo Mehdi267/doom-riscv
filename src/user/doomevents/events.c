@@ -4,7 +4,10 @@
 #include "../ulib/ufunc.h"
 short input[512];
 void* input_page;
+int old_event;
+long time_snap_shot_ms = 0;
 int events_handler();
+#define GAP_EVENT 500 
 
 #define NO_EVENT	0xff
 #define KEY_RIGHTARROW	0xae
@@ -38,19 +41,51 @@ void main(){
   events_handler();
 }
 
+typedef enum
+{
+    ev_keydown,
+    ev_keyup,
+    //Not usd
+    ev_mouse,
+    ev_joystick
+} evtype_t;
+
 typedef struct event_com{
   int mutex_sem;
   int event;
+  evtype_t press_type;
 } event_com;
 
+long get_cur_time_us(){
+  struct timeval	tp;
+  struct timezone	tzp;
+  gettimeofday(&tp, &tzp);
+  return tp.tv_usec;
+}
 
 void save_input(int charv){
+  long cur_time_us = get_cur_time_us();
+  if (old_event != NO_EVENT && 
+    (charv != old_event ||
+     cur_time_us - time_snap_shot_ms > GAP_EVENT)){
+    event_com* com = (event_com*) input_page;
+    com->event = old_event;
+    com->press_type = ev_keyup;
+    printf("======\n");
+    printf("[Release]Semaphore going into wait mode\n");
+    wait(com->mutex_sem);
+    printf("[Release]Semaphore awaken, event released\n");
+  }
+  old_event = charv;
+  time_snap_shot_ms = get_cur_time_us();
   event_com* com = (event_com*) input_page;
   com->event = charv;
-  printf("Semaphore going into wait mode\n");
+  com->press_type = ev_keydown;
+  printf("======\n");
+  printf("[Press]Semaphore going into wait mode\n");
   wait(com->mutex_sem);
   com->event = NO_EVENT;
-  printf("I have been awaken\n");
+  printf("[Press]I have been awaken\n");
 }
 
 int events_handler() {
@@ -60,6 +95,8 @@ int events_handler() {
   }
   event_com* com = (event_com*) input_page;
   com->event = NO_EVENT;
+  old_event = com->event; 
+  time_snap_shot_ms = get_cur_time_us();
   com->mutex_sem = screate(0);
   void_call();
   int input_index = 0;  // Index in the input buffer
@@ -74,40 +111,40 @@ int events_handler() {
         // Process based on the detected key character
         switch (c) {
           case 'A':
-            save_input(KEY_UPARROW);
             printf("Up arrow key pressed\n");
+            save_input(KEY_UPARROW);
             break;
           case 'B':
-            save_input(KEY_DOWNARROW);
             printf("Down arrow key pressed\n");
+            save_input(KEY_DOWNARROW);
             break;
           case 'C':
-            save_input(KEY_RIGHTARROW);
             printf("Right arrow key pressed\n");
+            save_input(KEY_RIGHTARROW);
             break;
           case 'D':
-            save_input(KEY_LEFTARROW);
             printf("Left arrow key pressed\n");
+            save_input(KEY_LEFTARROW);
             break;
           case 49:
             printf("in 49\n");
             cons_read(&c, 1);
             switch (c){
               case 53:
-                save_input(KEY_F5);
                 printf("F5 detected\n");
+                save_input(KEY_F5);
                 break;
               case 55:
-                save_input(KEY_F6);
                 printf("F6 detected\n");
+                save_input(KEY_F6);
                 break;
               case 56:
-                save_input(KEY_F7);
                 printf("F7 detected\n");
+                save_input(KEY_F7);
                 break;
               case 57:
-                save_input(KEY_F8);
                 printf("F8 detected\n");
+                save_input(KEY_F8);
                 break;
               default:
                 break;
@@ -119,20 +156,20 @@ int events_handler() {
             cons_read(&c, 1);
             switch (c){
               case 48:
-                save_input(KEY_F9);
                 printf("F9 detected\n");
+                save_input(KEY_F9);
                 break;
               case 49:
-                save_input(KEY_F10);
                 printf("F10 detected\n");
+                save_input(KEY_F10);
                 break;
               case 50:
-                save_input(KEY_F11);
                 printf("F11 detected\n");
+                save_input(KEY_F11);
                 break;
               case 52:
-                save_input(KEY_F12);
                 printf("F12 detected\n");
+                save_input(KEY_F12);
                 break;
               default:
                 break;
@@ -149,20 +186,20 @@ int events_handler() {
         switch (c)
         {
           case 'P':
-            save_input(KEY_F1);
             printf("F1 detected\n");
+            save_input(KEY_F1);
             break;
           case 'Q':
-            save_input(KEY_F2);
             printf("F2 detected\n");
+            save_input(KEY_F2);
             break;
           case 'R':
-            save_input(KEY_F3);
             printf("F3 detected\n");
+            save_input(KEY_F3);
             break;
           case 'S':
-            save_input(KEY_F4);
             printf("F4 detected\n");
+            save_input(KEY_F4);
             break; 
           default:
             printf("O detected but not treated\n");

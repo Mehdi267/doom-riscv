@@ -43,7 +43,7 @@ void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf){
 		uint8_t interrupt_number = mcause & ~INTERRUPT_CAUSE_FLAG;
     switch (mcause & ~INTERRUPT_CAUSE_FLAG) {
 			case intr_m_timer:
-				handle_mtimer_interrupt();
+        handle_mtimer_interrupt();
 				#ifndef VIRTMACHINE
 				csr_clear(mip, intr_m_timer);
 				#endif
@@ -59,7 +59,8 @@ void mtrap_handler(uintptr_t mcause, void *mepc, struct trap_frame *tf){
 				csr_clear(mip, SIE_SEI); //clear interrupt
 				break;
       case intr_m_external:
-        printf("intr_m_external not treated\n");
+        // printf("intr_m_external not treated\n");
+        handle_keyboard_interrupt();
 				csr_clear(mip, MIP_MEIP); //clear interrupt
         break;
 			default:

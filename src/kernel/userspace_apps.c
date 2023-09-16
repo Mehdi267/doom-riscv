@@ -28,9 +28,6 @@ const struct uapps *find_app(const char *name)
 
 int write_user_apps_fs(){
   int app = 0;
-  if (symbols_table == NULL){
-    return -1;
-  }
   while (symbols_table[app].name != NULL){
     int code_size = (int) ((long) symbols_table[app].end - 
         (long) symbols_table[app].start);

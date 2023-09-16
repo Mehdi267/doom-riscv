@@ -9,7 +9,6 @@ long int ret = 0;
 
 
 void dis(const char *filename) {
-    printf("%s\n", filename);
     int fd = open(filename, O_RDONLY, 0);
     if (fd == -1) {
         printf("Error opening file\n");
@@ -48,12 +47,6 @@ int dis_bin(char *prog) {
   return 0;
 }
 
-struct Pixel {
-  uint8_t red;
-  uint8_t green;
-  uint8_t blue;
-  uint8_t alpha;
-};
 
 /**
  * @brief if cmd is a builtin, executes the builtin and returns 0, returns 1 if not
@@ -69,40 +62,47 @@ int builtin_cmd(char *cmd) {
 #define SCREENWIDTH 320
 #define SCREENHEIGHT 200
 
+
+struct Pixel {
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
+  uint8_t alpha;
+};
 void display_test() {
   printf("size of screen %ld\n", SCREENWIDTH*SCREENHEIGHT*sizeof(struct Pixel));
   void* frame = malloc(SCREENWIDTH*SCREENHEIGHT*sizeof(struct Pixel)); 
   struct Pixel* data = (struct Pixel*)(frame);
   // Initialize pixel colors
-  int orientation = 6;
+  unsigned char orientation = 6;
   while (1) {
-    orientation++;
-for (int x = 0; x < SCREENWIDTH; x++) {
-    for (int y = 0; y < SCREENHEIGHT; y++) {
+    orientation += 40;
+    for (int x = 0; x < SCREENWIDTH; x++) {
+      for (int y = 0; y < SCREENHEIGHT; y++) {
         if (x < SCREENWIDTH / 2 && y < SCREENHEIGHT / 2) {
-            // Top-left corner: Red
-            (data + y * SCREENWIDTH + x)->red = 255;
-            (data + y * SCREENWIDTH + x)->green = 0;
-            (data + y * SCREENWIDTH + x)->blue = 0;
+          // Top-left corner: Red
+          (data + y * SCREENWIDTH + x)->red = 255;
+          (data + y * SCREENWIDTH + x)->green = 0;
+          (data + y * SCREENWIDTH + x)->blue = orientation;
         } else if (x >= SCREENWIDTH / 2 && y < SCREENHEIGHT / 2) {
-            // Top-right corner: Blue
-            (data + y * SCREENWIDTH + x)->red = 0;
-            (data + y * SCREENWIDTH + x)->green = 0;
-            (data + y * SCREENWIDTH + x)->blue = 255;
+          // Top-right corner: Blue
+          (data + y * SCREENWIDTH + x)->red = 0;
+          (data + y * SCREENWIDTH + x)->green = orientation;
+          (data + y * SCREENWIDTH + x)->blue = 255;
         } else if (x < SCREENWIDTH / 2 && y >= SCREENHEIGHT / 2) {
-            // Bottom-left corner: Green
-            (data + y * SCREENWIDTH + x)->red = 0;
-            (data + y * SCREENWIDTH + x)->green = 255;
-            (data + y * SCREENWIDTH + x)->blue = 0;
+          // Bottom-left corner: Green
+          (data + y * SCREENWIDTH + x)->red = 0;
+          (data + y * SCREENWIDTH + x)->green = 255;
+          (data + y * SCREENWIDTH + x)->blue = orientation;
         } else {
-            // Remaining corner: Any color (e.g., yellow)
-            (data + y * SCREENWIDTH + x)->red = 255;
-            (data + y * SCREENWIDTH + x)->green = 255;
-            (data + y * SCREENWIDTH + x)->blue = 0;
+          // Remaining corner: Any color (e.g., yellow)
+          (data + y * SCREENWIDTH + x)->red = 255;
+          (data + y * SCREENWIDTH + x)->green = 255+orientation;
+          (data + y * SCREENWIDTH + x)->blue = orientation;
         }
         (data + y * SCREENWIDTH + x)->alpha = 255; // Alpha component (transparency)
+      }
     }
-}
     // Ensure that orientation doesn't go beyond 255
     if (orientation > 255) {
         orientation = 0;
@@ -110,8 +110,7 @@ for (int x = 0; x < SCREENWIDTH; x++) {
     char in;
     cons_read(&in, 1);
     upd_data_display(data, 0, 0, SCREENWIDTH, SCREENHEIGHT);
-    // Add a delay to control the speed of the color change (optional)
-    sleep(1); // Sleep for 1 second (adjust as needed)
+    // sleep(1); // Sleep for 1 second (adjust as needed)
   }
   free(frame);
 }

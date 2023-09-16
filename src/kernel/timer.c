@@ -54,10 +54,11 @@ void handle_mtimer_interrupt()
 	#ifndef VIRTMACHINE
 		printf("Tic machine \n");
 		set_machine_timer_interrupt(TIC_PER); // this fills the role of ack
-		counter++;
+		time_counter++;
 		return ;
 	//Machine virt
 	#else
+  	time_counter++;
 		//inspired for the xv6 project
 		//We force a software interrupt that will have 
 		//to go through the kernel mode and runs the code that we have added
@@ -68,7 +69,6 @@ void handle_mtimer_interrupt()
 		sync_counter++;
 		if (sync_counter > SYNC_LIMIT){
 			sync_counter = 0;
-			// sync_all();
 		}
 		if (((csr_read(mstatus) & MSTATUS_MPP_0) != 0) && !first_call){
 			// debug_print_no_arg("Int comming from supervisor mode and " 
@@ -93,16 +93,15 @@ void handle_stimer_interrupt()
 		#ifdef KERNEL_PROCESSES_ON
 			set_supervisor_interrupts(false);
 		#endif
-		counter++;
+		time_counter++;
 		set_supervisor_timer_interrupt(TIC_PER); 
 		scheduler();
-	//Machine virt
 	#else
+	//Machine virt
 		debug_print_no_arg("--Called from m mode"  
 					"Inside timer interreupt handler supervisor -- \n"); 
-		counter++;
 		scheduler();
-		set_supervisor_interrupts(true);
+		// set_supervisor_interrupts(true);
 	#endif
   return;
 }

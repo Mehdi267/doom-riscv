@@ -78,7 +78,8 @@ QEMU_OPT_LINK_BLOCK = -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
 # Pour afficher l'affichage série en console, marche à travers ssh
 QEMU_NO_GRAPH_OPTS = -nographic
 # Pour avoir l'uart + le VGA en mode graphique
-# QEMU_GRAPH_OPTS = --enable-sdl --with-sdlabi=2.0 -display sdl -serial mon:stdio
+# QEMU_GRAPH_OPTS = -sdl -serial mon:stdio
+
 #These work but there is they are not easy to manipulate and 
 #and not well documented
 # QEMU_GRAPH_OPTS = -vga std -serial mon:stdio
@@ -86,8 +87,10 @@ QEMU_NO_GRAPH_OPTS = -nographic
 # QEMU_GRAPH_OPTS = -device isa-vga -serial mon:stdio
 # QEMU_GRAPH_OPTS = -device virtio-vga -serial mon:stdio
 QEMU_GRAPH_OPTS = -device virtio-gpu-device,bus=virtio-mmio-bus.1 -serial mon:stdio
-
 QEMU = $(RISCV_ROOT)qemu-system-riscv64
+UPDATED_QEMU = /opt/riscv_qemu/bin/qemu-system-riscv64
+# QEMU = $(UPDATED_QEMU)
+
 ifeq ("$(MACHINE)", "spike")
 	QEMU_MACHINE=spike_v1.10
 else ifeq ("$(MACHINE)", "sifive_u")
@@ -165,8 +168,12 @@ go_graphic: all
 kill_qemu:
 	killall -9 $(QEMU) 
 
-vnc:
+vncrem:
 	remmina -c vnc://127.0.0.1:5900 
+
+vncx:
+	x11vnc -auth guess -forever -loop -noxdamage -repeat 1000 -rfbauth /home/mehdi/.vnc/passwd -rfbport 5900 -shared -display :0 -bg -o /home/mehdi/.vnc/x11vnc.log -xkb -noxrecord -noxfixes -ncache 10 -ncache_cr -ncache_prealloc 127.0.0.1:5900
+
 
 # gdb : Lancement de GDB avec connection automatique et lecture de GDBINIT_FILE
 gdb:

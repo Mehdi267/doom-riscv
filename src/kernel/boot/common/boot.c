@@ -118,7 +118,6 @@ static inline void enter_supervisor_mode() {
 
 /*
 * boot_riscv
-*
 * This function is called from crtm.S
 * At this stage, only the machine trap vector mtvec has been configured.
 * The currently used stack is the machine stack that was allocated in crtm.S.

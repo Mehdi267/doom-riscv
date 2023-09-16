@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 
-extern uint64_t counter;
+extern uint64_t time_counter;
 
 /**
  * @brief return the frequency of the clock and the number of clock oscillations

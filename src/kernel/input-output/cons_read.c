@@ -131,9 +131,11 @@ unsigned long cons_read(const char *string, unsigned long length) {
     return 0;
   while (!detected_eol() && !is_buffer_full() && length > buffer_current_size()) {
     process *proc = get_current_process();
-    proc->state = BLOCKEDIO;
-    queue_add(proc, &blocked_io_process_queue, process, next_prev, prio);
-    scheduler();
+    if (proc){
+      proc->state = BLOCKEDIO;
+      queue_add(proc, &blocked_io_process_queue, process, next_prev, prio);
+      scheduler();    
+    }
   }
   // printf("String is equal to %s", string);
   return copy((char*)string, length, false);

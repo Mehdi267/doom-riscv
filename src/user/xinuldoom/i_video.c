@@ -51,8 +51,6 @@ int XShmGetEventBase( Display* dpy ); // problems with g++?
 
 #define POINTER_WARP_COUNTDOWN	1
 
-// Colormap	X_cmap;
-// XEvent		X_event;
 typedef struct XImage_personal{
   void* data;
 } XImage;
@@ -72,6 +70,7 @@ void* input_page;
 typedef struct event_com{
   int mutex_sem;
   int event;
+  evtype_t press_type;
 } event_com;
 
 typedef struct {
@@ -105,78 +104,6 @@ extern int getprio(int pid);
 // to use ....
 static int	multiply=1;
 
-
-//
-//  Translates the key currently in X_event
-//
-
-// int xlatekey(void)
-// {
-
-//     int rc;
-
-//     switch(rc = XKeycodeToKeysym(X_display, X_event.xkey.keycode, 0))
-//     {
-//       case XK_Left:	rc = KEY_LEFTARROW;	break;
-//       case XK_Right:	rc = KEY_RIGHTARROW;	break;
-//       case XK_Down:	rc = KEY_DOWNARROW;	break;
-//       case XK_Up:	rc = KEY_UPARROW;	break;
-//       case XK_Escape:	rc = KEY_ESCAPE;	break;
-//       case XK_Return:	rc = KEY_ENTER;		break;
-//       case XK_Tab:	rc = KEY_TAB;		break;
-//       case XK_F1:	rc = KEY_F1;		break;
-//       case XK_F2:	rc = KEY_F2;		break;
-//       case XK_F3:	rc = KEY_F3;		break;
-//       case XK_F4:	rc = KEY_F4;		break;
-//       case XK_F5:	rc = KEY_F5;		break;
-//       case XK_F6:	rc = KEY_F6;		break;
-//       case XK_F7:	rc = KEY_F7;		break;
-//       case XK_F8:	rc = KEY_F8;		break;
-//       case XK_F9:	rc = KEY_F9;		break;
-//       case XK_F10:	rc = KEY_F10;		break;
-//       case XK_F11:	rc = KEY_F11;		break;
-//       case XK_F12:	rc = KEY_F12;		break;
-	
-//       case XK_BackSpace:
-//       case XK_Delete:	rc = KEY_BACKSPACE;	break;
-
-//       case XK_Pause:	rc = KEY_PAUSE;		break;
-
-//       case XK_KP_Equal:
-//       case XK_equal:	rc = KEY_EQUALS;	break;
-
-//       case XK_KP_Subtract:
-//       case XK_minus:	rc = KEY_MINUS;		break;
-
-//       case XK_Shift_L:
-//       case XK_Shift_R:
-// 	rc = KEY_RSHIFT;
-// 	break;
-	
-//       case XK_Control_L:
-//       case XK_Control_R:
-// 	rc = KEY_RCTRL;
-// 	break;
-	
-//       case XK_Alt_L:
-//       case XK_Meta_L:
-//       case XK_Alt_R:
-//       case XK_Meta_R:
-// 	rc = KEY_RALT;
-// 	break;
-	
-//       default:
-// 	if (rc >= XK_space && rc <= XK_asciitilde)
-// 	    rc = rc - XK_space + ' ';
-// 	if (rc >= 'A' && rc <= 'Z')
-// 	    rc = rc - 'A' + 'a';
-// 	break;
-//     }
-
-//     return rc;
-
-// }
-
 void I_ShutdownGraphics(void)
 {
   image->data = NULL;
@@ -187,56 +114,51 @@ void I_ShutdownGraphics(void)
 //
 // I_StartFrame
 //
-void I_StartFrame (void)
-{
-    // er?
-
-}
+void I_StartFrame (void){}
 
 static int	lastmousex = 0;
 static int	lastmousey = 0;
 boolean		mousemoved = false;
 boolean		shmFinished;
-
-int first = 1;
-int iter = 0;
-int second = 0;
+int old_event = 0xff;
+//Used to detect stand alone events
+int iter_event = 0;
 #define NO_EVENT	0xff
 void I_GetEvent(void){
   event_com* com = (event_com*) input_page;
+  evtype_t event_type = com->press_type;
   int event_pressed = com->event;
-  if (event_pressed != NO_EVENT){
+  iter_event++;
+  if (event_pressed != old_event && 
+      event_type != ev_keyup && 
+      iter_event > 20 &&
+      old_event != NO_EVENT){
+    printf("------\n");
+    printf("[Doom]Releasing event due to timer = %d\n", old_event);
     event_t event;
-    event.type = ev_keydown;
-    event.data1 = event_pressed;
-    printf("event_pressed = %d\n", event_pressed);
+    event.type = ev_keyup;
+    event.data1 = old_event;
     D_PostEvent(&event);
+    iter_event = 0;
+    old_event = NO_EVENT;
+  }
+  if (event_pressed != NO_EVENT){
+    printf("^^^^^\n");
+    if (com->press_type == ev_keyup &&
+        old_event == event_pressed){
+      printf("[Doom][Release]Detected event release= %d\n", old_event);
+      iter_event = 0;
+      old_event = NO_EVENT;
+    } else {
+      old_event = event_pressed;
+    }
+    event_t event;
+    event.type = event_type;
+    event.data1 = event_pressed;
+    D_PostEvent(&event);
+    printf("[Doom][Press]event_pressed = %d\n", event_pressed);
     signal(com->mutex_sem);
   }
-  // iter++;
-  // if (iter > 1000){ 
-  // if (first){
-  //   event_t event;
-  //   event.type = ev_keydown;
-  //   event.data1 = KEY_DOWNARROW;
-  //   D_PostEvent(&event);
-  //   event.type = ev_keydown;
-  //   event.data1 = KEY_ENTER;
-  //   D_PostEvent(&event);
-  //   event.type = ev_keydown;
-  //   event.data1 = KEY_ENTER;
-  //   D_PostEvent(&event);
-  //   first = 0;
-  //   second = 1;
-  // }
-  // if (second){
-  //   event_t event;
-  //   event.type = ev_keydown;
-  //   event.data1 = KEY_ENTER;
-  //   D_PostEvent(&event);
-  //   second = 0;
-  // }
-  // }
 }
 
 //
@@ -504,14 +426,6 @@ void I_InitGraphics(void)
 
   X_width = SCREENWIDTH * multiply;
   X_height = SCREENHEIGHT * multiply;
-
-	// KeyPressMask
-	// | KeyReleaseMask
-	// // | PointerMotionMask | ButtonPressMask | ButtonReleaseMask
-	// | ExposureMask;
-
-  //   attribs.colormap = X_cmap;
-  //   attribs.border_pixel = 0;
 	
   image->data = (void*) malloc (SCREENWIDTH * SCREENHEIGHT);
 	rgba_pixelmap = malloc(sizeof(rgba_pixelmap)*SCREENWIDTH * SCREENHEIGHT); 
