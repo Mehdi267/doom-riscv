@@ -56,7 +56,6 @@ typedef struct event_com {
 
 typedef struct page_struct{
   int write_mutex;
-  int reserved;
   int nb_events_in;
   int event_head_id;
   int event_tail_id;
@@ -107,8 +106,6 @@ void process_event(event_queue* queue) {
     queue->head = com->next;
     com->beingused = 1;
     wait(page->write_mutex);
-    while (page->reserved == 1){sleep(500);}
-    page->reserved == 0;
     assert(scount(page->write_mutex) == 0);
     // printf("[Event Manager]Got mutex\n");
     int slot = -1;
@@ -141,7 +138,6 @@ void process_event(event_queue* queue) {
     page->nb_events_in++;
     memcpy(&page->events[slot], com, sizeof(event_com));
     // printf("Processing event: %d (%s)\n", com->event, (com->press_type == ev_keydown) ? "KeyDown" : "KeyUp");
-    page->reserved = 0;
     signal(page->write_mutex);
     // printf("[Event Manager]Release mutex\n");
     free(com);

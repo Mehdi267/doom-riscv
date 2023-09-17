@@ -129,7 +129,6 @@ typedef struct event_com {
 #define NO_EVENT	0xff
 typedef struct page_struct{
   int write_mutex;
-  int reserved;
   int nb_events_in;
   int event_head_id;
   int event_tail_id;
@@ -139,8 +138,6 @@ typedef struct page_struct{
 void get_next_event(event_action* action){
   page_struct* page = (page_struct*) input_page;
   wait(page->write_mutex);
-  while (page->reserved == 1){}
-  page->reserved = 1;
   // // printf("[Doom]Got mutex\n");
   if (page->nb_events_in > 0){
     event_com* ret_event = &page->events[page->event_head_id];
@@ -165,7 +162,6 @@ void get_next_event(event_action* action){
   else{
     action->event = NO_EVENT;
   }
-  page->reserved = 0;
   signal(page->write_mutex);
   // // printf("[Doom]Release mutex\n");
 }
@@ -186,7 +182,7 @@ void I_GetEvent(void){
     iter_event++;
     if (event_pressed != old_event && 
         event_type != ev_keyup && 
-        iter_event > 5 &&
+        iter_event > 10 &&
         old_event != NO_EVENT){
       // printf("###");
       // printf("[Doom][Release]Releasing event due to timer = %d\n", old_event);
