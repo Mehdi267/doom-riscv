@@ -937,6 +937,7 @@ static int add_and_allocate_frames(process* proc, uint32_t page_nb, page_t type)
   if (proc == 0 || page_nb > get_remaining_frames()){
     return -1;
   }
+  // printf("Trying to add to mem to, proc pid = %d pid = %d, name = %s\n", proc->pid, getpid(), getname());
   for (uint64_t page_iter = 0; page_iter < page_nb; page_iter++){
     frame_loc frame;
     memset(&frame, 0,sizeof(frame_loc));
@@ -944,7 +945,7 @@ static int add_and_allocate_frames(process* proc, uint32_t page_nb, page_t type)
       return -1;
     }
     //New lvl0 table
-    if (frame.lvl0_index == 1){
+    if (frame.lvl0_index == 0){
       //Works only for on lvl1 page
       assert(proc->page_tables_lvl_1_list->tail_page->page_type 
           == type);
@@ -994,6 +995,7 @@ int check_expansion_mem(process* proc, struct trap_frame* frame){
     long page_diff = used_pages - proc->mem_info.stack_usage;
     if (page_diff>0 && 
         (proc->mem_info.stack_usage + page_diff)<STACK_FRAME_SIZE*PT_SIZE){
+      printf("Trying to add to stack size, pid = %d, name = %s\n", getpid(), getname());
       debug_print_memory("Expanding memory of proc : %s by %ld \n", 
         proc->process_name, page_diff);
       add_and_allocate_frames(proc, page_diff, STACK_PAGE);

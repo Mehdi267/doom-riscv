@@ -8,9 +8,9 @@
 #include "../process/scheduler.h"
 #include "../input-output/cons_read.h"
 #include "../input-output/cons_write.h"
+#include "../drivers/console.h"
 #include "string.h"
 #include "assert.h"
-#include "../drivers/console.h"
 
 //Equal to the number of virtio ports 
 //even though i don't think that we will use all of them 

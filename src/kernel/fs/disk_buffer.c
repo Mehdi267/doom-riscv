@@ -12,7 +12,7 @@
 c_elt* global_cache_buf = 0; 
 uint32_t nb_elements_cache = 0; 
 uint32_t locked_files = 0; 
-#define MAX_CACHE_SIZE 30
+#define MAX_CACHE_SIZE 60
 
 char* read_block_c(uint32_t disk_block_number, cache_op cah_op){
   debug_print_v_fs("[df]Reading relative disk block %d\n", disk_block_number);

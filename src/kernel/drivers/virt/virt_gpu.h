@@ -239,24 +239,92 @@ void free_list_desc(uint32_t* list, int size);
  */
 uint32_t* get_desc(uint16_t num);
 
-//Display info
+/**
+ * @brief Get display information.
+ *
+ * @return The display information structure.
+ */
 struct virtio_gpu_resp_display_info get_display_info();
-//Print display object
+
+/**
+ * @brief Print display information.
+ */
 void print_display_info();
-//Print response header 
+
+/**
+ * @brief Print details of a response header.
+ *
+ * @param header The response header to print details of.
+ */
 void print_header_details(struct virtio_gpu_ctrl_hdr *header);
-//Gpu request generic
-void request_gpu(void *req, uint64_t req_size, void* res, uint64_t res_size);
-//Initializes the gpu connection and the frame and its size
+
+/**
+ * @brief Send a GPU request.
+ *
+ * @param req       Pointer to the request data.
+ * @param req_size  Size of the request data.
+ * @param res       Pointer to the response data.
+ * @param res_size  Size of the response data.
+ */
+void request_gpu(void *req, uint64_t req_size, void *res, uint64_t res_size);
+
+/**
+ * @brief Initialize the GPU frame and connection.
+ */
 void init_gpu_frame();
-//Update the memory region depicted by these parameters
+
+/**
+ * @brief Invalidate and flush a memory region.
+ *
+ * @param x      X-coordinate.
+ * @param y      Y-coordinate.
+ * @param width  Width of the region.
+ * @param height Height of the region.
+ *
+ * @return 0 if successful, or an error code.
+ */
 int invalidate_and_flush(int x, int y, int width, int height);
-//Updates all of the screen
+
+/**
+ * @brief Update the entire screen.
+ */
 void update_all();
-//Update the frame with data taken in as a parameter
-int update_data(void* data, int x, int y, int width, int height);
-//Checks if the cordinates are valid 
+
+/**
+ * @brief Update a frame with data.
+ *
+ * @param data   Pointer to the data to update with.
+ * @param x      X-coordinate.
+ * @param y      Y-coordinate.
+ * @param width  Width of the region.
+ * @param height Height of the region.
+ *
+ * @return 0 if successful, or an error code.
+ */
+int update_data(void *data, int x, int y, int width, int height);
+
+/**
+ * @brief Check if coordinates are valid.
+ *
+ * @param x      X-coordinate.
+ * @param y      Y-coordinate.
+ * @param width  Width of the region.
+ * @param height Height of the region.
+ *
+ * @return 0 if valid, negative otherwise.
+ */
 int check_cord(int x, int y, int width, int height);
-//returns inforamtion about the current display 
-void get_display_info_virt(struct display_info*);
+
+/**
+ * @brief Get information about the current display.
+ *
+ * @param info Pointer to a display information structure to fill.
+ */
+void get_display_info_virt(struct display_info *info);
+
+/**
+ * @brief Display some boxes.
+ */
+void display_boxes();
+
 #endif

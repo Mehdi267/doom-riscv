@@ -46,7 +46,6 @@ int XShmGetEventBase( Display* dpy ); // problems with g++?
 #include "v_video.h"
 #include "m_argv.h"
 #include "d_main.h"
-
 #include "doomdef.h"
 
 #define POINTER_WARP_COUNTDOWN	1
@@ -65,13 +64,7 @@ typedef struct rgba_pixel {
 rgba_pixel* rgba_pixelmap;
 int		X_width;
 int		X_height;
-
-void* input_page;
-typedef struct event_com{
-  int mutex_sem;
-  int event;
-  evtype_t press_type;
-} event_com;
+void* input_page; //Used for event handling
 
 typedef struct {
 	unsigned long pixel;
@@ -116,6 +109,67 @@ void I_ShutdownGraphics(void)
 //
 void I_StartFrame (void){}
 
+
+typedef struct event_action {
+  int event;
+  evtype_t press_type;
+} event_action;
+
+typedef struct event_com {
+  int event;
+  evtype_t press_type;
+  unsigned char beingused;
+  int next_event_id;
+  int before_event_id;
+  //Don't use this pointer here
+  struct event_com* next;
+} event_com;
+
+#define MAX_EVENTS 100
+#define NO_EVENT	0xff
+typedef struct page_struct{
+  int write_mutex;
+  int reserved;
+  int nb_events_in;
+  int event_head_id;
+  int event_tail_id;
+  event_com events[MAX_EVENTS+1];
+} page_struct;
+
+void get_next_event(event_action* action){
+  page_struct* page = (page_struct*) input_page;
+  wait(page->write_mutex);
+  while (page->reserved == 1){}
+  page->reserved = 1;
+  // // printf("[Doom]Got mutex\n");
+  if (page->nb_events_in > 0){
+    event_com* ret_event = &page->events[page->event_head_id];
+    action->event = ret_event->event;
+    action->press_type = ret_event->press_type;
+    if (page->event_head_id == page->event_tail_id
+        && page->nb_events_in == 1){
+      // printf("List is now empty\n");
+      page->event_head_id = -1;
+      page->event_tail_id = -1;
+    } else{
+      if (ret_event->before_event_id != -1){
+        // printf("ERROR CAUGHT! FIX PLEASE\n");
+      }
+      page->events[ret_event->next_event_id].before_event_id = 
+            ret_event->before_event_id;
+      page->event_head_id = ret_event->next_event_id;
+    }
+    ret_event->beingused = 0;
+    page->nb_events_in--;
+  }
+  else{
+    action->event = NO_EVENT;
+  }
+  page->reserved = 0;
+  signal(page->write_mutex);
+  // // printf("[Doom]Release mutex\n");
+}
+
 static int	lastmousex = 0;
 static int	lastmousey = 0;
 boolean		mousemoved = false;
@@ -123,41 +177,44 @@ boolean		shmFinished;
 int old_event = 0xff;
 //Used to detect stand alone events
 int iter_event = 0;
-#define NO_EVENT	0xff
 void I_GetEvent(void){
-  event_com* com = (event_com*) input_page;
-  evtype_t event_type = com->press_type;
-  int event_pressed = com->event;
-  iter_event++;
-  if (event_pressed != old_event && 
-      event_type != ev_keyup && 
-      iter_event > 20 &&
-      old_event != NO_EVENT){
-    printf("------\n");
-    printf("[Doom]Releasing event due to timer = %d\n", old_event);
-    event_t event;
-    event.type = ev_keyup;
-    event.data1 = old_event;
-    D_PostEvent(&event);
-    iter_event = 0;
-    old_event = NO_EVENT;
-  }
-  if (event_pressed != NO_EVENT){
-    printf("^^^^^\n");
-    if (com->press_type == ev_keyup &&
-        old_event == event_pressed){
-      printf("[Doom][Release]Detected event release= %d\n", old_event);
+  event_action com;
+  while(true){
+    get_next_event(&com);
+    evtype_t event_type = com.press_type;
+    int event_pressed = com.event;
+    iter_event++;
+    if (event_pressed != old_event && 
+        event_type != ev_keyup && 
+        iter_event > 5 &&
+        old_event != NO_EVENT){
+      // printf("###");
+      // printf("[Doom][Release]Releasing event due to timer = %d\n", old_event);
+      event_t event;
+      event.type = ev_keyup;
+      event.data1 = old_event;
+      D_PostEvent(&event);
       iter_event = 0;
       old_event = NO_EVENT;
-    } else {
-      old_event = event_pressed;
     }
-    event_t event;
-    event.type = event_type;
-    event.data1 = event_pressed;
-    D_PostEvent(&event);
-    printf("[Doom][Press]event_pressed = %d\n", event_pressed);
-    signal(com->mutex_sem);
+    if (event_pressed != NO_EVENT){
+      // printf("^^^");
+      if (com.press_type == ev_keyup &&
+          old_event == event_pressed){
+        // printf("[Doom][Release]Detected event release= %d\n", old_event);
+        iter_event = 0;
+        old_event = NO_EVENT;
+      } else {
+        old_event = event_pressed;
+      }
+      event_t event;
+      event.type = event_type;
+      event.data1 = event_pressed;
+      D_PostEvent(&event);
+      // printf("[Doom][Press]event_pressed = %d\n", event_pressed);
+    }else{
+      break;
+    }
   }
 }
 

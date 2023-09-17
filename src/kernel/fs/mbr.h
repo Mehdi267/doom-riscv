@@ -14,7 +14,6 @@ be allocated for testing purposes,
 and three additional partitions can be utilized to host different file systems.
 By default, we will mount the second partition, but we may introduce functionality
 to detect and utilize other partitions.
-
 ------ MBR ------*/
 
 #define MBR_SIGNATURE  0x55AA //Used to determine is the first block is an mbr
@@ -27,7 +26,7 @@ to detect and utilize other partitions.
 
 #define TEST_PARTITION 0x01 
 #define EXT2_PARTITION 0x83
-#define TEST_EXT2_PARTITION_SIZE 1000
+#define TEST_EXT2_PARTITION_SIZE 25000 //In blocs
 #define MIN_EXT2_SIZE 100 // the limit is added in order
                           // to make sure that the ex1t file system 
                           // can have a basic number of blocks

@@ -19,9 +19,10 @@ gpu_device_t *gpu_dev = &gpu_none;
 void register_gpu(gpu_device_t *dev)
 {
 	gpu_dev = dev;
-	if(dev->init)
-	{
-		dev->init();
+	if(dev->init){
+		if (dev->init()<0){
+	      gpu_dev = &gpu_none;
+    }
 	}
 }
 

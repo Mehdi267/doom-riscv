@@ -101,9 +101,6 @@ int create_base_dirs(){
   if (mkdir("/bin", 0)<0){return -1;}
   if (mkdir("/tmp", 0)<0){return -1;}
   if (mkdir("/usr", 0)<0){return -1;}
-  if (mkdir("/usr/bin", 0)<0){return -1;}
-  if (mkdir("/usr/include", 0)<0){return -1;}
-  if (mkdir("/usr/lib", 0)<0){return -1;}
   return 0;
 }
 

@@ -40,7 +40,7 @@ virt_q gpu_q;
  * reading and possibly writing the device’s virtio configuration space, and population of virtqueues.
  * 8. Set the DRIVER_OK status bit. At this point the device is “live”.
  */
-void virt_gpu_init(){
+int virt_gpu_init(){
   // Verify that the device is a virtio device, a disk, and has the appropriate configuration values.
   if (*G(MMIO_MAGIC_VALUE) != 0x74726976 ||
       *G(MMIO_VERSION) != 2 ||
@@ -51,7 +51,7 @@ void virt_gpu_init(){
       //check that the image exists and that are no problem
       //when linking it to the qemu image
       printf("Gpu not found!\n");
-      return;
+      return -1;
   }
   //Step 1 : we reset the device
   *G(MMIO_STATUS) = 0;
@@ -73,7 +73,7 @@ void virt_gpu_init(){
   //Step 6: We validate the the Features were accepted
   if (!(*G(MMIO_STATUS) & STATUS_FEATURES_OK)){
     printf("Features are not valid!\n");
-    return;
+    return -1;
   }
   
   //Step 7: Device specific setup
@@ -88,7 +88,7 @@ void virt_gpu_init(){
   uint32_t max = *G(MMIO_QUEUE_NUM_MAX);
   if(max < NUMQ){
     printf("\x1B[1\x1B[31 Queue size is too small!\x1b[0");
-    return;
+    return -1;
   }
   *G(MMIO_QUEUE_NUM) = NUMQ;
 
@@ -107,7 +107,7 @@ void virt_gpu_init(){
   if (*G(MMIO_STATUS) != 15){
     printf("\x1B[1m\x1B[31m gpu setup failed! STATUS %d\x1b[0m",
                        *G(MMIO_STATUS));
-    return;
+    return -1;
   }
 
   for (int i=0; i < NUMQ; i++){
@@ -121,15 +121,11 @@ void virt_gpu_init(){
   gpu_m.used_iter = 0;
   print_display_info();
   virt_gpu.frame =  malloc(HEIGHT*WIDTH*sizeof(pixel)); 
-  if (virt_gpu.frame == 0){return;}
-  memset(virt_gpu.frame, 125, HEIGHT*WIDTH*sizeof(pixel));
+  if (virt_gpu.frame == 0){return -1;}
   init_gpu_frame(virt_gpu.frame);
-  memset(virt_gpu.frame, 129, HEIGHT*WIDTH*sizeof(pixel));
-  // print_display_info();
+  display_boxes();
   update_all();
-  memset(virt_gpu.frame, 248, HEIGHT*WIDTH*sizeof(pixel));
-  update_all();
-  return;
+  return 0;
 }
 
 
@@ -387,9 +383,8 @@ void get_display_info_virt(struct display_info* dis_ptr){
 }
 
 void display_boxes() {
-  printf("size of screen %ld\n", WIDTH*HEIGHT*sizeof(pixel));
-  void* frame = malloc(WIDTH*HEIGHT*sizeof(pixel)); 
-  struct pixel* data = (pixel*)(frame);
+  if (!virt_gpu.frame){return;}
+  struct pixel* data = (pixel*)(virt_gpu.frame);
   // Initialize pixel colors
   unsigned char orientation = 6;
   orientation += 40;
@@ -421,8 +416,7 @@ void display_boxes() {
   }
   // Ensure that orientation doesn't go beyond 255
   gpu_dev->update_data(data, 0, 0, WIDTH, HEIGHT);
-  free(frame);
-}
+} 
 
 // Virtual gpu Device structure
 gpu_device_t virt_gpu = {

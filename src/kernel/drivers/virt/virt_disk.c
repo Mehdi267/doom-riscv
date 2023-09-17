@@ -288,7 +288,7 @@ int virt_disk_write(disk_op* op){
 
 void read_virtio_blk_config() {
   d_conf *config = (d_conf*) (char*)(VIRTIO0 + 0x100);
-  printf("-------Disk configuration ------\n");
+  printf("\n-------Disk configuration ------\n");
   printf("Capacity: %lu\n", config->capacity);
   printf("Size Max: %u\n", config->size_max);
   printf("Seg Max: %u\n", config->seg_max);
@@ -309,7 +309,7 @@ void read_virtio_blk_config() {
   printf("Max Write Zeroes Sectors: %u\n", config->max_write_zeroes_sectors);
   printf("Max Write Zeroes Seg: %u\n", config->max_write_zeroes_seg);
   printf("Write Zeroes May Unmap: %u\n", config->write_zeroes_may_unmap);
-  printf("-------Disk configuration end------\n");
+  printf("-------Disk configuration end------\n\n");
 }
 
 uint32_t get_disk_capacity() {
@@ -391,5 +391,6 @@ disk_device_t virt_disk = {
     virt_disk_init,
     virt_disk_read,
     virt_disk_write,
-    get_disk_capacity
+    get_disk_capacity,
+    read_virtio_blk_config
 };

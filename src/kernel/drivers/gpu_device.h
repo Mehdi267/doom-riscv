@@ -9,7 +9,7 @@ struct display_info{
 };
 
 typedef struct gpu_device {
-	void (*init)();
+	int (*init)();
   int width;
   int height;
   void* frame;

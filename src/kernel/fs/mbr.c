@@ -58,7 +58,7 @@ int save_global_mbr(){
 int set_up_mbr(){ 
   print_fs_no_arg("[df]set_up_mbr method was called\n");
   if (global_mbr != 0){
-    release_frame(global_mbr);
+    free(global_mbr);
   }
   //We allocate data for the global mbr struct
   global_mbr = (mbr_t*) malloc(sizeof(mbr_t));
@@ -104,7 +104,7 @@ int setup_test_partition(uint8_t partition_type){
   global_mbr->partitionTable[0].status = ACTIVE_PARTITION;
   global_mbr->partitionTable[0].type = partition_type;//test partition
   global_mbr->partitionTable[0].startLBA = 2;
-  global_mbr->partitionTable[0].sizeLBA = TEST_EXT2_PARTITION_SIZE*15;
+  global_mbr->partitionTable[0].sizeLBA = TEST_EXT2_PARTITION_SIZE;
   clear_partition_space(0);
   if (partition_type == EXT2_PARTITION){
       configure_ext2_file_system(0);
@@ -116,7 +116,7 @@ void print_occ_places(uint32_t* occu_places){
   if (occu_places==0){
     return;
   }
-  printf("\n-----occ----\n");
+  printf("\n-----Occupied Blocks----\n");
   printf("Occupied space segments:\n");
   for (int i=0; i<NB_PARTITIONS; i++){
     if (occu_places[2*i] != 0){
@@ -141,6 +141,7 @@ void print_partition_status(){
     printf("No mbr table is in memory");
   }
   PRINT_GREEN("##########disk############\n");
+  disk_dev->print_disk_info();
   print_mbr_details();
   uint32_t* occu_places = find_occupied_space();
   if (occu_places !=0){
@@ -155,7 +156,7 @@ void print_partition_status(){
                   disk_dev->get_disk_size(), 
                   &free_space, 
                   &num_free_segments);
-  printf("\n-----free----\n");
+  printf("\n-----free Space----\n");
   printf("Free space segments:\n");
   if (free_space !=0){
     print_free_spaces(free_space, num_free_segments);
@@ -167,6 +168,7 @@ void print_partition_status(){
 
 void print_mbr_details() {
   if (!global_mbr){return;}
+  printf("-------Partitions-------\n");
   for (int i = 0; i < NB_PARTITIONS; i++) {
     printf("Partition %d:\n", i + 1);
     printf("Status: %d\n", global_mbr->partitionTable[i].status);

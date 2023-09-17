@@ -3,7 +3,7 @@
 #include "stdint.h"
 
 //50 miliseconds
-#define TIC_PER 50
+#define TIC_PER 10
 
 /*
 * Prototypes

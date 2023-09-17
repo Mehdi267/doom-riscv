@@ -28,6 +28,7 @@ typedef struct disk_device {
   int (*read_disk)(disk_op*);
   int (*write_disk)(disk_op*);
   uint32_t (*get_disk_size)();
+  void (*print_disk_info)();
 } disk_device_t;
 
 /*

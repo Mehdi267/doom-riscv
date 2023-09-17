@@ -86,5 +86,5 @@ void release_frame(void *frame) {
 
 
 void print_mem_usage(){
-  printf("Mem usage = %ld/%ld %ld per cent\n", mem_usage, mem_total, (mem_usage*100)/mem_total);
+  printf("Memory usage = %ld/%ld %ld per cent\n", mem_usage, mem_total, (mem_usage*100)/mem_total);
 }

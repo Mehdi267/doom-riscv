@@ -4,8 +4,8 @@
 #include "fs.h"
 #include "../process/process.h"
 #include "../process/helperfunc.h"
-#include "string.h"
 #include "../process/fs_bridge.h"
+#include "string.h"
 
 
 static void navigate_to_parent_directory(char* current_directory) {
