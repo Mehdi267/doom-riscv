@@ -119,7 +119,7 @@ int virt_gpu_init(){
                                       // later in order to have faster
                                       // read speeds
   gpu_m.used_iter = 0;
-  print_display_info();
+  // print_display_info();
   virt_gpu.frame =  malloc(HEIGHT*WIDTH*sizeof(pixel)); 
   if (virt_gpu.frame == 0){return -1;}
   init_gpu_frame(virt_gpu.frame);

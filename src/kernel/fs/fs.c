@@ -19,18 +19,18 @@
 file_system_t* root_file_system = 0;
 
 int set_up_file_system() {
-  printf("Setting up file system\n");
+  printf("[FS]Setting up file system\n");
   if (find_mbr() < 0) {
-    printf("\033[0;31mMbr was not found\033[0m\n");  // Print in red
-    printf("\033[0;32mSetting up mbr\033[0m\n");     // Print in red
+    printf("\033[0;31m[MBR]Mbr was not found\033[0m\n");  // Print in red
+    printf("\033[0;32m[MBR]Setting up mbr\033[0m\n");     // Print in red
     return set_up_mbr();
   } else {
-    printf("\033[0;32mMbr was found\033[0m\n");      // Print in green
+    printf("\033[0;32m[MBR]Mbr was found\033[0m\n");      // Print in green
   }
   if (init_fs_drivers()<0){
     return -1;
   }
-  print_partition_status();
+  // print_partition_status();
   return 0;
 }
 
@@ -45,6 +45,7 @@ int clear_and_mount_test_part(){
 }
 
 int mount_custom_fs(uint8_t partition){
+  printf("[FS]Setting up file system\n");
   if (!(partition >=1 && partition <= NB_PARTITIONS)){
     PRINT_RED("Partition number must be between 1 and NB_PARTITIONS(4)");
     return -1;
@@ -62,10 +63,10 @@ int mount_custom_fs(uint8_t partition){
     EXT2_BLOCK_SIZE,  partition)<0){
       return -1;
   }
-  if (config_super_block()){
+  if (config_super_block()<0){
     return -1;
   }
-  if (config_blk_desc_table()){
+  if (config_blk_desc_table()<0){
     return -1;
   }
   return 0;
@@ -77,7 +78,7 @@ int mount_root_file_system(){
   }
   for (int i = 0; i < NB_PARTITIONS; i++){
     if(global_mbr->partitionTable[i].type == EXT2_PARTITION){
-      PRINT_GREEN("Ext2 file system was found\n");
+      PRINT_GREEN("[FS]Ext2 file system was found\n");
       if (configure_root_file_system(
         EXT2_PARTITION,//partition type number
         SUPER_BLOCK_LOC,//super block location
@@ -92,6 +93,7 @@ int mount_root_file_system(){
       if (config_blk_desc_table()){
         return -1;
       }
+      PRINT_GREEN("[FS]Root file system was mounted\n");
       return 0;
     }
   }
@@ -178,7 +180,7 @@ int configure_root_file_system(
     return -1;
   }
   hash_init_direct(root_file_system->inode_hash_table);
-  PRINT_GREEN("File system was configured\n");
+  PRINT_GREEN("[FS]File system was configured\n");
   return 0;
 }
 

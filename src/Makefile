@@ -16,11 +16,13 @@ KERNEL_BIN = $(BUILD_DIR)/$(KERNEL_NAME)
 TEST_OPT=NULL_TEST
 VIRT_OPT=NULL_VIRT
 
-#Disk variables
-#in order to create the disk image using this command :
-# qemu-img create -f raw xinul_disk.img 25M
-#Set this value to virt if the disk is present in not
-#then this value must set to any other value
+# Disk Variables
+# 
+# To create the disk image using this command:
+#   qemu-img create -f raw xinul_disk.img 25M
+# 
+# Set the value to 'virt' if the disk is present; otherwise, 
+# set this value to any other value.
 DISK_VIRT ?= virt
 
 #
@@ -150,15 +152,17 @@ clean:
 # Simulation
 #
 
-# go :Lance l'OS avec QEmu dans le terminal
+# go :Lance l'OS avec QEmu, aved des graphiques par default
 go: all
-	$(QEMU) $(QEMU_OPTS) $(QEMU_GRAPH_OPTS) 
-#$(QEMU_NO_GRAPH_OPTS)
+	$(QEMU) $(QEMU_OPTS) $(QEMU_GRAPH_OPTS)
+
+# go_nodis :Lance l'OS avec QEmu dans le terminal sans display
+go_nodis: all
+	$(QEMU) $(QEMU_OPTS) $(QEMU_GRAPH_OPTS)
 
 # debug : Lance l'OS dans un terminal avec QEmu et attend gdb.
 debug: all
 	$(QEMU) $(QEMU_OPTS) $(QEMU_GDB_OPTS) $(QEMU_GRAPH_OPTS) 
-#$(QEMU_NO_GRAPH_OPTS)
 
 # go-graphic : Lance l'OS avec QEmu en mode graphique
 go_graphic: all
@@ -170,10 +174,6 @@ kill_qemu:
 
 vncrem:
 	remmina -c vnc://127.0.0.1:5900 
-
-vncx:
-	x11vnc -auth guess -forever -loop -noxdamage -repeat 1000 -rfbauth /home/mehdi/.vnc/passwd -rfbport 5900 -shared -display :0 -bg -o /home/mehdi/.vnc/x11vnc.log -xkb -noxrecord -noxfixes -ncache 10 -ncache_cr -ncache_prealloc 127.0.0.1:5900
-
 
 # gdb : Lancement de GDB avec connection automatique et lecture de GDBINIT_FILE
 gdb:

@@ -2,6 +2,7 @@
 
 #include "drivers/console.h"
 #include "stdlib.h"
+#include "stdio.h"
 
 static int default_putchar(int ch)
 {
@@ -61,5 +62,6 @@ void register_console(console_device_t *dev)
 		dev->last_written_char_index = -1;
 		dev->start_of_buffer_index = 0;
 		dev->echo = true; // echo is off by default
-	}
+	  PRINT_GREEN("[INPUT]Uart was configured\n");
+  }
 }

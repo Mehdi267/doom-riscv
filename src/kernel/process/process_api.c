@@ -598,6 +598,7 @@ int fork(int parent_pid, struct trap_frame* tf){
   // memcpy(&trap_return, tf, sizeof(struct trap_frame));
 
   new_process->parent = parent_p;
+  new_process->input_type = parent_p->input_type;
   // We add the new process as a child to the parent process
   if (new_process->parent->children_tail != NULL) {
     new_process->parent->children_tail->next_sibling = new_process;
@@ -797,8 +798,6 @@ int waitpid(int pid, int *retvalp) {
   // negative pid, we find the first zombie and we take its return value and
   // free it
   if (pid < 0) {
-    // temp_process = get_process_struct_of_pid(getpid())->children_head;
-    // temp_process_before = temp_process;
     while (true) {
       temp_process = get_process_struct_of_pid(getpid())->children_head;
       temp_process_before = temp_process;
@@ -1097,4 +1096,12 @@ static int process_name_copy(process *p, const char *name, size_t size_arg) {
   strcpy(p->process_name, name);
   p->process_name[size] = 0;
   return 0;
+}
+
+void set_input_mode(int pid, input_t type){
+  process* proc = get_process_struct_of_pid(pid);
+  //Input by default is console input
+  if (proc){
+    proc->input_type = type;
+  }
 }

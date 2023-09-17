@@ -191,7 +191,7 @@ int events_handler() {
     return -1;  
   }
   memset(input_page, 0, 4096);
-  void_call();
+  set_in_mode(getpid(), RAW_INPUT);
   time_snap_shot_ms = get_cur_time_us();
   input_queue = (event_queue*) malloc(sizeof(event_queue));
   init_event_queue(input_queue);

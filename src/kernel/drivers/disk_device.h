@@ -24,7 +24,7 @@ typedef struct disk_operation{
 } disk_op;
 
 typedef struct disk_device {
-	void (*init)();
+	int (*init)();
   int (*read_disk)(disk_op*);
   int (*write_disk)(disk_op*);
   uint32_t (*get_disk_size)();

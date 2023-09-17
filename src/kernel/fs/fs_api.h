@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <stddef.h>
+#include "../process/fs_bridge.h"
 #ifndef FILE_SYS_CALLS_H
 #define FILE_SYS_CALLS_H
-#include "../process/fs_bridge.h"
 
 typedef enum {
     PERMISSION_NONE = 0,
@@ -24,39 +24,28 @@ typedef long           blkcnt_t;   // Number of 512B blocks allocated
 typedef long           time_t;     // Time type (usually represents POSIX timestamp)
 typedef unsigned short nlink_t;    // Number of hard links
 
-// // Messages from users
-// enum FileOpenFlags {
-//   O_RDONLY = 0x0000,      // Read-only
-//   O_WRONLY = 0x0001,      // Write-only
-//   O_RDWR = 0x0002,        // Read-write
-//   O_CREAT = 0x0010,       // Create the file if it doesn't exist
-//   O_EXCL = 0x0020,        // Fail if the file exists and O_CREAT is used
-//   O_TRUNC = 0x0040,       // Truncate the file to zero length upon opening
-//   O_APPEND = 0x0080,      // Set the file offset to the end before each write
-//   O_SYNC = 0x0200,        // Write operations are synchronized on storage
-//   O_NONBLOCK = 0x4000,    // Open in non-blocking mode
-//   O_DIRECTORY = 0x10000,  // Ensure that the file is a directory
-//   O_NOFOLLOW = 0x20000,   // Do not follow symbolic links
-//   O_CLOEXEC = 0x80000,    // Set the close-on-exec flag
-//   O_DSYNC = 0x400000,     // Synchronous data writes
-//   O_RSYNC = 0x1010000,    // Synchronous reads
-// };
-
+// Read-only
 #define O_RDONLY 00000000
+// Write-only
 #define O_WRONLY 00000001
+// Read-write
 #define O_RDWR 00000002
+// Create the file if it doesn't exist
 #ifndef O_CREAT
 #define O_CREAT 00000100  
 #endif
+// Fail if the file exists and O_CREAT is used
 #ifndef O_EXCL
 #define O_EXCL 00000200  
 #endif
 #ifndef O_NOCTTY
 #define O_NOCTTY 00000400  
 #endif
+// Truncate the file to zero length upon opening
 #ifndef O_TRUNC
 #define O_TRUNC 00001000  
 #endif
+// Set the file offset to the end before each write
 #ifndef O_APPEND
 #define O_APPEND 00002000
 #endif
@@ -75,6 +64,7 @@ typedef unsigned short nlink_t;    // Number of hard links
 #ifndef O_LARGEFILE
 #define O_LARGEFILE 00100000
 #endif
+// Ensure that the file is a directory
 #ifndef O_DIRECTORY
 #define O_DIRECTORY 00200000  
 #endif
@@ -122,8 +112,6 @@ ssize_t read(int file_descriptor, void *buffer, size_t count);
  * @return On success, returns the number of bytes written. On failure, returns -1 and sets 'errno' to indicate the specific error.
  */
 ssize_t write(int file_descriptor, const void *buffer, size_t count);
-
-// Other function definitions and comments omitted for brevity...
 
 /**
  * Creates a hard link between an existing file and a new filename.
@@ -248,17 +236,8 @@ int sys_pipe(int file_descriptors[2]);
  */
 int unlink(const char *file_name);
 
-
-int fcntl(int file_descriptor, int function_code, int arg);
-int ioctl(int file_descriptor, int function_code, int arg);
-//will try to implement but the the current design choices make this very hard to implement
-int mount(const char *special_file, const char *mount_point, int ro_flag);
 int rename(const char *old_name, const char *new_name);
 int rmdir(const char *dir_name);
-// int stat(const char *file_name, struct stat *status_buffer);
-mode_t umask(mode_t mask);
-int umount(const char *special_file);
-//int utime(const char *file_name, const struct utimbuf *times);
 
 #define R_OK  4  /* Read */
 #define W_OK  2  /* Write */

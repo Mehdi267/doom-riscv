@@ -647,4 +647,7 @@ int fork(int parent_pid, struct trap_frame*);
  */
 int execve(const char *filename, char *const argv[], char *const envp[]);
 
+//Used to set input type for the current process 
+void set_input_mode(int pid, input_t type);
+
 #endif

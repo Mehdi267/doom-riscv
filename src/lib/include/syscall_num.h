@@ -99,6 +99,7 @@
 #define SYSC_time               82
 #define SYSC_gettimeofday       83
 #define SYSC_settimeofday       84
+#define SYSC_set_in_mode        85
 
 
 #define NB_SYSCALLS             79

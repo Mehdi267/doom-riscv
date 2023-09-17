@@ -272,5 +272,12 @@ time_t time(time_t *tloc);
 int gettimeofday(struct timeval *tv, struct timezone *tz);
 int settimeofday(const struct timeval *tv, const struct timezone *tz);
 
+typedef enum input_type{
+  CONSOLE_INPUT,
+  RAW_INPUT,
+} input_t;
+
+//Used to set input type for the current process 
+void set_in_mode(int pid, input_t type);
 
 #endif

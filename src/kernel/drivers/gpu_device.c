@@ -2,7 +2,7 @@
 
 #include "stdlib.h"
 #include "gpu_device.h"
-
+#include "stdio.h"
 // See LICENSE for license details.
 
 gpu_device_t gpu_none = {
@@ -21,7 +21,10 @@ void register_gpu(gpu_device_t *dev)
 	gpu_dev = dev;
 	if(dev->init){
 		if (dev->init()<0){
-	      gpu_dev = &gpu_none;
+	    gpu_dev = &gpu_none;
+      PRINT_RED("[GPU]Gpu failed\n");
+    }else{
+      PRINT_GREEN("[GPU]Gpu configured\n");
     }
 	}
 }

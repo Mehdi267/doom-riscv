@@ -83,5 +83,6 @@ syscall(fstat)
 syscall(time)
 syscall(gettimeofday)
 syscall(settimeofday)
+syscall(set_in_mode)
 
 

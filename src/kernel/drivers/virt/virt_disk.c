@@ -49,18 +49,18 @@ virt_q block_q;
  * reading and possibly writing the device’s virtio configuration space, and population of virtqueues.
  * 8. Set the DRIVER_OK status bit. At this point the device is “live”.
  */
-void virt_disk_init(){
+int virt_disk_init(){
   // Verify that the device is a virtio device, a disk, and has the appropriate configuration values.
   if (*R(MMIO_MAGIC_VALUE) != 0x74726976 ||
       *R(MMIO_VERSION) != 2 ||
       *R(MMIO_DEVICE_ID) != 2 ||
       *R(MMIO_VENDOR_ID) != 0x554d4551) {
-      //If the we are here that means that 
-      //the disk was not found, please 
-      //check that the image exists and that are no problem
-      //when linking it to the qemu image
-      printf("Disk not found!\n");
-      return;
+    //If the we are here that means that 
+    //the disk was not found, please 
+    //check that the image exists and that are no problem
+    //when linking it to the qemu image
+    printf("Disk not found!\n");
+    return -1;
   }
   
   //Step 1 : we reset the device
@@ -90,7 +90,7 @@ void virt_disk_init(){
   //Step 6: We validate the the Features were accepted
   if (!(*R(MMIO_STATUS) & STATUS_FEATURES_OK)){
     printf("Features are not valid!\n");
-    return;
+    return -1;
   }
   
   //Step 7: Device specific setup
@@ -106,7 +106,7 @@ void virt_disk_init(){
   uint32_t max = *R(MMIO_QUEUE_NUM_MAX);
   if(max < NUMQ){
     printf("\x1B[1\x1B[31 Queue size is too small!\x1b[0");
-    return;
+    return -1;
   }
   *R(MMIO_QUEUE_NUM) = NUMQ;
 
@@ -125,7 +125,7 @@ void virt_disk_init(){
   if (*R(MMIO_STATUS) != 15){
     printf("\x1B[1m\x1B[31m Disk setup failed! STATUS %d\x1b[0m",
                        *R(MMIO_STATUS));
-    return;
+    return -1;
   }
 
 
@@ -138,7 +138,7 @@ void virt_disk_init(){
                                       // later in order to have faster
                                       // read speeds
   block_m.used_iter = 0;
-  return;
+  return 0;
 }
 
 /**

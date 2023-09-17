@@ -1,15 +1,9 @@
 /*
  * Projet PCSEA RISC-V
- *
- * Benoît Wallon <benoit.wallon@grenoble-inp.org> - 2019
- * Mathieu Barbe <mathieu@kolabnow.com> - 2019
- *
- * See license for license details.
  */
 
 #include "assert.h"
 #include "riscv.h"
-
 #include "syscall_num.h"
 #include "traps/trap.h"
 #include "process/process.h"
@@ -190,6 +184,9 @@ unsigned long syscall_handler(struct trap_frame *tf) {
       break;
     case SYSC_fs_info:
       fs_info((disk_info*)tf->a0);
+      break;
+    case SYSC_set_in_mode:
+      set_input_mode(tf->a0, tf->a1);
       break;
     case SYSC_void_call:
       void_call();
