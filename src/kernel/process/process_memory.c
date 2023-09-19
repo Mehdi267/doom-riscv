@@ -18,10 +18,10 @@
 #include "traps/trap.h"
 #include "timer.h"
 #include "drivers/splash.h"
-#include "../memory/frame_dist.h"
-#include "../memory/pages.h"
+#include "memory/frame_dist.h"
+#include "memory/pages.h"
 #include "encoding.h"
-#include "../memory/virtual_memory.h"
+#include "memory/virtual_memory.h"
 #include "memory_api.h"
 #include "fs_bridge.h"
 

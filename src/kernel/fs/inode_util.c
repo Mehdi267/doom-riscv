@@ -1,6 +1,6 @@
 #include "inode.h"
-#include "../process/helperfunc.h"
-#include "../process/fs_bridge.h"
+#include "process/helperfunc.h"
+#include "process/fs_bridge.h"
 #include "fs.h"
 #include "ext2.h"
 #include "super_block.h"

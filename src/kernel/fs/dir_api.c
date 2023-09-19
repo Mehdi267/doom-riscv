@@ -2,9 +2,9 @@
 #include "inode.h"
 #include "inode_util.h"
 #include "fs.h"
-#include "../process/process.h"
-#include "../process/helperfunc.h"
-#include "../process/fs_bridge.h"
+#include "process/process.h"
+#include "process/helperfunc.h"
+#include "process/fs_bridge.h"
 #include "string.h"
 
 
@@ -16,7 +16,6 @@ static void navigate_to_parent_directory(char* current_directory) {
   char *last_separator = strrchr(current_directory, '/');
   ssize_t old_len = strlen(current_directory);
   if (last_separator != NULL) {
-    // printf("current_directory = %s space = %ld\n", current_directory, (unsigned long) (last_separator-current_directory));
     // Truncate the path at the last separator to go up to the parent directory
     if (current_directory == 
         (char*) current_directory + (last_separator-current_directory)){
@@ -128,8 +127,6 @@ int chdir(const char *new_directory){
                    dir_inode)<0){
     return -1;
   }
-  //Not very usefull
-  // sync_all();
   return 0;
 }
 
@@ -150,7 +147,7 @@ int mkdir(const char *dir_name, mode_t mode){
   }
   inode_t* parent_dir = walk_and_get(final_string, 1);
   if (parent_dir == 0){
-    printf("cannot create directory \'%s\': No such file or directory", 
+    printf("cannot create directory \'%s\': No such file or directory\n", 
         dir_name);
     free(final_string);
     free_path_fs(path_data);
@@ -164,7 +161,6 @@ int mkdir(const char *dir_name, mode_t mode){
           EXT2_FT_DIR,
           path_data->files[path_data->nb_files -1],
           strlen(path_data->files[path_data->nb_files -1]))<0){
-      // PRINT_RED("Folder already exists or something went wrong\n");
       PRINT_RED("Folder already exists\n");
       free_inode(dir_inode, get_inode_number(dir_inode));
       free(final_string);
@@ -177,7 +173,6 @@ int mkdir(const char *dir_name, mode_t mode){
       free_path_fs(path_data);
       return -1;
     }
-    // sync_all();
   }
   printf("Mkdir called = %s\n", final_string);
   free(final_string);

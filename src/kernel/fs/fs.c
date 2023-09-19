@@ -13,7 +13,7 @@
 #include "logger.h" // Used to log and print fs conf 
 #include "inode.h" 
 
-#include "../memory/frame_dist.h" 
+#include "memory/frame_dist.h" 
 
 
 file_system_t* root_file_system = 0;

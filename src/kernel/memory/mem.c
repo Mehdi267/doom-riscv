@@ -8,7 +8,7 @@
 #include "mem.h"
 #include "stddef.h"
 #include "stdio.h"
-#include "../process/process.h"
+#include "process/process.h"
 
 /* Heap boundaries */
 extern char _heap_start[];

@@ -1,6 +1,6 @@
 #include "pages.h"
 #include "frame_dist.h"
-#include "../process/helperfunc.h"
+#include "process/helperfunc.h"
 #include "process/process.h"
 #include <stdbool.h>
 #include <assert.h>

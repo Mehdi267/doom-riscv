@@ -129,10 +129,10 @@ DK_GATEWAY = 172.17.0.1
 .PHONY: clean kernel $(KERNEL_BIN) user lib
 
 
-test : clean all 
+test: clean all 
 	$(QEMU) $(QEMU_OPTS) $(QEMU_NO_GRAPH_OPTS)
 
-test : TEST_OPT=TESTING
+test: TEST_OPT=TESTING
 
 all $(KERNEL_BIN) : kernel
 

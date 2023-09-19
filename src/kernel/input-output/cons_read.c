@@ -1,7 +1,7 @@
-#include "../drivers/console.h"
-#include "../process/helperfunc.h"
-#include "../process/scheduler.h"
-#include "../process/process.h"
+#include "drivers/console.h"
+#include "process/helperfunc.h"
+#include "process/scheduler.h"
+#include "process/process.h"
 #include "encoding.h"
 #include <stdbool.h>
 #include <assert.h>

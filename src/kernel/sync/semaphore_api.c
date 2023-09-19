@@ -1,10 +1,10 @@
-#include "../process/scheduler.h"
+#include "process/scheduler.h"
 #include "stdbool.h"
-#include "../process/process.h"
-#include "../sync/semaphore_api.h"
-#include "../process/helperfunc.h"
+#include "process/process.h"
+#include "sync/semaphore_api.h"
+#include "process/helperfunc.h"
 #include <stdlib.h>
-#include "../sync/msgqueue.h"
+#include "sync/msgqueue.h"
 #include "assert.h"
 
 

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include "../ulib/syscall.h"
+#include "syscall.h"
 
 
 

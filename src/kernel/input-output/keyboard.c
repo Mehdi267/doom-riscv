@@ -1,8 +1,8 @@
 #include "keyboard.h"
-#include "../drivers/console.h"
-#include "../process/process.h"
-#include "../process/scheduler.h"
-#include "../process/helperfunc.h"
+#include "drivers/console.h"
+#include "process/process.h"
+#include "process/scheduler.h"
+#include "process/helperfunc.h"
 #include "queue.h"
 #include <assert.h>
 #include <stdio.h>

@@ -11,11 +11,11 @@ Checking that inodes exist
 Removing inodes and then Adding other inodes
 Stress tests for all of the above 
 *****************************************/
-#include "../fs/mbr.h"
-#include "../fs/ext2.h"
-#include "../fs/disk_buffer.h"
-#include "../fs/inode.h"
-#include "../fs/fs.h"
+#include "fs/mbr.h"
+#include "fs/ext2.h"
+#include "fs/disk_buffer.h"
+#include "fs/inode.h"
+#include "fs/fs.h"
 #include "assert.h"
 #include <stdint.h>
 #include <stdio.h>

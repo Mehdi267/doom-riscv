@@ -1,7 +1,7 @@
 /* VGA fonts */
 
 #include "stdint.h"
-#include "../process/helperfunc.h"
+#include "process/helperfunc.h"
 #include "font.h"
 #include "vga.h"
 

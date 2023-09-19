@@ -1,4 +1,4 @@
-#include "../ulib/syscall.h"
+#include "syscall.h"
 #include "stdio.h"
 #include "string.h"
 

@@ -13,9 +13,9 @@
 #include "scheduler.h"//Called when we need to communicate with the scheduler
 
 //Memory related
-#include "../memory/frame_dist.h"
-#include "../memory/pages.h"
-#include "../memory/virtual_memory.h"
+#include "memory/frame_dist.h"
+#include "memory/pages.h"
+#include "memory/virtual_memory.h"
 #include "memory_api.h"
 #include "process_memory.h"
 
@@ -24,12 +24,12 @@
 #include "drivers/splash.h"
 #include "encoding.h"
 #include "traps/trap.h"
-#include "../sync/semaphore_api.h"
+#include "sync/semaphore_api.h"
 #include "timer.h"
 
 //Fs imports
-#include "../fs/fs_api.h" //for open and dup2 syscall
-#include "../fs/inode_util.h" //to get inode out of filename
+#include "fs/fs_api.h" //for open and dup2 syscall
+#include "fs/inode_util.h" //to get inode out of filename
 
 #define FLOAT_TO_INT(x) (int)((x) + 0.5)
 

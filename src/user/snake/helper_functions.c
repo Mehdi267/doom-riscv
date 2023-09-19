@@ -1,6 +1,6 @@
 #include "helper_functions.h"
 #include "stdio.h"
-#include "../ulib/syscall.h"
+#include "syscall.h"
 #include "snake.h"
 #define LINES 20
 #define COLUMNS 20

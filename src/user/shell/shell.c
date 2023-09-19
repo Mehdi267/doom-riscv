@@ -1,5 +1,5 @@
 #include "syscall.h"
-#include "../ulib/ufunc.h"
+#include "ufunc.h"
 #include "stdio.h"
 #include "string.h"
 #include <stdio.h>
@@ -7,6 +7,7 @@
 
 long int ret = 0;
 
+void display_test();
 
 void dis(const char *filename) {
     int fd = open(filename, O_RDONLY, 0);
@@ -41,15 +42,14 @@ int dis_bin(char *prog) {
   }
   
   printf("Number of instructions: %d\n", i);
-  
   close(fd);
-
   return 0;
 }
 
 
 /**
- * @brief if cmd is a builtin, executes the builtin and returns 0, returns 1 if not
+ * @brief if cmd is a builtin, executes the builtin and returns 0,
+ * returns 1 if not
  */
 int builtin_cmd(char *cmd) {
   if (!strcmp(cmd, "echo $?")) {
@@ -57,62 +57,6 @@ int builtin_cmd(char *cmd) {
   return 0;
   }
   return 1;
-}
-
-#define SCREENWIDTH 320
-#define SCREENHEIGHT 200
-
-
-struct Pixel {
-  uint8_t red;
-  uint8_t green;
-  uint8_t blue;
-  uint8_t alpha;
-};
-void display_test() {
-  printf("size of screen %ld\n", SCREENWIDTH*SCREENHEIGHT*sizeof(struct Pixel));
-  void* frame = malloc(SCREENWIDTH*SCREENHEIGHT*sizeof(struct Pixel)); 
-  struct Pixel* data = (struct Pixel*)(frame);
-  // Initialize pixel colors
-  unsigned char orientation = 6;
-  while (1) {
-    orientation += 40;
-    for (int x = 0; x < SCREENWIDTH; x++) {
-      for (int y = 0; y < SCREENHEIGHT; y++) {
-        if (x < SCREENWIDTH / 2 && y < SCREENHEIGHT / 2) {
-          // Top-left corner: Red
-          (data + y * SCREENWIDTH + x)->red = 255;
-          (data + y * SCREENWIDTH + x)->green = 0;
-          (data + y * SCREENWIDTH + x)->blue = orientation;
-        } else if (x >= SCREENWIDTH / 2 && y < SCREENHEIGHT / 2) {
-          // Top-right corner: Blue
-          (data + y * SCREENWIDTH + x)->red = 0;
-          (data + y * SCREENWIDTH + x)->green = orientation;
-          (data + y * SCREENWIDTH + x)->blue = 255;
-        } else if (x < SCREENWIDTH / 2 && y >= SCREENHEIGHT / 2) {
-          // Bottom-left corner: Green
-          (data + y * SCREENWIDTH + x)->red = 0;
-          (data + y * SCREENWIDTH + x)->green = 255;
-          (data + y * SCREENWIDTH + x)->blue = orientation;
-        } else {
-          // Remaining corner: Any color (e.g., yellow)
-          (data + y * SCREENWIDTH + x)->red = 255;
-          (data + y * SCREENWIDTH + x)->green = 255+orientation;
-          (data + y * SCREENWIDTH + x)->blue = orientation;
-        }
-        (data + y * SCREENWIDTH + x)->alpha = 255; // Alpha component (transparency)
-      }
-    }
-    // Ensure that orientation doesn't go beyond 255
-    if (orientation > 255) {
-        orientation = 0;
-    }
-    char in;
-    cons_read(&in, 1);
-    upd_data_display(data, 0, 0, SCREENWIDTH, SCREENHEIGHT);
-    // sleep(1); // Sleep for 1 second (adjust as needed)
-  }
-  free(frame);
 }
 
 int main() {
@@ -124,10 +68,8 @@ int main() {
     //stderr
     assert(dup2(1, 2) == 2);
     open(".doomrc", O_CREAT, 0);
-    // #ifdef VIRTMACHINE
-    //Loads all of the elfs into the disk
-    // ld_progs_into_disk();
-    // #endif
+    //Loads all of the binary files into the disk
+    ld_progs_into_disk();
   }
   // display_test();
   char cmd[21];
@@ -193,10 +135,10 @@ int main() {
   else if (builtin_cmd(cmd) != 0) {
     pid = start(cmd, 800000, 128, NULL);
     if (pid == -1) {
-    printf("shell: program not found: %s\n", cmd);
-    ret = -1;
+      printf("shell: program not found: %s\n", cmd);
+      ret = -1;
     } else {
-    waitpid_old(pid, &ret);
+      waitpid_old(pid, &ret);
     }
   }
   memset(cmd, 0, 20);

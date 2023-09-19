@@ -6,12 +6,12 @@
 #include "fs_api.h"
 #include "ext2.h"
 #include "fs.h"
-#include "../process/process.h"
-#include "../process/helperfunc.h"
+#include "process/process.h"
+#include "process/helperfunc.h"
 #include "inode.h"
 #include "pipe.h"
 #include "inode_util.h"
-#include "../process/fs_bridge.h"
+#include "process/fs_bridge.h"
 #include "assert.h"
 
 // Messages from users

@@ -2,7 +2,7 @@
 #include "fs_bridge.h"
 #include "helperfunc.h"
 #include "logger.h"
-#include "../fs/inode_util.h"
+#include "fs/inode_util.h"
 #include "assert.h"
 
 uint32_t get_root_dir_name_size(process* proc_arg){

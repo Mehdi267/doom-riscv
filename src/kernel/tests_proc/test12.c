@@ -4,9 +4,9 @@
  * Tests de rendez-vous sur une file de taille 1.
  ******************************************************************************/
 
-#include "../process/process.h"
-#include "../process/helperfunc.h"
-#include "../sync/msgqueue.h" // for p funcs
+#include "process/process.h"
+#include "process/helperfunc.h"
+#include "sync/msgqueue.h" // for p funcs
 #include "stdio.h"
 #include "assert.h"
 #include "stdint.h"

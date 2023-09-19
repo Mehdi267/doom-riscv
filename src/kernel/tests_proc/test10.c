@@ -4,9 +4,9 @@
  *******************************************************************************/
 /* Test d'utilisation d'une file comme espace de stockage temporaire. */
 
-#include "../sync/timer_api.h"
+#include "sync/timer_api.h"
 #include "assert.h"
-#include "../sync/msgqueue.h" // for p funcs
+#include "sync/msgqueue.h" // for p funcs
 #include "stdio.h"
 #include "string.h" // for strlen
 #include "tests.h"

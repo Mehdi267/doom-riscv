@@ -1,13 +1,13 @@
 #include "drivers/disk_device.h" //to do disk operations
 #include "mbr.h" 
 #include "fs.h"
-#include "../memory/frame_dist.h" // used to allocate the block
+#include "memory/frame_dist.h" // used to allocate the block
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "stdio.h"
 #include "string.h"
-#include "../logger.h"
+#include "logger.h"
 #include "disk_buffer.h"
 
 //This value represents the global mdr that 

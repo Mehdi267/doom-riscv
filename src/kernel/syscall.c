@@ -1,7 +1,6 @@
 /*
  * Projet PCSEA RISC-V
  */
-
 #include "assert.h"
 #include "riscv.h"
 #include "syscall_num.h"
@@ -33,10 +32,12 @@ void void_call(){
   proc->input_type = RAW_INPUT;
 }
 
+//This function takes a trap frame that contains inforamtion related to
+//syscall taht was used and the parameters provided to the syscall and 
+//call the method that was used and finally returns the value of the syscall 
+//in the a0 register. 
 unsigned long syscall_handler(struct trap_frame *tf) {
-  // we need to return a ulong because some functions returns int (32 bit)
-  // and other ulong (64 bits)
-  unsigned long x ;
+  uint64_t x;
   switch (tf->a7) {
     case SYSC_start:
       return start_virtual((const char*) tf->a0, (unsigned long) tf->a1,(int) tf->a2, (void *)tf->a3);
@@ -50,11 +51,10 @@ unsigned long syscall_handler(struct trap_frame *tf) {
       return kill(tf->a0);
     case SYSC_waitpid:
       x = waitpid(tf->a0,(int*) tf->a1);
-      // printf("{trap handeler} Value written in *retvalp %ld \n", *((unsigned long *) tf->a1));
       return x;
     case SYSC_exit:
       exit_process(tf->a0);
-      return 0; // we need to return something
+      return 0; 
     case SYSC_cons_write:
       return cons_write((char*) tf->a0, (unsigned long) tf->a1);
     case SYSC_cons_read:
@@ -102,10 +102,8 @@ unsigned long syscall_handler(struct trap_frame *tf) {
     case SYSC_wait:
       return wait(tf->a0);      
     case SYSC_shm_create:
-      debug_print("--------shm method create string = = %s -----------\n", (const char*) tf->a0);
       return (unsigned long) shm_create(0, (const char*) tf->a0);
     case SYSC_shm_acquire:
-      debug_print("--------shm method acquire string = = %s ------\n", (const char*) tf->a0);
       return (unsigned long) shm_acquire(0, (const char*) tf->a0);
     case SYSC_shm_release:
       shm_release((const char*) tf->a0);
@@ -204,7 +202,6 @@ unsigned long syscall_handler(struct trap_frame *tf) {
         break;
       }
     case SYSC_upd_data_display:
-      // printf("HELLO THERE \n  ");
       if (gpu_dev->update_data != NULL){
         gpu_dev->update_data((void*) tf->a0, tf->a1, tf->a2, tf->a3, tf->a4);
         break;
@@ -217,7 +214,7 @@ unsigned long syscall_handler(struct trap_frame *tf) {
       return settimeofday((const struct timeval *)tf->a0, (const struct timezone *)tf->a1);      
     default:
       printf("Syscall code does not match any of the defined syscalls, num = %ld\n", tf->a7);
-      // blue_screen(tf);
+      blue_screen(tf);
       break;
   }
   return 0;

@@ -1,5 +1,5 @@
 #include "scheduler.h"
-#include "../memory/frame_dist.h"
+#include "memory/frame_dist.h"
 #include "assert.h"
 #include "hash.h"
 #include "helperfunc.h"
@@ -13,7 +13,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "../sync/timer_api.h"
+#include "sync/timer_api.h"
 #include <stdint.h>
 
 LIST_HEAD(blocked_io_process_queue);

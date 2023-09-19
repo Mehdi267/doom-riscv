@@ -1,6 +1,6 @@
 // Exemple d'app minimaliste
 
-#include "../ulib/syscall.h"
+#include "syscall.h"
 
 int main(void *arg)
 {

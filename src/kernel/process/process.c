@@ -6,7 +6,7 @@
 
 #include "process.h"
 #include "memory_api.h"
-#include "../timer.h"
+#include "timer.h"
 #include "hash.h"
 #include "helperfunc.h"
 #include "mem.h"
@@ -15,7 +15,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "../sync/semaphore_api.h"
+#include "sync/semaphore_api.h"
 #include "riscv.h"
 #include <assert.h>
 

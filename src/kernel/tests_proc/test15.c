@@ -4,9 +4,9 @@
  * Tuer des processus en attente sur file
  ******************************************************************************/
 
-#include "../process/process.h"
-#include "../process/helperfunc.h"
-#include "../sync/msgqueue.h" // for p funcs
+#include "process/process.h"
+#include "process/helperfunc.h"
+#include "sync/msgqueue.h" // for p funcs
 #include "stdio.h"
 #include "assert.h"
 #include "stdint.h"

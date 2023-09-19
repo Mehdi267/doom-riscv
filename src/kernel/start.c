@@ -6,8 +6,8 @@
  *
  * See license for license details.
  */
-#include "drivers/splash.h" // for splash_screen and splash_vga_screen
-#include "memory/frame_dist.h"
+
+#include "drivers/splash.h"
 #include "process/process.h" // for initialize_process_workflow
 #include "memory/virtual_memory.h" //for set_up_virtual_memory
 #include "riscv.h" // for csr_set

@@ -1,11 +1,11 @@
 #include "timer_api.h"
-#include "../timer.h" // for TIC_PER cte
+#include "timer.h" // for TIC_PER cte
 #include <stdint.h>
 #include "assert.h"
 #include "drivers/clint.h" // for clint_dev
-#include "../process/helperfunc.h" // get_current_process
-#include "../process/scheduler.h" //for scheduler
-#include "../process/process.h"
+#include "process/helperfunc.h" // get_current_process
+#include "process/scheduler.h" //for scheduler
+#include "process/process.h"
 
 //This variable is global and used to indicate the time evolution since the machine started
 uint64_t time_counter = 0; // time_counter is incremented in timer.c

@@ -1,6 +1,6 @@
 #include "stdio.h"
 #include "stdint.h"
-#include "../process/helperfunc.h"
+#include "process/helperfunc.h"
 #include "vga.h"
 #include "font.h"
 

@@ -1,6 +1,6 @@
 #include "pipe.h"
 #include "inode.h"
-#include "../sync/semaphore_api.h"
+#include "sync/semaphore_api.h"
 #include "string.h"
 #include "assert.h"
 
