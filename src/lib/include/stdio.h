@@ -3,9 +3,15 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+/* Standard file descriptors.  */
 #define stdin 0
 #define stdout 1
 #define stderr 2
+
+#define	STDIN_FILENO	0	/* Standard input.  */
+#define	STDOUT_FILENO	1	/* Standard output.  */
+#define	STDERR_FILENO	2	/* Standard error output.  */
+
 
 #define EOF -1
 #define BS 8

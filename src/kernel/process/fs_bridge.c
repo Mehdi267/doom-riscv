@@ -258,7 +258,9 @@ bool check_if_inode_is_being_used(process* proc_arg, uint32_t inode_number){
   process* proc;
   if (proc_arg == NULL){
     proc = get_process_struct_of_pid(getpid()); 
-  } else {proc = proc_arg;}
+  } else {
+    proc = proc_arg;
+  }
   if (proc == 0){return 0;}
   debug_print_fsapi("[FSAPI]Cheking if inode n %d is being used\n",
        inode_number);

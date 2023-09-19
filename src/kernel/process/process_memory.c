@@ -896,6 +896,7 @@ int copy_process_memory(process* new_proc, process* old_proc){
   if (old_proc->shared_pages != NULL){
     shared_pages_proc_t* shared_iter = old_proc->shared_pages->head_shared_page;
       while (shared_iter!=NULL){
+        printf("shared_iter->key = %s \n", shared_iter->key);
         shm_acquire(new_proc, shared_iter->key);
         shared_iter = shared_iter->next_shared_page;
       }

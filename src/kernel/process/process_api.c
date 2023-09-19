@@ -594,8 +594,6 @@ int fork(int parent_pid, struct trap_frame* tf){
   if (add_fork_data_node(new_process->pid, tf)<0){
     return -1;
   }
-  // block_forked = new_process->pid;
-  // memcpy(&trap_return, tf, sizeof(struct trap_frame));
 
   new_process->parent = parent_p;
   new_process->input_type = parent_p->input_type;
@@ -649,7 +647,6 @@ int fork(int parent_pid, struct trap_frame* tf){
   //---Add process to activatable queue
   queue_add(new_process, &activatable_process_queue, process, next_prev, prio);
   check_if_new_prio_is_higher_and_call_scheduler(new_process->prio, true, 0);
-  // printf("Fork finished\n");
   return new_process->pid;
 }
 

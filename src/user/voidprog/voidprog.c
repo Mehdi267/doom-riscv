@@ -1,68 +1,81 @@
-// #include <stdio.h>
-// #include "stdlib.h"
+/*******************************************************************************
+ * Ensimag - Projet Systeme 
+ * Test 31
+ *
+ * Test 31 - fork test
+ *
+ ******************************************************************************/
 
-// // static int tab[10000000] = {0};  // Initialize all elements to 0
-// // static int tab3[10000000];
-// // int tab4[100000];
-// extern char _text_start_app[];
-// extern char _text_end_app[];
-// extern char _bss_start_app[];
-// extern char _bss_end_app[];
-// extern char _data_start_app[];
-// extern char _data_end_app[];
+#include "syscall.h"
+#include "stdio.h"
+#include "string.h"
 
-// int main(int argc, char* argv[]){
-//   printf(" _text_start_app[] = %p\n", _text_start_app);
-//   printf(" _text_end_app[] = %p\n", _text_end_app);
-//   printf(" _bss_start_app[] = %p\n", _bss_start_app);
-//   printf(" _bss_end_app[] = %p\n", _bss_end_app);
-//   printf(" _data_start_app[] = %p\n", _data_start_app);
-//   printf(" _data_end_app[] = %p\n", _data_end_app);
-//   // printf(" tab pointer is equal to %p\n", tab);
-//   for (int i = 0; i < 100000; i++){
-//     // tab3[i] = i;
-//     // tab4[i] = i;
-//     // tab[i] = i;
-//    }
-//   // (void)tab4;
-//   // (void)tab3;
-//   // (void)tab;
-//   printf("###########start\n");
-//   void *add = malloc(4000);
-//   printf("add pointer is equal to %p\n", add);
-//   printf("###########start\n");
-//   void *add2 = malloc(4000);
-//   printf("add2 pointer is equal to %p\n", add2);
-//   printf("###########start\n");
-//   void *add3 = malloc(40000);
-//   printf("add3 pointer is equal to %p\n", add3);
-//   return 0;
-// }
+int f[10];
 
+int test_fork() {
+  printf("Inside test31\n");
+  int file_fd = open("fork.txt", O_CREAT | O_TRUNC | O_RDWR, 0);
+  printf("file_fd = %d\n",file_fd);
+  char msg[] = "Hello from the child process\n";
+  if (file_fd == -1) {
+    printf("Error opening file");
+    return 1;
+  }
+  //To fix small shared pages bug
+  void *test_mappings = shm_create("test31_fork");
+  if (test_mappings == 0){
+    printf("Map failed\n");
+  }
+  // if (test_mappings == 0){
+  //   test_mappings = shm_acquire("test31_fork");
+  //   if (test_mappings == 0){
+  //     printf("Open shared page failed\n");
+  //     return -1;
+  //   }
+  // }
+  strncpy((char*) test_mappings, msg, strlen(msg));
+  printf("file_fd = %d\n",file_fd);
+  pid_t child_pid = fork();
+  if (child_pid == -1) {
+    printf("fork failed");
+    return 1;
+  }
+  if (child_pid == 0) {
+    // This code runs in the child process.
+    // assert(memcmp(test_mappings, msg, strlen(msg)) == 0);
+    printf("Child process: My PID is %d\n", getpid(), msg);
+    printf("Writing msg = %s", msg);
+    assert(write(file_fd, msg, strlen(msg)) == (long)strlen(msg));
+    close(file_fd);
+    exit(0);
+  } else {
+    // This code runs in the parent process.
+    printf("Parent process: My PID is %d, Child PID is %d\n", getpid(), child_pid);
+    // Wait for the child process to finish
+    long status;
+    waitpid_old(child_pid, &status);
 
+    // Rewind the file descriptor to the beginning
+    lseek(file_fd, 0, SEEK_SET);
 
-#include <stdio.h>
-#include <dirent.h>
+    // Read and print the contents of the file using the file descriptor
+    char buffer[256];
+    read(file_fd, buffer, strlen(msg));
+    printf("buffer = %s\n", buffer);
+    assert(memcmp(buffer, msg, strlen(msg)) == 0);
+    // Close the file descriptor
+    close(file_fd);
+  }
+  if (unlink("fork.txt")<0){
+    printf("delete file failed");
+    return -1;
+  }
+  // shm_release("test31_fork");
+  return 0;
+}
 
 int main() {
-  // Directory path
-  const char *dir_path = "."; // Current directory
-
-  // Open the directory
-  DIR *dir = opendir(dir_path);
-  if (dir == NULL) {
-      perror("opendir");
-      return 1;
-  }
-
-  // Read and print directory entries
-  struct dirent *entry;
-  while ((entry = readdir(dir)) != NULL) {
-      printf("%s\n", entry->d_name);
-  }
-
-  // Close the directory
-  closedir(dir);
-
+  assert(test_fork() == 0);
+  printf("Fork test success\n");
   return 0;
 }

@@ -10,18 +10,16 @@ long int ret = 0;
 void display_test();
 
 void dis(const char *filename) {
-    int fd = open(filename, O_RDONLY, 0);
-    if (fd == -1) {
-        printf("Error opening file\n");
-        return;
-    }
-
-    char buffer[1024]; // Buffer to hold read data
-    while (my_fgets(buffer, sizeof(buffer), fd) != NULL) {
-        printf("%s", buffer); // Print each line read from the file
-    }
-
-    close(fd); // Close the file when done
+  int fd = open(filename, O_RDONLY, 0);
+  if (fd == -1) {
+      printf("Error opening file\n");
+      return;
+  }
+  char buffer[1024]; // Buffer to hold read data
+  while (my_fgets(buffer, sizeof(buffer), fd) != NULL) {
+      printf("%s", buffer); // Print each line read from the file
+  }
+  close(fd); // Close the file when done
 }
 
 int dis_bin(char *prog) {
@@ -69,7 +67,7 @@ int main() {
     assert(dup2(1, 2) == 2);
     open(".doomrc", O_CREAT, 0);
     //Loads all of the binary files into the disk
-    ld_progs_into_disk();
+    // ld_progs_into_disk();
   }
   // display_test();
   char cmd[21];

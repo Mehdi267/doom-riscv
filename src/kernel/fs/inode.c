@@ -329,11 +329,10 @@ int free_inode(inode_t* inode, uint32_t inode_number){
     }
     super->s_free_inodes_count++;
     desc_table->bg_free_inodes_count++;
-    remove_inode_list(inode_number, inode);
     save_super_block();
     save_blk_desc_table();
   }
-  return 0;
+  return remove_inode_list(inode_number, inode);
 }
 
 int free_inode_data(inode_t* inode){

@@ -173,21 +173,26 @@ inode_t* walk_and_get(const char* path, uint32_t backward_steps){
   if (path_data == 0){
     return 0;
   }
-  // print_path_data(path_data);
   inode_t* inode = 0;
   if (is_absolute_directory(path)){
     print_inode_no_arg("Path is an absolute dir \n");
     inode = get_inode(EXT2_GOOD_OLD_FIRST_INO);  
+    if (strcmp(path, "/") == 0){
+      free_path_fs(path_data);
+      return inode;
+    }
   } else {
     print_inode_no_arg("Path is a relative dir \n");
     inode = get_current_dir(NULL);
   }
   debug_print_inode("[IN]Walk Exploration depth = %d, cur dir inode %d\n", 
       path_data->nb_files - backward_steps, get_inode_number(inode));
-  for (uint32_t file_iter = 0; file_iter < path_data->nb_files - backward_steps; file_iter++) {
-    inode = get_inode(look_for_inode_dir(inode, 
-      path_data->files[file_iter], 
-      strlen(path_data->files[file_iter]))); 
+  if (path_data->nb_files - backward_steps >=0){
+    for (uint32_t file_iter = 0; file_iter < path_data->nb_files - backward_steps; file_iter++) {
+      inode = get_inode(look_for_inode_dir(inode, 
+        path_data->files[file_iter], 
+        strlen(path_data->files[file_iter]))); 
+    }
   }
   free_path_fs(path_data);
   debug_print_inode("[IN]Finished walk on path %s\n",path);

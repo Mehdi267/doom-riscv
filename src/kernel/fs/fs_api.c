@@ -325,12 +325,16 @@ int unlink(const char *file_name){
           return -1;
         }
         sync_all();
-        printf("DELETED FILE\n");
+        PRINT_GREEN("Deleted file : %s \n", file_name);
       }
       else if (used == true){
         printf("File is being used, cannot delete\n");
         free_path_fs(path_data);
         return -1;
+      }
+      else{
+        printf("Unlinking failed, used = %d, file type = %d \n", 
+            used, file_inode->i_mode);
       }
   }else{
     free_path_fs(path_data);
