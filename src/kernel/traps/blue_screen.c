@@ -12,7 +12,8 @@
 #include "assert.h"
 #include "trap.h"
 
-#include "fs/fs.h"
+//Used to get the sync method
+#include "fs/fs.h" 
 
 static const char *land_names[4] = {
 		"User",

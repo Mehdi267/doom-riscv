@@ -650,7 +650,12 @@ int copy_process_memory(process* new_proc, process* old_proc){
   }
   //TODO: fix this, because the mappings used by the parent process
   //could be different from those used by the child, thus we need 
-  //to get an complete copy
+  //to get an complete copy, 
+  //Here is an example of a possible error
+  //Allocate 3 shared page
+  //Free second page
+  //The third page will be in the second postion
+  //BUt it has to be in the third position
   if (old_proc->shared_pages != NULL){
     shared_pages_proc_t* shared_iter = old_proc->shared_pages->head_shared_page;
       while (shared_iter!=NULL){

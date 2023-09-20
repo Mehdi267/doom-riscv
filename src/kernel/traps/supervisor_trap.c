@@ -26,13 +26,6 @@
 #include <string.h>
 
 
-
-extern void inc_sepc(void); // defined in supervisor_trap_entry.S
-
-int debug = 0;
-
-void noting(){}
-
 void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
   bool user = false;
   if (((csr_read(sstatus) & MSTATUS_SPP) == 0)){
