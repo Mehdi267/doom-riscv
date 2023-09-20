@@ -1,6 +1,7 @@
 #include "pipe.h"
 #include "inode.h"
 #include "sync/semaphore_api.h"
+#include "process/helperfunc.h" //FOR THE MIN FUNCTIONS
 #include "string.h"
 #include "assert.h"
 
@@ -54,8 +55,6 @@ int close_pipe(pipe* pipe, close_type type){
   }
   return 0;
 }
-
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 int write_pipe(pipe* pipe, const char* data, int length){
   if (!(pipe && data && pipe->can_write)){

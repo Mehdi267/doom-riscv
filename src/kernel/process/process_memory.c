@@ -575,7 +575,7 @@ static int init_mem_proc(process* process_conf){
 
 
 
-int process_memory_allocator(process* process_conf, unsigned long size){
+int process_memory_allocator(process* process_conf, unsigned long stack_size){
   //We initiate the lvl2 page and we link to the only lvl1 page that will use
   //this page will be linked to lvl0 pages that contain 2Mb of data
   if (init_mem_proc(process_conf)<0){
@@ -583,21 +583,37 @@ int process_memory_allocator(process* process_conf, unsigned long size){
   }
   //----------------------------Reserving space -------------------
   //The current value of the heap size is set so that we can have at least one frame
-  int heap_size = 1;
-  debug_print_memory("Reserving space for the process %s // %d \n",
-       process_conf->process_name, process_conf->pid);
+  int code_size = (int) ((long) process_conf->app_pointer->end - 
+      (long) process_conf->app_pointer->start);
+  if (code_size <0){return -1;}
+  uint32_t nb_frames_code = CUSTOM_MOD_DIV(code_size, FRAME_SIZE); 
+  int data_left_code = code_size;
+  uint64_t frame_list[nb_frames_code];    
+  if (add_and_allocate_frames(process_conf, nb_frames_code, CODE_PAGE, frame_list)<0){return -1;}
+  if (add_and_allocate_frames(process_conf, CUSTOM_MOD_DIV(stack_size, FRAME_SIZE), STACK_PAGE, NULL)<0){return -1;}
+  if (add_and_allocate_frames(process_conf, CUSTOM_MOD_DIV(1, FRAME_SIZE), HEAP_PAGE, NULL)<0){return -1;}
+  int page_iter = 0;
+  while(data_left_code>0){
+    printf("frame_list nb %d add %lx \n", page_iter, frame_list[page_iter]);
+    memcpy((void*)frame_list[page_iter], 
+        (void*)((long)process_conf->app_pointer->start + page_iter*FRAME_SIZE),
+        MIN(FRAME_SIZE, data_left_code));
+    data_left_code-=FRAME_SIZE;
+    page_iter++;
+  }
+  return 0;
   #ifdef USER_PROCESSES_ON
-    if (process_conf->app_pointer == NULL){return -1;}
-    //We reserve the space for the stack and heap and also the code
-    //which will be copied from else where
-    int code_size = (int) ((long) process_conf->app_pointer->end - (long) process_conf->app_pointer->start);
-    debug_print_memory("Code needs to be added to the process // code size =  %d \n", code_size);
-    //The + FRAME SIZE is used as a temporary measure because
-    //some elf headers are not added to the code size and we need to find 
-    //a way to compute their size
-    if (add_frames_process(process_conf, code_size, size, heap_size)<0){
-      return -1;
-    };
+    // if (process_conf->app_pointer == NULL){return -1;}
+    // //We reserve the space for the stack and heap and also the code
+    // //which will be copied from else where
+    // int code_size = (int) ((long) process_conf->app_pointer->end - (long) process_conf->app_pointer->start);
+    // debug_print_memory("Code needs to be added to the process // code size =  %d \n", code_size);
+    // //The + FRAME SIZE is used as a temporary measure because
+    // //some elf headers are not added to the code size and we need to find 
+    // //a way to compute their size
+    // if (add_frames_process(process_conf, code_size, size, heap_size)<0){
+    //   return -1;
+    // };
 
   #endif
   #ifdef KERNEL_PROCESSES_ON
@@ -937,10 +953,13 @@ int copy_process_memory(process* new_proc, process* old_proc){
 //   lvl1->link_index_table
 // }
 
-static int add_and_allocate_frames(process* proc, uint32_t page_nb, page_t type){
+int add_and_allocate_frames(process* proc,  uint32_t page_nb,
+                            page_t type, uint64_t* page_add_list){
   if (proc == 0 || page_nb > get_remaining_frames()){
     return -1;
   }
+  bool save_pages = false;
+  if (page_add_list != 0){save_pages = true;}
   // printf("Trying to add to mem to, proc pid = %d pid = %d, name = %s\n", proc->pid, getpid(), getname());
   for (uint64_t page_iter = 0; page_iter < page_nb; page_iter++){
     frame_loc frame;
@@ -965,6 +984,9 @@ static int add_and_allocate_frames(process* proc, uint32_t page_nb, page_t type)
     debug_print_memory("Allo details frame page_table = %p \n", frame.page_table); 
     void* frame_pointer = get_frame();
     if (frame_pointer == NULL){return -1;}
+    if (save_pages){
+      *(page_add_list+page_iter) = (uint64_t) frame_pointer;
+    }
     memset(frame_pointer, 0, FRAME_SIZE);
     configure_page_entry(frame.page_table->pte_list+frame.lvl0_index,
       (long unsigned int) frame_pointer, 
@@ -1002,7 +1024,7 @@ int check_expansion_mem(process* proc, struct trap_frame* frame){
       printf("Trying to add to stack size, pid = %d, name = %s\n", getpid(), getname());
       debug_print_memory("Expanding memory of proc : %s by %ld \n", 
         proc->process_name, page_diff);
-      add_and_allocate_frames(proc, page_diff, STACK_PAGE);
+      add_and_allocate_frames(proc, page_diff, STACK_PAGE, NULL);
     }
   }
   return -1;
@@ -1024,7 +1046,7 @@ void *sys_sbrk(long int increment){
   uint64_t abs_inc = ABS(increment);
   uint64_t nb_pages = CUSTOM_MOD_DIV(abs_inc, FRAME_SIZE);
   if (increment>0){
-    if (add_and_allocate_frames(proc, nb_pages, HEAP_PAGE)<0){
+    if (add_and_allocate_frames(proc, nb_pages, HEAP_PAGE, NULL)<0){
       PRINT_RED("SBRK FAILED\n");
       return ((void *) (-1));
     }

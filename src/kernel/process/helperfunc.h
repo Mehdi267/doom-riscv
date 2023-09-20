@@ -27,6 +27,8 @@
     } \
 })
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
 /**
  * @brief Casts an int to a void * pointer 
 */

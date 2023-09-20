@@ -113,4 +113,17 @@ int check_expansion_mem(process* proc, struct trap_frame* frame);
  */
 void *sys_sbrk(long int increment);
 
+/**
+ * @brief Allocate page_nb of the type equal to the type parameter
+ * and then saves the addresses of the allocated pages into the page_add_list if 
+ * it is not NULL.
+ * @param proc The process to which we would like to allocate the frames
+ * @param page_nb the number of frames that we would like to allocate
+ * @param type the type of the pages that we would like to allocate
+ * @param page_add_list the list to which we would saves the addresses of the allocated pages 
+ * if the list is not NULL
+ * @return int status
+ */
+int add_and_allocate_frames(process* proc, uint32_t page_nb, page_t type, uint64_t* page_add_list);
+
 #endif
