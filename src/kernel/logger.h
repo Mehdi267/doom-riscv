@@ -232,5 +232,21 @@
             if (DEBUG_DIR_API_LEVEL == 2){ printf("\033[0;31m[%s][%d][%s]: \033[0;m" fmt, __FILE__, \
                                 __LINE__, __func__);} } while (0)
 
+/**
+ * @brief the following macro are used to display the  
+ * debug messages some of the operating system methods
+ */
+#define DEBUG_FS_OBJ_LEVEL 0 //Indicates if debug type is active
+
+#define debug_print_fsobj(fmt, ...) \
+        do {if (DEBUG_FS_OBJ_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
+            if (DEBUG_FS_OBJ_LEVEL == 2){ printf("\033[0;31m[%s][%d][%s]: \033[0;m" fmt, __FILE__, \
+                                __LINE__, __func__, __VA_ARGS__);} } while (0)
+
+#define print_fsobj_no_arg(fmt, ...) \
+        do {if (DEBUG_FS_OBJ_LEVEL == 1){ printf(fmt);}  \
+            if (DEBUG_FS_OBJ_LEVEL == 2){ printf("\033[0;31m[%s][%d][%s]: \033[0;m" fmt, __FILE__, \
+                                __LINE__, __func__);} } while (0)
+
 
 #endif

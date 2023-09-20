@@ -77,23 +77,26 @@ int write_pipe(pipe* pipe, const char* data, int length){
           int current_write = MIN(PIPE_BUFFER_SIZE -
                               pipe->cur_buf_cap, length - written_length);
           assert(current_write >= 0);
-          if ((pipe->nb_written+current_write)/PIPE_BUFFER_SIZE > 0){
-            int remaining_space = PIPE_BUFFER_SIZE-pipe->nb_written;
+          //We check if we overlap
+          if ((pipe->pos_written+current_write) > PIPE_BUFFER_SIZE ){
+            //Space remaining till the end of the pipe
+            int remaining_space = PIPE_BUFFER_SIZE-pipe->pos_written;
             /*
                     |ffffrrfff|
               We write here ^(remaining_space)
     then We write here ^
             */
-            memcpy(pipe->buffer + pipe->nb_written, 
+            memcpy(pipe->buffer + pipe->pos_written, 
                   data + written_length, remaining_space);
-            written_length += remaining_space;
+            written_length+=remaining_space;
             memcpy(pipe->buffer, data + written_length, current_write - remaining_space);
-            pipe->nb_written = current_write - remaining_space;
+            pipe->pos_written = current_write - remaining_space;
+            written_length += current_write - remaining_space;
           }else{
-            memcpy(pipe->buffer + pipe->nb_written,
+            memcpy(pipe->buffer + pipe->pos_written,
                 data + written_length, current_write);
             written_length += current_write; 
-            pipe->nb_written += current_write;
+            pipe->pos_written += current_write;
           }
           //if this is negative something has went terribly wrong
           pipe->cur_buf_cap += current_write;
@@ -118,7 +121,8 @@ int read_pipe(pipe* pipe, const char* data, int length){
   }
   int read_length = 0;
   if (wait(pipe->semaphore_id)>=0){
-    while ((read_length != length) && (pipe->can_write)){
+    while ((read_length != length) && 
+        (pipe->cur_buf_cap != 0 || pipe->can_write)){
       if (pipe->cur_buf_cap == 0){
         //The other process must read the data 
         //before we write more into it
@@ -130,19 +134,22 @@ int read_pipe(pipe* pipe, const char* data, int length){
           int current_read = MIN(pipe->cur_buf_cap,
                               length - read_length);
           assert(current_read >= 0);
-          if ((pipe->nb_read+current_read)/PIPE_BUFFER_SIZE > 0){
-            int remaining_space = PIPE_BUFFER_SIZE-pipe->nb_read;
+          //We check if we overlap
+          if ((pipe->pos_read+current_read)/PIPE_BUFFER_SIZE > 0){
+            int remaining_space = PIPE_BUFFER_SIZE-pipe->pos_read;
             memcpy((char*)(data + read_length), 
-                  pipe->buffer+pipe->nb_read,
+                  pipe->buffer+pipe->pos_read,
                   remaining_space);
-            read_length += remaining_space; 
-            memcpy((char*)(data + read_length), data, current_read-remaining_space);
-            pipe->nb_read = current_read-remaining_space;
+            read_length+=remaining_space;
+            memcpy((char*)(data + read_length),
+                 pipe->buffer, current_read-remaining_space);
+            pipe->pos_read = current_read-remaining_space;
+            read_length += current_read-remaining_space;
           } else{
             memcpy((char*)(data + read_length), 
-                  pipe->buffer + pipe->nb_read, current_read);
+                  pipe->buffer + pipe->pos_read, current_read);
             read_length += current_read; 
-            pipe->nb_read += current_read;
+            pipe->pos_read += current_read;
           }
           pipe->cur_buf_cap -= current_read;
           pipe->lock_buf = false;

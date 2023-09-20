@@ -24,7 +24,7 @@
 #include "../input-output/cons_read.h" //for cons_read declation
 //File system related 
 #include "../fs/inode.h" //Used for inode pointer
-#include "../fs/pipe.h" //Used for inode pointer
+#include "../fs/pipe.h" //Used for pipe struct 
 #include "../fs/ext2.h" //Used to extract ext2 values
 
 /**

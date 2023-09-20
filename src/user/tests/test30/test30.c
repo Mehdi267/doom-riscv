@@ -36,7 +36,8 @@ int test_pipe_simple() {
     return -1;
   }
 
-  // printf("Read from pipe: %s\n", read_buffer);
+  // printf("Bytes read = %ld; Read from pipe: %s\n", 
+      // bytes_read, read_buffer);
   assert(memcmp(read_buffer, write_data, strlen(write_data)) == 0);
   // Close the read end of the pipe
   close(pipe_fd[0]);
@@ -54,6 +55,41 @@ int write_pipe(int pipe_write_end){
   return 0;
 }
 
+int test_pipe_overlap() {
+  int pipefd[2];
+  char buffer[20000]; // A buffer to hold the data
+
+  // Create the pipe
+  if (pipe(pipefd) == -1) {
+    printf("pipe");
+    return 1;
+  }
+
+  // Write 6000 bytes into the pipe
+  char data1[6000];
+  memset(data1, 255, 6000);
+  write(pipefd[1], data1, 6000);
+
+  // Read 4000 bytes from the pipe
+  ssize_t bytesRead = read(pipefd[0], buffer, 4000);
+  buffer[bytesRead] = '\0'; // Null-terminate the string
+  // printf("Read %ld\n", bytesRead);
+
+  // Write an additional 6000 bytes into the pipe
+  char data2[6000];
+  memset(data2, 255, 6000);
+  write(pipefd[1], data2, 6000);
+
+  close(pipefd[1]);
+  // Read the remaining data from the pipe
+  bytesRead = read(pipefd[0], buffer, sizeof(buffer));
+  buffer[bytesRead] = '\0'; // Null-terminate the string
+
+  // Close the pipe
+  close(pipefd[0]);
+  return 0;
+}
+
 int read_pipe(int pipe_read_end){
   char read_buffer[11];
   ssize_t bytes_read = read(pipe_read_end, read_buffer, sizeof(read_buffer));
@@ -62,7 +98,6 @@ int read_pipe(int pipe_read_end){
     return -1;
   }
   const char *write_data = "good pipe!";
-  // printf("read_buffer = %s \n", read_buffer);
   assert(memcmp(read_buffer, write_data, strlen(write_data)) == 0);
   return 0;
 }
@@ -76,21 +111,21 @@ int test_pipe() {
   for (int i = 0; i < 500; i++){
     write_pipe(pipe_fd[1]);
   }
-  printf("Completed write_pipe(pipe_fd[1]\n");
+  // printf("Completed write_pipe(pipe_fd[1]\n");
   for (int i = 0; i < 400; i++){
     read_pipe(pipe_fd[0]);
   }
-  printf("Completed read_pipe(pipe_fd[0]\n");
+  // printf("Completed read_pipe(pipe_fd[0]\n");
   for (int i = 0; i < 500; i++){
     write_pipe(pipe_fd[1]);
   }
-  printf("Completed write_pipe(pipe_fd[1]\n");
+  // printf("Completed write_pipe(pipe_fd[1]\n");
   for (int i = 0; i < 600; i++){
     read_pipe(pipe_fd[0]);
   }
-  printf("Completed read_pipe(pipe_fd[0]\n");
+  // printf("Completed read_pipe(pipe_fd[0]\n");
   // Close the read end of the pipe
-  printf("Closing pipes\n");
+  // printf("Closing pipes\n");
   close(pipe_fd[1]);
   close(pipe_fd[0]);
   return 0;
@@ -104,6 +139,7 @@ int main(int argc, char *argv) {
   for (int i = 0; i < 10; i++){
     assert(test_pipe_simple() == 0);
   }
+  assert(test_pipe_overlap() == 0);
   for (int i = 0; i < 10; i++){
     assert(test_pipe() == 0);
   }

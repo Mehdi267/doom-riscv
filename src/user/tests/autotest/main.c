@@ -36,7 +36,7 @@ const char *tests[] =
         "test27",
         "test28",
         "test29",
-        // "test30",
+        "test30",
         "test31",
         "test32",
         NULL

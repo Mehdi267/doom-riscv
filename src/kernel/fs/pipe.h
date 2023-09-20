@@ -6,12 +6,12 @@
 #define PIPE_BUFFER_SIZE 8192
 
 typedef struct file_system_pipe{
-  int buffer[PIPE_BUFFER_SIZE];
+  char buffer[PIPE_BUFFER_SIZE];
   //Indicates how many 
   //elements are in the buffer 
   uint32_t cur_buf_cap;
-  uint32_t nb_read;
-  uint32_t nb_written;
+  uint32_t pos_read;
+  uint32_t pos_written;
   bool can_write;
   bool can_read;
   bool lock_buf;
