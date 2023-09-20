@@ -77,6 +77,6 @@ void blue_screen(struct trap_frame *tf)
     sync_all();
     assert(0);
   }
-  assert(0);
+  // assert(0);
   // exit(-tf->mcause);
 }
