@@ -566,6 +566,12 @@ int fork(int parent_pid, struct trap_frame* tf){
   new_process->page_table_level_2 = NULL;
   new_process->page_tables_lvl_1_list = NULL;
   new_process->released_pages_list = NULL;
+
+  //-------------Shared pages-------------------
+  new_process->shared_pages = NULL;
+  new_process->released_pages_list = NULL;
+  new_process->proc_shared_hash_table = NULL;
+  
   if (copy_process_memory(new_process, parent_p) < 0) {
     print_memory_no_arg("Memory is full");
     return -1;
@@ -611,12 +617,6 @@ int fork(int parent_pid, struct trap_frame* tf){
 
   //--------------Return value----------------
   new_process->return_value = NULL;
-
-  //-------------Shared pages-------------------
-  new_process->shared_pages = NULL;
-  new_process->released_pages_list = NULL;
-  new_process->proc_shared_hash_table = NULL;
-  //TODO ADD FUNCTION THAT CREATES AN OPENS THE SHARED PAGES
   //--------------Semaphore signal-----------
   new_process->sem_signal = 0;
   //------------Add process to the activatable queue-------

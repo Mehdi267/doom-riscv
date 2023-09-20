@@ -19,15 +19,11 @@ int test_fork() {
     return 1;
   }
   //To fix small shared pages bug
-  // void *test_mappings = shm_create("test31_fork");
-  // if (test_mappings == 0){
-  //   test_mappings = shm_acquire("test31_fork");
-  //   if (test_mappings == 0){
-  //     printf("Open shared page failed\n");
-  //     return -1;
-  //   }
-  // }
-  // strncpy((char*) test_mappings, msg, strlen(msg));
+  void *test_mappings = shm_create("test31_fork");
+  if (test_mappings == 0){
+    return -1;
+  }
+  strncpy((char*) test_mappings, msg, strlen(msg));
   pid_t child_pid = fork();
   if (child_pid == -1) {
     printf("fork failed");
@@ -35,7 +31,7 @@ int test_fork() {
   }
   if (child_pid == 0) {
     // This code runs in the child process.
-    // assert(memcmp(test_mappings, msg, strlen(msg)) == 0);
+    assert(memcmp(test_mappings, msg, strlen(msg)) == 0);
     printf("Child process: My PID is %d\n", getpid(), msg);
     printf("msg = %s", msg);
     assert(write(file_fd, msg, strlen(msg)) == (long)strlen(msg));

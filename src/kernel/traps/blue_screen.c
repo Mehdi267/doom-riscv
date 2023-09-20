@@ -73,7 +73,7 @@ void blue_screen(struct trap_frame *tf)
 	uint8_t land = (uint8_t)((tf->mstatus & MSTATUS_MPP) >> 11);
 	printf("\n%s from %s land at %lx\n", exception_names[tf->mcause], land_names[land], tf->mepc);
 	printf("\033[0;m");
-  if (land == 0){
+  if (land != 0){
     sync_all();
     assert(0);
   }

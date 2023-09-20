@@ -297,7 +297,8 @@ void shm_release(const char *key){
     // -release the frame that was holding the process
     // -delete the process from the hash table
     release_frame(page_info->page_address);
-    hash_del(get_shared_pages_hash_table(), cast_char_star_into_pointer(key_no_c));
+    hash_del(get_shared_pages_hash_table(), 
+      cast_char_star_into_pointer(key_no_c));
     free(key_free);
     if (page_info->page_key != NULL){
       free(page_info->page_key);
@@ -343,10 +344,11 @@ static int create_hash_table_and_shared_pages_wrapper(process* current_proc){
 }
 
 void *shm_acquire(process *proc, const char *key){
-  debug_print_memory_api("Acquiring a share page with name = [%s] \n", key);
   if (key ==NULL){
     return NULL;
   }
+  debug_print_memory_api("Acquiring a share page with name = [%s]; proc id = %d; proc name %s\n",
+           key, proc->pid, proc->process_name);
   char *key_no_c = (char*) key;
   
   //We check if the page exists or no
@@ -392,6 +394,8 @@ void *shm_create(process* proc, const char *key){
   //We check if the page exists
   if (get_shared_page(key_no_c) !=NULL){
     //If the page exits we leave directly
+    free(key_no_c);
+    debug_print_memory_api("Shared page already exits name = %s", key_no_c);
     return NULL;
   }
   shared_page_t* page_info = create_shared_page(key_no_c);

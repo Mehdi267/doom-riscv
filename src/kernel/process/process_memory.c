@@ -728,10 +728,10 @@ int free_process_memory(process* proc, del_t del_type){
   //We start by removing the shared pages
   debug_print_memory("--------Releasing shared frames for the process/ id -> %d -------- : %s\n",
               proc->pid, proc->process_name); 
-  
   if (proc->proc_shared_hash_table != NULL){
     shared_pages_proc_t* shared_iter = proc->shared_pages->head_shared_page;
     shared_pages_proc_t* shared_iter_prev = proc->shared_pages->head_shared_page;
+    printf("shared_iter = %p \n", shared_iter);
     while (shared_iter!=NULL){
       shared_iter = shared_iter->next_shared_page;
       set_custom_release_process(proc);
@@ -893,6 +893,9 @@ int copy_process_memory(process* new_proc, process* old_proc){
     }
     lvl0_iter = lvl0_iter->next_page;
   }
+  //TODO: fix this, because the mappings used by the parent process
+  //could be different from those used by the child, thus we need 
+  //to get an complete copy
   if (old_proc->shared_pages != NULL){
     shared_pages_proc_t* shared_iter = old_proc->shared_pages->head_shared_page;
       while (shared_iter!=NULL){

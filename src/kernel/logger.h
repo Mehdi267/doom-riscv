@@ -187,7 +187,7 @@
  * @brief the following macro are used to display the  
  * debug messages of the file system operations 
  */ 
-#define DEBUG_INODE_LEVEL 2 //Indicates if debug type is active
+#define DEBUG_INODE_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_inode(fmt, ...) \
         do {if (DEBUG_INODE_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \
@@ -204,7 +204,7 @@
  * @brief the following macro are used to display the  
  * debug messages of the file system api
  */
-#define DEBUG_FS_API_LEVEL 2 //Indicates if debug type is active
+#define DEBUG_FS_API_LEVEL 0 //Indicates if debug type is active
 
 #define debug_print_fsapi(fmt, ...) \
         do {if (DEBUG_FS_API_LEVEL == 1){ printf(fmt, __VA_ARGS__);} \

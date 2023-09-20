@@ -121,6 +121,7 @@ typedef struct fd_file_proc{
 /**
  * @brief This linked list will be used
  * to save the initilization data of new processes
+ * that were forked
  */
 typedef struct fork_init_data {
   int pid;

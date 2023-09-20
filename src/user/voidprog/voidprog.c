@@ -42,7 +42,7 @@ int test_fork() {
   }
   if (child_pid == 0) {
     // This code runs in the child process.
-    // assert(memcmp(test_mappings, msg, strlen(msg)) == 0);
+    assert(memcmp(test_mappings, msg, strlen(msg)) == 0);
     printf("Child process: My PID is %d\n", getpid(), msg);
     printf("Writing msg = %s", msg);
     assert(write(file_fd, msg, strlen(msg)) == (long)strlen(msg));
