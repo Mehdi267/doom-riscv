@@ -425,7 +425,7 @@ int free_frames_page_table(page_table_link_list_t* page_table_link){
     if (page_table_link->index >= SHARED_MEMORY_START){
       return 0;
     }
-    print_memory_no_arg("-------------------freeing page-------------");
+    print_memory_no_arg("-------------------freeing page-------------\n");
     //static lvl0 pages
     if (page_table_link->page_type == STACK_PAGE){
       free_frames_indexed_inverse(page_table_link->table, PT_SIZE-1, PT_SIZE-1-page_table_link->usage);
@@ -455,6 +455,9 @@ int free_frames_page_table(page_table_link_list_t* page_table_link){
 }
 
 int free_fs_proc(process* proc, del_t del_type){
+  if (del_type == PRESERVE_FS){
+    return 0;
+  }
   if (close_all_files(proc)<0){
     return -1;
   }
@@ -769,7 +772,7 @@ int check_expansion_mem(process* proc, struct trap_frame* frame){
       printf("Trying to add to stack size, pid = %d, name = %s\n", getpid(), getname());
       debug_print_memory("Expanding memory of proc : %s by %ld \n", 
         proc->process_name, page_diff);
-      add_and_allocate_frames(proc, page_diff, STACK_PAGE, NULL);
+      return add_and_allocate_frames(proc, page_diff, STACK_PAGE, NULL);
     }
   }
   return -1;

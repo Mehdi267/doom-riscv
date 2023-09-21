@@ -37,4 +37,14 @@ extern const struct uapps *find_app(const char *name);
  * @return int status
  */
 extern int write_user_apps_fs();
+
+/**
+ * @brief Looks for the binary file with name argument 
+ * and then writes it to disk
+ * @param name Program name
+ * @return int function statis
+ */
+int write_file_disk(const char* name);
+
 #endif
+

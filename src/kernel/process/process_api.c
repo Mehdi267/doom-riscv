@@ -684,8 +684,12 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
   if (cur_proc->app_pointer->start == NULL){return -1;}
   int fd = open(cur_proc, filename, O_RDONLY, 0);
   if (fd<0){return -1;}
-  assert(read(fd, cur_proc->app_pointer->start, new_inode->i_size)
-       == new_inode->i_size);
+  //We make sure that the program that we linked to is the same program
+  //that is on disk
+  int len = read(fd, cur_proc->app_pointer->start, new_inode->i_size);
+  assert(len == new_inode->i_size);
+  // assert(read(fd, cur_proc->app_pointer->start, new_inode->i_size)
+  //      == new_inode->i_size);
   cur_proc->app_pointer->end = (void*)((char*)cur_proc->app_pointer->start +
                            new_inode->i_size);
   close(fd);
@@ -728,7 +732,7 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
 
   //We set to them to null to avoid errors
   void* old_lvl2 = cur_proc->page_table_level_2;
-  if (free_process_memory(cur_proc, DELETE_MEM_FS)<0){
+  if (free_process_memory(cur_proc, PRESERVE_FS)<0){
     return -1;
   }
   cur_proc->page_table_level_2 = NULL;
@@ -736,6 +740,7 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
   cur_proc->shared_pages = NULL;
   cur_proc->released_pages_list = NULL;
   cur_proc->proc_shared_hash_table = NULL;
+  memset(&cur_proc->mem_info, 0, sizeof(mem_proc));
   if (process_memory_allocator(cur_proc, FRAME_SIZE) < 0) {
     print_memory_no_arg("Memory is full");
     return -1;

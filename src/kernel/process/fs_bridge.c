@@ -222,10 +222,12 @@ flip* get_fs_list_elt(process* proc_arg, int fd){
   while (fd_list_iter != 0){
     if (fd_list_iter->fd == fd){
       debug_print_fsapi("[FSAPI]Get fs api num %d was found\n", fd);
+      printf("fd_list_iter->fd = %d \n", fd_list_iter->fd);     
       return fd_list_iter->file_info;
     }
     fd_list_iter = fd_list_iter->next_file;
   }
+  debug_print_fsapi("[FSAPI]Get fs api num %d was not found\n", fd);
   return 0;
 }
 

@@ -75,6 +75,7 @@ syscall(getdents)
 syscall(void_call)
 syscall(execve);
 syscall(ld_progs_into_disk);
+syscall(write_file_disk)
 syscall(sbrk);
 syscall(get_display_info)
 syscall(upd_data_display)

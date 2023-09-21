@@ -13,6 +13,7 @@
 #include "riscv.h" // for csr_set
 #include "timer.h"
 
+#include "userspace_apps.h"
 #include <stdio.h> 
 #include "fs/fs.h"
 #include "process/helperfunc.h"

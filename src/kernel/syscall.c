@@ -196,6 +196,8 @@ unsigned long syscall_handler(struct trap_frame *tf) {
       return (unsigned long) sys_sbrk(tf->a0);
     case SYSC_getdents:
       return (unsigned long) getdents(tf->a0, (struct dirent *)tf->a1, tf->a2);
+    case SYSC_write_file_disk:
+      return (unsigned long) write_file_disk((const char*) tf->a0);
     case SYSC_get_display_info:
       if (gpu_dev->get_display_info != NULL){
         gpu_dev->get_display_info((struct display_info*) tf->a0);

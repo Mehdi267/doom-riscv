@@ -47,7 +47,7 @@ char *readline(char *prompt)
   
   {
     cons_read(buf, buf_len);
-    printf("%s\n", buf);
+    printf("\n%s\n", buf);
     return buf;
   }
   // {

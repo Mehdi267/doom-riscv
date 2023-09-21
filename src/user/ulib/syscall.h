@@ -222,7 +222,6 @@ int fstat(unsigned int fd, struct stat *buf);
 int pipe(int file_descriptors[2]);
 pid_t fork(void);
 int execve(const char *filename, char *const argv[], char *const envp[]);
-void ld_progs_into_disk();
 void *sbrk(unsigned long increment);
 
 //dir api
@@ -233,7 +232,9 @@ int rmdir(const char *path);
 int getdents(int fd, struct dirent *dirp,
             unsigned int count);
 
-//Custom api
+//Custom calls
+void ld_progs_into_disk();
+int write_file_disk(const char* name);
 void print_dir_elements(const char*);
 typedef struct disk_info{
  uint32_t total_blocks;

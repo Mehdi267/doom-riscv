@@ -84,6 +84,7 @@ int main() {
   char dis_binprog[] = "dis_bin";
   char exitshell[] = "exit";
   char voidsysprog[] = "voidsys";
+  char writefprog[] = "writef";
   while (1) {
   printf("shell$");
   if (getcwd(current_dir, CURR_DIR_SIZE) != 0){
@@ -105,6 +106,11 @@ int main() {
     char* curr_path = cmd + strlen(cdprog) + 1;
     printf("curr_path = %s\n", curr_path);
     chdir(curr_path);
+  }
+  else if (memcmp(cmd, "writef", strlen(writefprog)) == 0){
+    char* curr_path = cmd + strlen(writefprog) + 1;
+    printf("Will copy %s into disk\n", curr_path);
+    write_file_disk(curr_path);
   }
   else if (memcmp(cmd, "rmdir", strlen(rmdirprog)) == 0){
     char* curr_path = cmd + strlen(rmdirprog) + 1;

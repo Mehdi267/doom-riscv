@@ -475,6 +475,7 @@ int check_if_new_prio_is_higher_and_call_scheduler(int newprio,
 //This is usd in the free_process_memory to specify
 //the extent at which we would like to delete things
 typedef enum delete_types{
+  PRESERVE_FS,
   DELETE_MEM_FS, //Delete memory usage and close all fs
                  //related pointers
   DELETE_ALL,

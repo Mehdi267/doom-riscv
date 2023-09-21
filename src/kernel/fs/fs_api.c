@@ -144,6 +144,8 @@ ssize_t write(int file_descriptor,
     return -1;
   }
   if (fs_elt->type == FS_FT_CHRDEV){
+    debug_print_fsapi("\033[0;34m[FSAPI] Writing to character device fd : %d \033[0;0m\n",
+          file_descriptor);
     return dev_op[(fs_elt->f_inode->i_osd1 & 0xffff0000) >> 16].write((uint64_t)buffer, count); 
   } 
   else if (fs_elt->type == FS_FT_PIPE){
