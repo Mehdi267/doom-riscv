@@ -3,6 +3,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
+
 __attribute__((noreturn)) void abort(void);
 __attribute__((noreturn)) void exit(int status);
 

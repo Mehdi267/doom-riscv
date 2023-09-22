@@ -67,7 +67,7 @@ int main() {
     assert(dup2(1, 2) == 2);
     open(".doomrc", O_CREAT, 0);
     //Loads all of the binary files into the disk
-    // ld_progs_into_disk();
+    ld_progs_into_disk();
   }
   // display_test();
   char cmd[21];

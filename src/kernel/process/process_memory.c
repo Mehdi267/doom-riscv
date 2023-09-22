@@ -455,20 +455,21 @@ int free_frames_page_table(page_table_link_list_t* page_table_link){
 }
 
 int free_fs_proc(process* proc, del_t del_type){
+  //We do nothing is this case 
   if (del_type == PRESERVE_FS){
     return 0;
   }
+  return 0;
   if (close_all_files(proc)<0){
     return -1;
   }
-  if (del_type != DELETE_ALL){
-    return 0;
-  }
-  if (proc->root_dir.dir_name != 0){
-    free(proc->root_dir.dir_name);
-  }
-  if (proc->cur_dir.dir_name != 0){
-    free(proc->cur_dir.dir_name);
+  if (del_type == DELETE_ALL){
+    if (proc->root_dir.dir_name != 0){
+      free(proc->root_dir.dir_name);
+    }
+    if (proc->cur_dir.dir_name != 0){
+      free(proc->cur_dir.dir_name);
+    }
   }
   return 0;
 }
@@ -483,7 +484,6 @@ int free_process_memory(process* proc, del_t del_type){
       return -1;
     }
   #endif
-  proc_mang_g.nb_proc_running--;
   debug_print_memory("--------Inside free_process_memory, current process: %s\n", getname());
   debug_print_memory("--------Freeing memory for the process/ id -> %d -------- : %s\n", 
             proc->pid, proc->process_name);
@@ -536,26 +536,26 @@ int free_process_memory(process* proc, del_t del_type){
     }
     free(proc->page_tables_lvl_1_list);
   }
-  if (del_type != DELETE_ALL){
-    return 0;
+  if (del_type == DELETE_ALL){
+    proc_mang_g.nb_proc_running--;
+    //We remove share page and all the memory associated to them
+    if (hash_del(get_process_hash_table(),
+          cast_int_to_pointer(proc->pid)) < 0) {
+      return -1;
+    }
+    if (proc->context_process != NULL){
+      free(proc->context_process);
+      proc->context_process = 0;
+    }
+    if (proc->process_name != NULL){
+      free(proc->process_name);
+      proc->process_name = 0;
+    }
+    debug_print_memory("free_process_memory ENDED, current process: %s\n", getname());
+    save_pid(proc->pid);
+    free(proc);
+    proc = 0;
   }
-  //We remove share page and all the memory associated to them
-  if (hash_del(get_process_hash_table(),
-         cast_int_to_pointer(proc->pid)) < 0) {
-    return -1;
-  }
-  if (proc->context_process != NULL){
-    free(proc->context_process);
-    proc->context_process = 0;
-  }
-  if (proc->process_name != NULL){
-    free(proc->process_name);
-    proc->process_name = 0;
-  }
-  debug_print_memory("free_process_memory ENDED, current process: %s\n", getname());
-  save_pid(proc->pid);
-  free(proc);
-  proc = 0;
   return 0;
 }
 

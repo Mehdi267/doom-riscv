@@ -571,11 +571,14 @@ int fork(int parent_pid, struct trap_frame* tf){
   new_process->shared_pages = NULL;
   new_process->released_pages_list = NULL;
   new_process->proc_shared_hash_table = NULL;
-  
+  debug_print("Fork init was completed parent pid = %d\n", parent_pid);
+
   if (copy_process_memory(new_process, parent_p) < 0) {
     print_memory_no_arg("Memory is full");
     return -1;
   }
+  debug_print("[Fork] memory copied = %d\n", parent_pid);
+  
   new_process->context_process = (context_t *)malloc(sizeof(context_t));
   if (new_process->context_process == NULL) {
     return -1;
@@ -621,6 +624,7 @@ int fork(int parent_pid, struct trap_frame* tf){
   new_process->sem_signal = 0;
   //------------Add process to the activatable queue-------
   new_process->state = ACTIVATABLE;
+  debug_print("[Fork] processes management completed parent pid = %d\n", parent_pid);
 
   //------------File system related configuration----------
   #ifdef VIRTMACHINE
@@ -644,6 +648,8 @@ int fork(int parent_pid, struct trap_frame* tf){
       return -1;
     }
   #endif
+  debug_print("[Fork]Processes file system copied completed parent pid = %d\n", parent_pid);
+
   //---Add process to activatable queue
   queue_add(new_process, &activatable_process_queue, process, next_prev, prio);
   check_if_new_prio_is_higher_and_call_scheduler(new_process->prio, true, 0);

@@ -119,8 +119,7 @@ open_fd* dup_open_file(process* proc_arg, flip* open_file, int custom_fd){
   if (proc_arg == NULL){
     proc = get_process_struct_of_pid(getpid()); 
   } else {proc = proc_arg;}
-  if (open_file == 0 || proc == 0 || 
-      custom_fd<0 || custom_fd>=MAX_FS){
+  if (open_file == 0 || proc == 0 || custom_fd>=MAX_FS){
     return 0;
   }
   open_fd* open_file_proc = (open_fd*) 
@@ -128,7 +127,8 @@ open_fd* dup_open_file(process* proc_arg, flip* open_file, int custom_fd){
   if (open_file_proc == 0){
     return 0;
   }
-  if (custom_fd == 0){
+  //Not a specific fd
+  if (custom_fd < 0){
     open_file_proc->fd = alloc_bit_fdmap(proc->fd_bitmap);
     assert(proc->fd_bitmap + (open_file_proc->fd/8) < proc->fd_bitmap + SIZE_BIT_MAP);
     *((char*)((proc->fd_bitmap + (open_file_proc->fd/8)))) |=
@@ -222,7 +222,6 @@ flip* get_fs_list_elt(process* proc_arg, int fd){
   while (fd_list_iter != 0){
     if (fd_list_iter->fd == fd){
       debug_print_fsapi("[FSAPI]Get fs api num %d was found\n", fd);
-      printf("fd_list_iter->fd = %d \n", fd_list_iter->fd);     
       return fd_list_iter->file_info;
     }
     fd_list_iter = fd_list_iter->next_file;
@@ -340,6 +339,8 @@ int remove_fd_list(process* proc_arg, int fd, rem_type op_type){
     free(fd_elt);
     debug_print_fsapi("[FSAPI]Open files list num %d was removed\n", fd);
   }
+  //This is used so that we can use the link 
+  //to attach an other file to it
   else if (op_type == ONLY_CLOSE_FILE){
     debug_print_fsapi("[FSAPI]Close the file but did not remove the link, fd = %d\n", fd);
   }
@@ -347,6 +348,7 @@ int remove_fd_list(process* proc_arg, int fd, rem_type op_type){
 }
 
 int close_all_files(process* proc_arg){
+  printf("close_all_files was called \n");
   process* proc;
   if (proc_arg == NULL){
     proc = get_process_struct_of_pid(getpid()); 
@@ -368,24 +370,28 @@ int copy_proc_fds(process* dest_proc, process* src_proc){
   if (src_proc == 0 || dest_proc == 0){
     return -1;
   }
-  open_fd* fd_list_iter = src_proc->open_files_table;
-  while (fd_list_iter != 0){
+  open_fd* fd_src_iter = src_proc->open_files_table;
+  while (fd_src_iter != 0){
     open_fd* open_file_proc = (open_fd*) 
             malloc(sizeof(open_fd));
     if (open_file_proc == 0){return -1;}
-    open_file_proc->fd = fd_list_iter->fd;
-    open_file_proc->file_info = fd_list_iter->file_info;
-    fd_list_iter->file_info->usage_counter++;
+    assert(fd_src_iter->file_info !=0);
+    open_file_proc->fd = fd_src_iter->fd;
+    open_file_proc->file_info = fd_src_iter->file_info;
+    printf("Copying file descriptors %d, pointer %p, target pointer %p \n", 
+        fd_src_iter->fd, fd_src_iter->file_info, &open_file_proc->file_info);
+    fd_src_iter->file_info->usage_counter++;
     open_file_proc->next_file = NULL;
     open_file_proc->file_previous = NULL;
     if (dest_proc->open_files_table == NULL){
+      printf("Init open_files_table\n");
       dest_proc->open_files_table =  open_file_proc;
     } else {
       open_file_proc->next_file = dest_proc->open_files_table;
       dest_proc->open_files_table->file_previous = open_file_proc;
       dest_proc->open_files_table = open_file_proc;
     }
-    fd_list_iter = fd_list_iter->next_file;
+    fd_src_iter = fd_src_iter->next_file;
   }
   return 0;
 }

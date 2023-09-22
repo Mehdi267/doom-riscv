@@ -432,7 +432,7 @@ int dup(process* proc, int file_descriptor){
     return -1;
   }
   open_fd* op_file = 
-      dup_open_file(NULL, get_fs_list_elt(proc, file_descriptor), 0);
+      dup_open_file(NULL, get_fs_list_elt(proc, file_descriptor), -1);
   if(op_file!=0){
     return op_file->fd;
   }else{
@@ -441,6 +441,8 @@ int dup(process* proc, int file_descriptor){
 }
 
 int dup2(process* proc, int file_descriptor, int new_file_descriptor){
+  debug_print_fsapi("\033[0;34m[FSAPI]{dup2}Dup 2 was called new fd : %d; old fd : %d\033[0;0m\n",
+        new_file_descriptor, file_descriptor);
   if (file_descriptor<0 || new_file_descriptor<0 ||
        file_descriptor>=MAX_FS || new_file_descriptor>=MAX_FS){
     return -1;
@@ -452,22 +454,23 @@ int dup2(process* proc, int file_descriptor, int new_file_descriptor){
   }
   //We check if it is already open for ths process
   open_fd* new_file = get_open_fd_elt(proc, new_file_descriptor);
+  //If the file is not bein used
   if (new_file == 0){
-    new_file = dup_open_file(proc, file_dup, new_file_descriptor);
-    if (new_file == 0){
-      return -1;
-    }
-    file_dup->usage_counter++;
-    return new_file_descriptor;
+    debug_print_fsapi("\033[0;34m[FSAPI]{dup2}fd %d is not being used \033[0;0m\n",
+        new_file_descriptor);
   } else{
-    if (remove_fd_list(proc, file_descriptor, ONLY_CLOSE_FILE)<0){
+    debug_print_fsapi("\033[0;34m[FSAPI]{dup2}fd 2 %d is being used\033[0;0m\n",
+        new_file_descriptor);
+    if (remove_fd_list(proc, new_file_descriptor, REMOVE_ALL)<0){
+      printf("Dup2 failed, can't close new fd:%d\n", new_file_descriptor);
       return -1;
     }
-    file_dup->usage_counter++;
-    new_file->file_info = file_dup;
-    return new_file_descriptor;
   }
-  return -1;
+  new_file = dup_open_file(proc, file_dup, new_file_descriptor);
+  if (new_file == 0){
+    return -1;
+  }
+  return new_file_descriptor;
 }
 
 int rename(const char *old_name, const char *new_name){

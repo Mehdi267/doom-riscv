@@ -126,12 +126,14 @@ void run_process(char ** seq, int background, char * in_file, char* out_file, in
 
 
 int main() {
+  //We check if these files were opened before
   //stdin
-  assert(open("/dev/terminal", O_RDONLY, 0) == 0);
+  assert(open("/dev/terminal", O_RDONLY, 0) != -1);
   //stdout
-  assert(open("/dev/terminal", O_WRONLY, 0) == 1);
+  assert(open("/dev/terminal", O_WRONLY, 0) != -1);
   //stderr
-  assert(dup2(1, 2) == 2);
+  assert(dup2(1, 2) != -1);
+  // assert(open("/dev/terminal", O_WRONLY, 0) != -1);
 	while (1) { 
 		struct cmdline *l;
 		char *line=0;
