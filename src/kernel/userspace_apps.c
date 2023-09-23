@@ -68,8 +68,6 @@ int write_user_apps_fs(){
     for (int file = 0;
           file < sizeof(black_list_copy)/sizeof(char *);
           file++){
-      printf("black_list_copy[file] = %s \n", 
-          black_list_copy[file]);
       if (strncmp(black_list_copy[file], symbols_table[app].name, 
             strlen(black_list_copy[file])) == 0){
         do_not_copy = true; //temp

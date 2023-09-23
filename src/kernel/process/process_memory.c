@@ -662,7 +662,6 @@ int copy_process_memory(process* new_proc, process* old_proc){
   if (old_proc->shared_pages != NULL){
     shared_pages_proc_t* shared_iter = old_proc->shared_pages->head_shared_page;
       while (shared_iter!=NULL){
-        printf("shared_iter->key = %s \n", shared_iter->key);
         shm_acquire(new_proc, shared_iter->key);
         shared_iter = shared_iter->next_shared_page;
       }
@@ -764,12 +763,13 @@ int check_expansion_mem(process* proc, struct trap_frame* frame){
         proc->process_name);
     uint64_t sp_limit = (uint64_t)0x40000000 +
            FRAME_SIZE * proc->stack_shift;
-    uint64_t current_sp = (uint64_t)frame->sp;
-    uint64_t used_pages = (sp_limit-current_sp)/FRAME_SIZE + 1;
+    // uint64_t current_sp = (uint64_t)frame->sp;
+    uint64_t current_mem_prob = (uint64_t)frame->mtval; 
+    uint64_t used_pages = (sp_limit-current_mem_prob)/FRAME_SIZE + 1;
     long page_diff = used_pages - proc->mem_info.stack_usage;
     if (page_diff>0 && 
         (proc->mem_info.stack_usage + page_diff)<STACK_FRAME_SIZE*PT_SIZE){
-      printf("Trying to add to stack size, pid = %d, name = %s\n", getpid(), getname());
+      debug_print_memory("Trying to add to stack size, pid = %d, name = %s\n", getpid(), getname());
       debug_print_memory("Expanding memory of proc : %s by %ld \n", 
         proc->process_name, page_diff);
       return add_and_allocate_frames(proc, page_diff, STACK_PAGE, NULL);

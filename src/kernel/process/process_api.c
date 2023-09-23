@@ -733,6 +733,7 @@ int execve(const char *filename, char *const argv[], char *const envp[]){
     new_argv[i] = (void*)((uint64_t)data_ptr-(uint64_t)new_argv);
     strcpy(data_ptr, argv[i]);
     data_ptr += strlen(argv[i]) + 1;
+    // data_ptr[-1] = '\0';  // Null-terminate the copied string
   }
   new_argv[argc] = NULL;  // NULL-terminate the pointers
 

@@ -100,15 +100,15 @@ void run_process(char ** seq, int background, char * in_file, char* out_file, in
 	if (in_file && start)
 	{
 		int fd_in = open(in_file, O_RDONLY, 0);
-		if (fd_in == -1) { printf("open  : " ); exit(1);}
-		dup2(fd_in, 0); 
+		if (fd_in == -1) { printf("open in failed: " ); exit(1);}
+		if(dup2(fd_in, 0)<0){printf("dup in failed: " ); exit(1);}  
 		close(fd_in);
 	}
 	if (out_file && end)
 	{
-		int fd_out = open(out_file, O_WRONLY | O_TRUNC, 0);
-		if (fd_out == -1) { printf("open  : " ); exit(1);}
-		dup2(fd_out, 1); 
+		int fd_out = open(out_file, O_WRONLY | O_TRUNC | O_CREAT, 0);
+		if (fd_out == -1) { printf("open out failed: " ); exit(1);}
+		if(dup2(fd_out, 1)<0){printf("dup out failed: " ); exit(1);} 
 		close(fd_out);
 	}
 	char* base_file = "/bin/";
@@ -138,18 +138,33 @@ int main() {
 		struct cmdline *l;
 		char *line=0;
 		int i, j;
-		char *prompt = "ensishell>";
-
+    #define CURR_DIR_SIZE 50
+    #define PROMPT_SIZE 90
+    char prompt_final[PROMPT_SIZE];
+		char *prompt = "\033[0;32mensishell\033[0;0m:";
+    memcpy(prompt_final, prompt, strlen(prompt));
+    int pos = strlen(prompt); 
+    char current_dir[CURR_DIR_SIZE];
+    if (getcwd(current_dir, CURR_DIR_SIZE) != 0){
+      memcpy(prompt_final+pos, current_dir, strlen(current_dir));
+      pos += strlen(current_dir);
+    }
+    char *term = "#>";
+    memcpy(prompt_final+pos, term, strlen(term));
+    pos += strlen(term);
 		/* Readline use some internal memory structure that
 		   can not be cleaned at the end of the program. Thus
 		   one memory leak per command seems unavoidable yet */
-		line = readline(prompt);
-		if (line == 0 || ! strncmp(line,"exit", 4)) {
+		line = readline(prompt_final);
+		if (line == 0 || !strncmp(line,"exit", 4)) {
 			terminate(line);
 		}
-
 		if (!strncmp(line,"jobs", 4)) {
 			output_process_bg();
+			continue;
+		}
+    if (!strncmp(line,"cd", 2)) {
+      change_directory((char*)line+2);
 			continue;
 		}
 		/* parsecmd free line and set it up to 0 */

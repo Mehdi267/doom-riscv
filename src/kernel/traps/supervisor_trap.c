@@ -93,7 +93,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
         // blue_screen(tf);
         if (user){
           if (check_expansion_mem(get_process_struct_of_pid(getpid()), tf)>=0){
-            printf("Trying to add to mem to,  pid = %d, name = %s\n", getpid(), getname());
+            debug_print_memory("Trying to add to mem to,  pid = %d, name = %s\n", getpid(), getname());
             break;
           } else{
             PRINT_RED("Killing process = (CAUSE_FETCH_PAGE_FAULT)\n");
@@ -106,7 +106,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
         // blue_screen(tf);
         if (user){
           if (check_expansion_mem(get_process_struct_of_pid(getpid()), tf)>=0){
-            printf("Trying to add to mem to,  pid = %d, name = %s\n", getpid(), getname());
+            debug_print_memory("Trying to add to mem to,  pid = %d, name = %s\n", getpid(), getname());
             break;
           } else{
             PRINT_RED("Killing proces = (CAUSE_LOAD_PAGE_FAULTs)\n");
@@ -119,7 +119,7 @@ void strap_handler(uintptr_t scause, void *sepc, struct trap_frame *tf){
         // blue_screen(tf);
         if (user){
           if (check_expansion_mem(get_process_struct_of_pid(getpid()), tf)>=0){
-            printf("Trying to add to mem to,  pid = %d, name = %s\n", getpid(), getname());
+            debug_print_memory("Trying to add to mem to,  pid = %d, name = %s\n", getpid(), getname());
             break;
           } else{
             PRINT_RED("Killing process = (CAUSE_STORE_PAGE_FAULT)\n");

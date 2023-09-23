@@ -89,7 +89,8 @@
 #define SYSC_getdents           68
 #define SYSC_access             69
 #define SYSC_fstat              70
-#define SYSC_write_file_disk    71
+#define SYSC_lstat              71
+#define SYSC_write_file_disk    72
 
 #define SYSC_print_dir_elements 76 
 #define SYSC_fs_info            77

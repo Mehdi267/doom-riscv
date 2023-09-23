@@ -129,8 +129,8 @@ int open(process* proc, const char *file_name, int flags, mode_t mode){
 }
 
 int close(int file_descriptor){
-  debug_print_fsapi("\033[0;35m[FSAPI]Close file was called on fd = %d\n\033[0;0m",
-       file_descriptor);
+  debug_print_fsapi("\033[0;35m[FSAPI][Close]Close file was called on fd = %d; current proc [%s]\n\033[0;0m",
+      file_descriptor, getname());
   sync_all();
   return remove_fd_list(NULL, file_descriptor, REMOVE_ALL);
 }
@@ -393,7 +393,7 @@ static int conf_stat_buf(struct stat *buf, inode_t* file_inode){
   }
   buf->st_dev = 1; //We are using one device currently         
   buf->st_ino = get_inode_number(file_inode);         
-  buf->st_mode = 777; //Random value might add modes later        
+  buf->st_mode = ext2_to_stat_mode(file_inode->i_mode); //Random value might add modes later        
   buf->st_nlink = file_inode->i_links_count;       
   buf->st_uid = 0;         
   buf->st_gid = 0;         
@@ -470,6 +470,8 @@ int dup2(process* proc, int file_descriptor, int new_file_descriptor){
   if (new_file == 0){
     return -1;
   }
+  debug_print_fsapi("\033[0;34m[FSAPI]{dup2}Dup 2 worked new fd ->%d; old fd ->: %d\033[0;0m\n",
+        new_file_descriptor, file_descriptor);
   return new_file_descriptor;
 }
 

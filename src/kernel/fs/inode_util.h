@@ -1,5 +1,6 @@
 #include "inode.h"
 #include "disk_buffer.h"
+#include "fs_api.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -70,6 +71,17 @@ void print_dir_entry_obj(dir_entry* entry);
  * @return inode_t* the inode that we collected 
  */
 inode_t* walk_and_get(const char* path, uint32_t backward_steps);
+
+/**
+ * @brief Maps an Ext2 file mode to a stat file mode.
+ *
+ * This function takes an Ext2 file mode and maps it to a stat file mode,
+ * including file type (e.g., directory, regular file)
+ *
+ * @param ext2_mode The Ext2 file mode to be mapped.
+ * @return The corresponding stat file mode.
+ */
+mode_t ext2_to_stat_mode(unsigned short ext2_mode);
 
 #endif /* INODE_H */
 

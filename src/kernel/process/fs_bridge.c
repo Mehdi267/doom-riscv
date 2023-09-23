@@ -115,6 +115,8 @@ static int alloc_bit_fdmap(char* fd_map){
 
 
 open_fd* dup_open_file(process* proc_arg, flip* open_file, int custom_fd){
+  debug_print_fsapi("\033[0;34m[FSAPI]{dup_open_file} was called custom fd : %d;\033[0;0m\n",
+        custom_fd);
   process* proc;
   if (proc_arg == NULL){
     proc = get_process_struct_of_pid(getpid()); 
@@ -134,6 +136,9 @@ open_fd* dup_open_file(process* proc_arg, flip* open_file, int custom_fd){
     *((char*)((proc->fd_bitmap + (open_file_proc->fd/8)))) |=
          (1<<(open_file_proc->fd%8));
   }else{
+    assert(proc->fd_bitmap + (custom_fd/8) < proc->fd_bitmap + SIZE_BIT_MAP);
+    *((char*)((proc->fd_bitmap + (custom_fd/8)))) |=
+        (1<<(custom_fd%8));
     //We assume that the file has already been allocated 
     open_file_proc->fd = custom_fd;
   }
@@ -148,15 +153,16 @@ open_fd* dup_open_file(process* proc_arg, flip* open_file, int custom_fd){
     }
     proc->open_files_table->next_file = 0;
     proc->open_files_table->file_previous = 0;
-    return open_file_proc;
   }
   else {
     open_file_proc->next_file = proc->open_files_table;
     proc->open_files_table->file_previous
       = open_file_proc;
     proc->open_files_table = open_file_proc; 
-    return open_file_proc;
   }
+  debug_print_fsapi("\033[0;34m[FSAPI]{dup_open_file} ran well, new file fd: %d; usage of fd : %d\033[0;0m\n",
+        custom_fd, open_file->usage_counter);
+  return open_file_proc;
 }
 
 
@@ -370,6 +376,8 @@ int copy_proc_fds(process* dest_proc, process* src_proc){
   if (src_proc == 0 || dest_proc == 0){
     return -1;
   }
+  debug_print_fsapi("[FSAPI]Copying fds: %s from %s\n", 
+      dest_proc->process_name ,src_proc->process_name);
   open_fd* fd_src_iter = src_proc->open_files_table;
   while (fd_src_iter != 0){
     open_fd* open_file_proc = (open_fd*) 
@@ -378,13 +386,10 @@ int copy_proc_fds(process* dest_proc, process* src_proc){
     assert(fd_src_iter->file_info !=0);
     open_file_proc->fd = fd_src_iter->fd;
     open_file_proc->file_info = fd_src_iter->file_info;
-    printf("Copying file descriptors %d, pointer %p, target pointer %p \n", 
-        fd_src_iter->fd, fd_src_iter->file_info, &open_file_proc->file_info);
     fd_src_iter->file_info->usage_counter++;
     open_file_proc->next_file = NULL;
     open_file_proc->file_previous = NULL;
     if (dest_proc->open_files_table == NULL){
-      printf("Init open_files_table\n");
       dest_proc->open_files_table =  open_file_proc;
     } else {
       open_file_proc->next_file = dest_proc->open_files_table;
@@ -393,5 +398,7 @@ int copy_proc_fds(process* dest_proc, process* src_proc){
     }
     fd_src_iter = fd_src_iter->next_file;
   }
+  debug_print_fsapi("[FSAPI]Copy completed : %s from %s\n", 
+      dest_proc->process_name ,src_proc->process_name);
   return 0;
 }
