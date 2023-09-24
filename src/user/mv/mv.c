@@ -38,49 +38,22 @@ void move_file(const char *source, const char *destination) {
   }
 }
 
-
 void move_directory(const char *source, const char *destination) {
   // Create the destination directory if it doesn't exist
   struct stat st;
   if (stat(destination, &st) == -1) {
-    if (mkdir(destination, 0755) == -1) {
-      perror("mkdir");
-      exit(EXIT_FAILURE);
+    if (rename(source, destination)<0){
+      perror("Rename failed\n");
     }
-  }
-
-  DIR *dir = opendir(source);
-  if (!dir) {
-    perror("opendir");
-    exit(EXIT_FAILURE);
-  }
-
-  struct dirent *entry;
-  while ((entry = readdir(dir))) {
-    if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-      continue;
-    }
-
-    char source_path[1024];
+  } else {
     char destination_path[1024];
-    snprintf(source_path, sizeof(source_path), "%s/%s", source, entry->d_name);
-    snprintf(destination_path, sizeof(destination_path), "%s/%s", destination, entry->d_name);
-
-    if (entry->d_type == DT_DIR) {
-      move_directory(source_path, destination_path);
-    } else {
-      move_file(source_path, destination_path);
+    snprintf(destination_path, sizeof(destination_path), "%s/%s", destination, basename((char *)source));
+    if (rename(source, destination_path)<0){
+      perror("Rename failed\n");
     }
-  }
-
-  closedir(dir);
-
-  // Remove the source directory after moving its contents
-  if (rmdir(source) == -1) {
-    perror("rmdir");
-    exit(EXIT_FAILURE);
   }
   printf("Directory moved from %s to %s\n", source, destination);
+  return;
 }
 
 int main(int argc, char *argv[]) {
