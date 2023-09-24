@@ -104,6 +104,17 @@ int rmdir(const char *path);
  */
 int rename(const char *oldpath, const char *newpath);
 
+#ifndef DT_UNKNOWN
+#define  DT_UNKNOWN     0
+#define  DT_FIFO        1
+#define  DT_CHR         2
+#define  DT_DIR         4
+#define  DT_BLK         6
+#define  DT_REG         8
+#define  DT_LNK         10
+#define  DT_SOCK        12
+#define  DT_WHT         14
+#endif
 /**
  * int getdents(unsigned int fd, struct dirent *dirp, unsigned int count);
  *
@@ -120,7 +131,7 @@ int rename(const char *oldpath, const char *newpath);
  *
  * Return Value:
  *   - On success, the number of bytes read into the buffer.
- *   - On error, -1 is returned and errno is set to indicate the error.
+ *   - On error, -1.
  *
  * Notes:
  *   - It's important to provide a buffer of sufficient size (specified by 'count')

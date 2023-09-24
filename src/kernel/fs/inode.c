@@ -626,7 +626,7 @@ int add_inode_directory(inode_t* dir,
   size_t name_size){
   super_block* super = (super_block*) get_super_block();
   if (dir == 0 || super == 0 || inode_number == 0 || name_size <0){
-    PRINT_RED("[IN][add_inode_directory] An element is null\n");
+    PRINT_RED("[IN][add_inode_directory failed] An element is null, dir inode add %p\n", dir);
     return -1;
   }
   debug_print_inode("\033[0;35m[IN]Adding an inode to a dir %d\n\033[0;0m", 
@@ -1225,7 +1225,7 @@ int getdents_i(inode_t* dir, struct dirent *dirp,
           dirp->d_off = ((uint64_t)list_elt - (uint64_t)block_data) + 
                         blk*EXT2_BLOCK_SIZE + list_elt->rec_len;
           dirp->d_reclen = size_ent;
-          dirp->d_type = list_elt->file_type;
+          dirp->d_type = map_ext2_to_dt(list_elt->file_type);
           char filename[list_elt->name_len + 1];
           memcpy(filename, (char*)list_elt + sizeof(dir_entry_basic),
               list_elt->name_len);

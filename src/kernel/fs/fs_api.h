@@ -137,7 +137,7 @@ enum SEEK_OPERATION {
  */
 off_t lseek(int file_descriptor, off_t offset, int whence);
 
-struct stat {
+struct __attribute__((__packed__)) stat {
     dev_t     st_dev;         // ID of device containing file
     ino_t     st_ino;         // Inode number
     mode_t    st_mode;        // File type and mode

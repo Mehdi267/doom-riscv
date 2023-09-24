@@ -40,6 +40,7 @@ int getchar(void);
 int fgetc(int fd);
 char* fgets(char* buffer, int size, int fd);
 long int ftell(int stream);
+
 //######################################################
 //##   Utility functions ##
 //######################################################
@@ -59,3 +60,4 @@ void printb(const void* data, size_t size);
  * @param size the size of the block
  */
 void print_block(void* data, size_t size);
+

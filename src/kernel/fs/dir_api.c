@@ -142,7 +142,8 @@ int mkdir(const char *dir_name, mode_t mode){
   debug_print_dirapi("[DIRAPI] mkdir called and final_string = %s\n",
        final_string);
   path_fs* path_data = extract_files(final_string);
-  if (path_data == 0){
+  if (path_data == 0 || path_data->files == 0){
+    PRINT_RED("Path search failed\n");
     return -1;
   }
   inode_t* parent_dir = walk_and_get(final_string, 1);
@@ -151,6 +152,7 @@ int mkdir(const char *dir_name, mode_t mode){
         dir_name);
     free(final_string);
     free_path_fs(path_data);
+    return -1;
   }
   inode_t* dir_inode = alloc_inode(); 
   if (dir_inode != 0){

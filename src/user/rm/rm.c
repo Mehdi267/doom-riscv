@@ -42,7 +42,7 @@ void remove_directory(const char *path) {
 
     struct stat st;
     if (lstat(entry_path, &st) == -1) {
-      perror("lstat");
+      perror("lstat failed\n");
       continue;
     }
 
@@ -86,11 +86,11 @@ int main(int argc, char *argv[]) {
       // Process non-option arguments (file/directory paths)
       struct stat st;
       if (lstat(arg, &st) == -1) {
-        perror("lstat");
+        perror("lstat failed\n");
         continue;
       }
 
-      printf("S_ISDIR(st.st_mode) = %d", S_ISDIR(st.st_mode));
+      // printf("S_ISDIR(st.st_mode) = %d\n", S_ISDIR(st.st_mode));
       if (S_ISDIR(st.st_mode) && directory && recursive) {
         remove_directory(arg);
       } else if (!S_ISDIR(st.st_mode)) {

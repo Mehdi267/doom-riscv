@@ -134,16 +134,18 @@ int main() {
   //stderr
   assert(dup2(1, 2) != -1);
   // assert(open("/dev/terminal", O_WRONLY, 0) != -1);
-	while (1) { 
+	#define CURR_DIR_SIZE 50
+  #define PROMPT_SIZE 90
+  char prompt_final[PROMPT_SIZE];
+  char *prompt = "\033[0;32mensishell\033[0;0m:";
+  int prompt_size = strlen(prompt);
+  while (1) { 
 		struct cmdline *l;
 		char *line=0;
 		int i, j;
-    #define CURR_DIR_SIZE 50
-    #define PROMPT_SIZE 90
-    char prompt_final[PROMPT_SIZE];
-		char *prompt = "\033[0;32mensishell\033[0;0m:";
+    memset(prompt_final, 0, PROMPT_SIZE);
     memcpy(prompt_final, prompt, strlen(prompt));
-    int pos = strlen(prompt); 
+    int pos = prompt_size;
     char current_dir[CURR_DIR_SIZE];
     if (getcwd(current_dir, CURR_DIR_SIZE) != 0){
       memcpy(prompt_final+pos, current_dir, strlen(current_dir));

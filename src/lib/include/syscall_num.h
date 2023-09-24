@@ -91,6 +91,8 @@
 #define SYSC_fstat              70
 #define SYSC_lstat              71
 #define SYSC_write_file_disk    72
+#define SYSC_stat               73
+#define SYSC_rename             74
 
 #define SYSC_print_dir_elements 76 
 #define SYSC_fs_info            77

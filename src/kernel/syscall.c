@@ -179,6 +179,10 @@ unsigned long syscall_handler(struct trap_frame *tf) {
       return fstat(tf->a0, (struct stat *)tf->a1);
     case SYSC_lstat:
       return stat((const char*)tf->a0, (struct stat *)tf->a1);
+    case SYSC_stat:
+      return stat((const char*)tf->a0, (struct stat *)tf->a1);
+    case SYSC_rename:
+      return rename((const char*)tf->a0, (const char*)tf->a1);
     case SYSC_print_dir_elements:
       print_dir_elements((const char*)tf->a0);    
       break;

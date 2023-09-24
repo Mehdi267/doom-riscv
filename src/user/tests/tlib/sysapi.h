@@ -7,6 +7,7 @@
 
 #ifndef _SYSAPI_H_
 #define _SYSAPI_H_
+#include "stat.h"
 
 #define NULL ((void*)0)
 typedef __SIZE_TYPE__ size_t;
@@ -122,6 +123,9 @@ typedef __UINTPTR_TYPE__ uintptr_t;
 #define TRUE 1
 #define FALSE 0
 
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
+
 #define NR_PHILO 5
 // Prototype des appels systeme de la spec
 int chprio(int pid, int newprio);
@@ -234,20 +238,6 @@ extern int sync();
 extern int clear_disk_cache();
 extern void print_fs_details();
 
-typedef long long off_t;
-typedef unsigned int mode_t;
-typedef int pid_t;
-typedef long ssize_t;
-typedef unsigned long int ino_t;
-typedef unsigned int   uid_t;      // User ID of owner
-typedef unsigned int   gid_t;      // Group ID of owner
-typedef unsigned int   dev_t;      // Device ID (if file is character or block special)
-typedef int            blksize_t;  // Block size for filesystem I/O
-typedef long           blkcnt_t;   // Number of 512B blocks allocated
-typedef long           time_t;     // Time type (usually represents POSIX timestamp)
-typedef unsigned short nlink_t;    // Number of hard links
-
-
 
 #define O_RDONLY 00000000
 #define O_WRONLY 00000001
@@ -298,22 +288,19 @@ enum SEEK_OPERATION {
   SEEK_END = 2,
 };
 
-struct __attribute__((packed)) stat {
-  dev_t     st_dev;         // ID of device containing file
-  ino_t     st_ino;         // Inode number
-  mode_t    st_mode;        // File type and mode
-  nlink_t   st_nlink;       // Number of hard links
-  uid_t     st_uid;         // User ID of owner
-  gid_t     st_gid;         // Group ID of owner
-  dev_t     st_rdev;        // Device ID (if file is character or block special)
-  off_t     st_size;        // Total size, in bytes
-  blksize_t st_blksize;     // Block size for filesystem I/O
-  blkcnt_t  st_blocks;      // Number of 512B blocks allocated
-  time_t    st_atime;       // Time of last access
-  time_t    st_mtime;       // Time of last modification
-  time_t  
-    st_ctime;       // Time of last status change
-};
+#ifndef DT_UNKNOWN
+#define  DT_UNKNOWN     0
+#define  DT_FIFO        1
+#define  DT_CHR         2
+#define  DT_DIR         4
+#define  DT_BLK         6
+#define  DT_REG         8
+#define  DT_LNK         10
+#define  DT_SOCK        12
+#define  DT_WHT         14
+#endif
+
+
 struct dirent {
   uint64_t         d_ino;
   int64_t          d_off;
@@ -333,13 +320,14 @@ int unlink(const char *file_name);
 int link(const char *oldpath, const char *newpath);
 int dup(int file_descriptor);
 int dup2(int file_descriptor, int new_file_descriptor);
+int lstat(const char *pathname, struct stat *buf);
 int stat(const char *pathname, struct stat *buf);
 int fstat(unsigned int fd, struct stat *buf);
 int pipe(int file_descriptors[2]);
 pid_t fork(void);
 int execve(const char *filename, char *const argv[], char *const envp[]);
-void ld_progs_into_disk();
 void *sbrk(unsigned long increment);
+int rename(const char *old_name, const char *new_name);
 
 //Dir api
 char *getcwd(char *buf, size_t size);

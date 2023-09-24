@@ -378,6 +378,8 @@ uint32_t look_for_inode_dir(inode_t* dir,
  * @param dir the directory inode
  * @param name the name of the inode
  * @param name_len the length of the name of the inode
+ * @param force forces the delete, 
+ * even if we are working with a directory
  * @return uint32_t status
  */
 int remove_inode_dir(inode_t* dir, 

@@ -83,6 +83,12 @@ inode_t* walk_and_get(const char* path, uint32_t backward_steps);
  */
 mode_t ext2_to_stat_mode(unsigned short ext2_mode);
 
+// Map EXT2 file types to DT constants
+int map_ext2_to_dt(uint8_t ext2_type);
+
+//maps ext2 inode mode to ext2_type
+int map_ext2_types_to_dir_type(uint32_t ext2_type);
+
 #endif /* INODE_H */
 
 

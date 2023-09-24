@@ -388,7 +388,7 @@ int sys_link(const char *oldpath, const char *newpath){
 }
 
 static int conf_stat_buf(struct stat *buf, inode_t* file_inode){
-  if (root_file_system == 0 && file_inode == 0){
+  if (root_file_system == 0 || file_inode == 0){
     return -1;
   }
   buf->st_dev = 1; //We are using one device currently         
@@ -476,7 +476,98 @@ int dup2(process* proc, int file_descriptor, int new_file_descriptor){
 }
 
 int rename(const char *old_name, const char *new_name){
-  return 0; 
+  if (old_name == 0 || new_name == 0){
+    return -1;
+  }
+  debug_print_fsapi("Rename called old = %s; new = %s\n", 
+    old_name, new_name);
+  inode_t* old_inode = walk_and_get(old_name, 0);
+  debug_print_fsapi("Found old inode, inode number = %d\n", 
+                get_inode_number(old_inode));
+  if (old_inode == 0){
+    debug_print_fsapi("Cant find old name %s\n", old_name);
+    return -1;
+  }
+  //We check if the file already exists
+  inode_t* new_inode = walk_and_get(new_name, 0);
+  path_fs* path_data_new = extract_files(new_name);
+  if (path_data_new == 0){
+    return -1;
+  }
+  if (new_inode != 0){
+    debug_print_fsapi("New name is already taken %s, old mode %d, new mode  %d\n", 
+        new_name, old_inode->i_mode, new_inode->i_mode);
+    if ((old_inode->i_mode & EXT2_S_IFREG) != 0 && 
+        (new_inode->i_mode & EXT2_S_IFREG) != 0){
+      unlink(new_name);
+    } else if (( old_inode->i_mode & EXT2_S_IFDIR) != 0 &&
+          (new_inode->i_mode & EXT2_S_IFDIR) != 0){
+      inode_t* dir_inode = walk_and_get(new_name, 1);
+      if (dir_inode == 0){free_path_fs(path_data_new);return -1;}
+      if (remove_inode_dir(dir_inode, path_data_new->files[path_data_new->nb_files -1],
+              strlen(path_data_new->files[path_data_new->nb_files -1]))<0){
+        debug_print_fsapi("Directory new_name is not empty %s\n", new_name);
+        free_path_fs(path_data_new);
+        return -1;
+      }
+    }
+    else {
+      free_path_fs(path_data_new);
+      return -1;
+    }
+  }
+  inode_t* dir_inode = walk_and_get(new_name, 1);
+  inode_t* dir_inode_old = walk_and_get(old_name, 1);
+  if (dir_inode == 0 || dir_inode_old == 0){
+    free_path_fs(path_data_new);
+    return -1;
+  }
+  path_fs* path_data_old = extract_files(old_name);
+  if (path_data_old == 0){
+    free_path_fs(path_data_new);
+    return -1;
+  }
+  //We check if the strings are equal;
+  if (get_inode_number(dir_inode) == get_inode_number(dir_inode_old) &&
+      (strcmp(path_data_new->files[path_data_new->nb_files -1],
+          path_data_old->files[path_data_old->nb_files -1]) == 0)){
+    debug_print_fsapi("Rename is pointless, rename to the same name; new: %s, old: %s \n", new_name, old_name);
+    free_path_fs(path_data_new);
+    free_path_fs(path_data_old);
+    return 0;
+  }
+  if ((old_inode->i_mode & EXT2_S_IFREG) != 0){
+    if (sys_link(old_name, new_name)<0){
+      free_path_fs(path_data_new);
+      free_path_fs(path_data_old);
+      return -1;
+    }
+  } else if ((old_inode->i_mode & EXT2_S_IFDIR) != 0){
+    if (add_inode_directory(dir_inode, 
+                  get_inode_number(old_inode), 
+                  map_ext2_types_to_dir_type(old_inode->i_mode),
+                  path_data_new->files[path_data_new->nb_files -1],
+                  strlen(path_data_new->files[path_data_new->nb_files -1]))<0){
+        free_path_fs(path_data_new);
+        free_path_fs(path_data_old);
+        return -1;
+    }
+  }
+  free_path_fs(path_data_new);
+  if ((old_inode->i_mode & EXT2_S_IFREG) != 0){
+    if (unlink(old_name)<0){
+      free_path_fs(path_data_old);
+      return -1;
+    }
+  } else if ((old_inode->i_mode & EXT2_S_IFDIR) != 0){    
+    if (remove_inode_dir(dir_inode_old, path_data_old->files[path_data_old->nb_files -1],
+                strlen(path_data_old->files[path_data_old->nb_files -1]))<0){
+      free_path_fs(path_data_old);
+      return -1;
+    }
+  }
+  free_path_fs(path_data_old);
+  return 0;
 }
 
 int sys_pipe(int file_descriptors[2]){

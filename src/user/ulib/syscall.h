@@ -218,11 +218,13 @@ int link(const char *oldpath, const char *newpath);
 int dup(int file_descriptor);
 int dup2(int file_descriptor, int new_file_descriptor);
 int lstat(const char *pathname, struct stat *buf);
+int stat(const char *pathname, struct stat *buf);
 int fstat(unsigned int fd, struct stat *buf);
 int pipe(int file_descriptors[2]);
 pid_t fork(void);
 int execve(const char *filename, char *const argv[], char *const envp[]);
 void *sbrk(unsigned long increment);
+int rename(const char *old_name, const char *new_name);
 
 //dir api
 char *getcwd(char *buf, size_t size);

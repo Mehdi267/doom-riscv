@@ -16,6 +16,14 @@ enum {
 
 int main() {
     // Create a directory
+    if (mkdir("test33", 0777)<0){
+      printf("mkdir test33 failed \n");
+      return 1;
+    }
+    if (chdir("test33")<0){
+      printf("chdir test33 failed \n");
+      return 1;
+    }
     if (mkdir("mydir", 0777) == -2) {
       printf("mkdir");
       return 1;
@@ -52,30 +60,31 @@ int main() {
 
     struct dirent *entry;
     int offset = 0;
-    int i  = 0;
+    int filenb = 0;
     // printf("##nread = %d\n", nread);
     while (offset < nread - 1) { // temp measure
-      if(i > 5){break;}
+      //Endless loop duck tape
+      if(filenb > 5){break;}
       entry = (struct dirent *)(buf_c + offset);
       // printf("inode nb: %ld\n", entry->d_ino);
       // printf("Entry rec len: %d\n", entry->d_reclen);
       // printf("Entry type: %d\n", entry->d_type);
       // printf("Entry name: %s\n", entry->d_name);
-      if (i == 0){
+      if (filenb == 0){
         assert(entry->d_reclen == 32);
-        assert(entry->d_type == 2);
+        assert(entry->d_type == DT_DIR);
       }
-      if (i == 1){
+      if (filenb == 1){
         assert(entry->d_reclen == 32);
-        assert(entry->d_type == 2);
+        assert(entry->d_type == DT_DIR);
       }
-      if (i == 2){
+      if (filenb == 2){
         assert(entry->d_reclen == 40);
-        assert(entry->d_type == 1);
+        assert(entry->d_type == DT_REG);
         assert(strcmp("myfile.txt", entry->d_name) == 0);
       }
       offset += entry->d_reclen;
-      i++;
+      filenb++;
     }
     if (close(fddir)<0){
       return 1;
@@ -94,6 +103,13 @@ int main() {
       printf("rmdir");
       return 1;
     }
-
+    if (chdir("..")<0){
+      printf("chdir test33 failed \n");
+      return 1;
+    }
+    if (rmdir("test33")<0){
+      printf("mkdir test33 failed \n");
+      return 1;
+    }
     return 0;
 }
