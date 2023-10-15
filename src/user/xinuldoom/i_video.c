@@ -170,6 +170,7 @@ static int	lastmousex = 0;
 static int	lastmousey = 0;
 boolean		mousemoved = false;
 boolean		shmFinished;
+#define EVENT_MAX_DURATION 8
 int old_event = 0xff;
 //Used to detect stand alone events
 int iter_event = 0;
@@ -182,7 +183,7 @@ void I_GetEvent(void){
     iter_event++;
     if (event_pressed != old_event && 
         event_type != ev_keyup && 
-        iter_event > 10 &&
+        iter_event > EVENT_MAX_DURATION &&
         old_event != NO_EVENT){
       // printf("###");
       // printf("[Doom][Release]Releasing event due to timer = %d\n", old_event);

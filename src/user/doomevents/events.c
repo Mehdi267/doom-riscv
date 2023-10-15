@@ -95,7 +95,7 @@ void process_event(event_queue* queue) {
   page_struct* page = (page_struct*) input_page;
   if (page->nb_events_in == MAX_EVENTS){
     while (page->nb_events_in == MAX_EVENTS){
-      sleep(500);
+      sleep(100);
     }
   }
   if (queue->head != NULL) {
